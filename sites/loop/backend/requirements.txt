@@ -1,0 +1,16 @@
+patchright>=0.5
+humanization-playwright>=0.1
+fastapi>=0.115
+uvicorn[standard]>=0.30
+websockets>=12.0
+zhipuai>=2.0
+openai>=1.0
+python-dotenv>=1.0
+Pillow>=10.0
+httpx>=0.27
+mcp>=1.0
+capsolver>=1.0
+pyyaml>=6.0
+aiosqlite>=0.20
+bcrypt>=4.0
+psutil>=5.9

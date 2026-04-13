@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+/* ===== 文章正文渲染样式 ===== */
+.article-content {
+  font-size: 1.0625rem;
+  line-height: 1.85;
+  color: #374151;
+}
+
+.article-content h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 2.5rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  line-height: 1.35;
+}
+
+.article-content h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 1.75rem 0 0.75rem;
+  padding-left: 0.75rem;
+  border-left: 3px solid #3b82f6;
+  line-height: 1.4;
+}
+
+.article-content p {
+  margin: 1rem 0;
+  color: #475569;
+}
+
+.article-content strong {
+  color: #1e3a8a;
+  font-weight: 700;
+}
+
+.article-content ul {
+  margin: 1rem 0 1rem 1.5rem;
+  list-style-type: disc;
+}
+
+.article-content ol {
+  margin: 1rem 0 1rem 1.5rem;
+  list-style-type: decimal;
+}
+
+.article-content li {
+  margin: 0.4rem 0;
+  padding-left: 0.25rem;
+  color: #475569;
+}
+
+.article-content li::marker {
+  color: #3b82f6;
+}
+
+.article-content blockquote {
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  background: #eff6ff;
+  border-left: 4px solid #3b82f6;
+  border-radius: 0 0.5rem 0.5rem 0;
+  color: #1e40af;
+  font-style: italic;
+  font-size: 0.95rem;
+}
+
+.article-content a {
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.article-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.9rem;
+}
+
+.article-content th {
+  background: #1e3a8a;
+  color: white;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+}
+
+.article-content td {
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: #475569;
+}
+
+.article-content tr:nth-child(even) td {
+  background: #f8fafc;
+}

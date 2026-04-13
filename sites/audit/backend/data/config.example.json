@@ -1,0 +1,93 @@
+{
+  "brandName": "您的品牌名称",
+  "brandDescription": "您的产品描述",
+  "adminTitle": "管理后台",
+  "email": "",
+  "autoPostEnabled": false,
+  "postsPerDay": 5,
+  "autoPostTime": "09:00",
+  "autoPostCount": 1,
+  "autoPostInterval": 24,
+  "enableSearchRewrite": false,
+  "rewriteRounds": 3,
+  "seoKeywords": "",
+  "adminUsername": "admin",
+  "adminPassword": "admin123",
+  "llmApiKey": "",
+  "llmApiEndpoint": "",
+  "llmModel": "",
+  "imageUseAI": false,
+  "imageApiKey": "",
+  "unsplashApiKey": "",
+  "smtpHost": "",
+  "smtpPort": 587,
+  "smtpUser": "",
+  "smtpPassword": "",
+  "smtpFrom": "",
+  "feishuWebhook": "",
+  "feishuTableUrl": "",
+  "feishuAppId": "",
+  "feishuAppSecret": "",
+  "brandConfig": {
+    "name": "您的品牌名称",
+    "description": "您的产品描述",
+    "adminTitle": "管理后台",
+    "emailSubjectPrefix": "[您的品牌] ",
+    "websiteUrl": "https://your-domain.com"
+  },
+  "emailConfig": {
+    "service": "",
+    "host": "",
+    "port": 465,
+    "secure": true,
+    "user": "",
+    "pass": "",
+    "from": "",
+    "adminEmail": ""
+  },
+  "feishuConfig": {
+    "webhookUrl": "",
+    "appId": "",
+    "appSecret": "",
+    "tableUrl": ""
+  },
+  "llmConfig": {
+    "provider": "",
+    "apiKey": "",
+    "baseURL": "",
+    "model": ""
+  },
+  "imageConfig": {
+    "unsplashApiKey": "",
+    "useAI": false,
+    "aiApiKey": "",
+    "enableDeduplication": true,
+    "deduplicationWindow": 5
+  },
+  "seoConfig": {
+    "autoPublish": false,
+    "publishInterval": 24,
+    "publishTime": "09:00",
+    "postsPerDay": 5,
+    "aiArticleCount": 2,
+    "rewriteArticleCount": 2,
+    "enableSearchRewrite": false,
+    "rewriteRounds": 3,
+    "keywords": ""
+  },
+  "admins": [
+    {
+      "email": "admin@example.com",
+      "password": "changeme",
+      "name": "管理员",
+      "role": "admin",
+      "createdAt": "2026-02-25T00:00:00.000Z",
+      "needsPasswordChange": true
+    }
+  ],
+  "utmConfig": {
+    "defaultSource": "baidu",
+    "defaultMedium": "cpc",
+    "trackingEnabled": true
+  }
+}

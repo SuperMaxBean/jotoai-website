@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+::selection {
+  background-color: #7c3aed;
+  color: white;
+}
+
+.gradient-hero {
+  background: radial-gradient(circle at 50% 0%, #f5f3ff 0%, #ffffff 70%);
+}
+
+.grid-bg {
+  background-image: 
+    linear-gradient(to right, rgba(240, 240, 240, 0.8) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(240, 240, 240, 0.8) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.gradient-card-purple {
+  background: linear-gradient(145deg, #fbf7ff 0%, #ffffff 100%);
+}
+
+.gradient-card-blue {
+  background: linear-gradient(145deg, #f0f9ff 0%, #ffffff 100%);
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Handwriting Optimization */
+.font-handwriting {
+  font-family: 'Reenie Beanie', 'Long Cang', cursive;
+  font-size: 1.45rem; 
+  line-height: 1.5;
+  transform: rotate(-0.5deg);
+  letter-spacing: 0.02em;
+  text-shadow: 0.5px 0.5px 0px rgba(0,0,0,0.05);
+}
+
+@keyframes scroll-vertical {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+.animate-scroll-vertical {
+  animation: scroll-vertical 90s linear infinite; 
+}
+
+.animate-scroll-vertical:hover {
+  animation-play-state: paused;
+}
+
+/* Smooth fade for elements */
+.fade-in-up {
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== 文章正文渲染样式 ===== */
+.article-content { font-size: 1.0625rem; line-height: 1.85; color: #374151; }
+.article-content h2 { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e2e8f0; line-height: 1.35; }
+.article-content h3 { font-size: 1.125rem; font-weight: 700; color: #1e293b; margin: 1.75rem 0 0.75rem; padding-left: 0.75rem; border-left: 3px solid #7c3aed; line-height: 1.4; }
+.article-content p { color: #475569; margin: 1rem 0; }
+.article-content strong { color: #1e3a8a; font-weight: 700; }
+.article-content ul { margin: 1rem 0 1rem 1.5rem; list-style-type: disc; }
+.article-content ol { margin: 1rem 0 1rem 1.5rem; list-style-type: decimal; }
+.article-content li { margin: 0.5rem 0; color: #475569; }
+.article-content li::marker { color: #7c3aed; }
+.article-content blockquote { background: #faf5ff; border-left: 4px solid #7c3aed; padding: 1rem 1.25rem; margin: 1.5rem 0; border-radius: 0 0.5rem 0.5rem 0; }
+.article-content blockquote p { color: #6d28d9; margin: 0; }
+.article-content a { color: #7c3aed; text-decoration: underline; }
+.article-content a:hover { color: #5b21b6; }
+

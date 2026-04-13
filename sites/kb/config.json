@@ -1,0 +1,98 @@
+{
+  "brandName": "企业知识中台",
+  "brandDescription": "JOTO 旗下 AI 企业知识中台",
+  "adminTitle": "企业知识中台",
+  "email": "sales@jototech.cn",
+  "autoPostEnabled": false,
+  "postsPerDay": 5,
+  "autoPostTime": "09:00",
+  "autoPostCount": 1,
+  "autoPostInterval": 24,
+  "enableSearchRewrite": false,
+  "rewriteRounds": 3,
+  "seoKeywords": "RAG、检索增强生成、企业知识库、企业知识中台、知识管理平台、智能知识库、私有知识库、企业知识管理、AI 知识库、知识中台、企业内部知识库、员工培训知识库、客服智能知识库、政务知识中台、金融企业知识库、制造业知识管理、法律智能知识库、医疗私有知识库、企业文档知识库、办公知识中台、集团知识中台",
+  "adminUsername": "admin",
+  "adminPassword": "admin123",
+  "llmApiKey": "",
+  "llmApiEndpoint": "",
+  "llmModel": "",
+  "imageUseAI": false,
+  "imageApiKey": "",
+  "unsplashApiKey": "",
+  "smtpHost": "",
+  "smtpPort": 587,
+  "smtpUser": "",
+  "smtpPassword": "",
+  "smtpFrom": "",
+  "feishuWebhook": "",
+  "feishuTableUrl": "https://vcn27jg8tmuq.feishu.cn/base/FniubotRna9gyvs5oDMcbJgPnnb?table=tblQCOffzrWGhHnP&view=vewiicVZHC",
+  "feishuAppId": "cli_a91b5bc69c389cc2",
+  "feishuAppSecret": "kqg00wJHvxCf7yFUYcSCWfptmkURCmcM",
+  "brandConfig": {
+    "name": "企业知识中台",
+    "description": "JOTO 旗下 AI 企业知识中台",
+    "adminTitle": "企业知识中台",
+    "emailSubjectPrefix": "[企业知识中台] ",
+    "websiteUrl": "https://kb.jotoai.com"
+  },
+  "emailConfig": {
+    "service": "",
+    "host": "smtp.163.com",
+    "port": 465,
+    "secure": true,
+    "user": "tomi3@163.com",
+    "pass": "RMxYLw3MXtPjBc8u",
+    "from": "tomi3@163.com",
+    "adminEmail": "sales@jototech.cn"
+  },
+  "feishuConfig": {
+    "webhookUrl": "",
+    "appId": "",
+    "appSecret": "",
+    "tableUrl": ""
+  },
+  "llmConfig": {
+    "provider": "",
+    "apiKey": "72d2be1c-1e31-4568-927b-131689425efe",
+    "baseURL": "https://ark.cn-beijing.volces.com/api/v3",
+    "model": "doubao-seed-1-6-flash-250615"
+  },
+  "imageConfig": {
+    "unsplashApiKey": "ETntY6KkSWr-yhy8YVx0BByNFdXc2gLp93VWBLSwsdM",
+    "useAI": false,
+    "aiApiKey": "",
+    "enableDeduplication": true,
+    "deduplicationWindow": 5
+  },
+  "seoConfig": {
+    "autoPublish": true,
+    "publishInterval": 24,
+    "publishTime": "09:00",
+    "postsPerDay": 5,
+    "aiArticleCount": 3,
+    "rewriteArticleCount": 3,
+    "enableSearchRewrite": true,
+    "rewriteRounds": 3,
+    "keywords": "RAG、检索增强生成、企业知识库、企业知识中台、知识管理平台、智能知识库、私有知识库、企业知识管理、AI 知识库、知识中台、企业内部知识库、员工培训知识库、客服智能知识库、政务知识中台、金融企业知识库、制造业知识管理、法律智能知识库、医疗私有知识库、企业文档知识库、办公知识中台、集团知识中台",
+    "articleWordCount": 2000
+  },
+  "admins": [
+    {
+      "email": "admin@jotoai.com",
+      "password": "Jototech@123",
+      "name": "管理员",
+      "role": "admin",
+      "createdAt": "2026-02-27T00:00:00.000Z",
+      "needsPasswordChange": true
+    }
+  ],
+  "utmConfig": {
+    "defaultSource": "baidu",
+    "defaultMedium": "cpc",
+    "trackingEnabled": true
+  },
+  "tavilyConfig": {
+    "apiKey": "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",
+    "maxResults": 5
+  }
+}

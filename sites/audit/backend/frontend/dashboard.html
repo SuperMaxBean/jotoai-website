@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JOTO 统一管理后台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+    .card { transition: all 0.2s ease; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .dot-green  { background: #22c55e; box-shadow: 0 0 6px #22c55e88; }
+    .dot-red    { background: #ef4444; box-shadow: 0 0 6px #ef444488; }
+    .dot-yellow { background: #f59e0b; box-shadow: 0 0 6px #f59e0b88; }
+    .dot-gray   { background: #64748b; }
+    @keyframes pulse-green { 0%,100%{box-shadow:0 0 4px #22c55e88}50%{box-shadow:0 0 10px #22c55ecc} }
+    @keyframes pulse-red   { 0%,100%{box-shadow:0 0 4px #ef444488}50%{box-shadow:0 0 10px #ef4444cc} }
+    .dot-green  { animation: pulse-green 2s infinite; }
+    .dot-red    { animation: pulse-red 1.5s infinite; }
+    .status-bar-item { transition: background 0.3s; }
+    .alert-banner { animation: slideDown 0.3s ease; }
+    @keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+    .spinner { border: 2px solid rgba(255,255,255,0.1); border-top-color: #6366f1; border-radius: 50%; width: 14px; height: 14px; animation: spin 0.7s linear infinite; display: inline-block; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="min-h-screen text-white">
+
+  <!-- Header -->
+  <header class="border-b border-white/10 bg-slate-900/50 backdrop-blur sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-sm">J</div>
+        <span class="font-semibold text-lg">JOTO 统一管理后台</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <span id="adminEmail" class="text-slate-400 text-sm"></span>
+        <button onclick="logout()" class="text-sm px-4 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition">退出登录</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Alert Banner (shown when sites are down) -->
+  <div id="alertBanner" class="hidden bg-red-500/10 border-b border-red-500/30 alert-banner">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center gap-3">
+      <span class="text-red-400 text-lg">⚠️</span>
+      <span id="alertText" class="text-red-300 text-sm font-medium"></span>
+      <button onclick="checkStatus()" class="ml-auto text-xs text-red-400 hover:text-red-200 border border-red-500/30 px-3 py-1 rounded-lg transition">重新检测</button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <main class="max-w-7xl mx-auto px-6 py-10">
+    <div class="mb-8 flex items-end justify-between">
+      <div>
+        <h1 class="text-3xl font-bold mb-2">站点管理</h1>
+        <p class="text-slate-400">选择一个站点进入管理页面</p>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div class="bg-slate-800/50 rounded-xl p-4 border border-white/5">
+        <div class="text-slate-400 text-sm mb-1">站点总数</div>
+        <div class="text-2xl font-bold">6</div>
+      </div>
+      <div class="bg-slate-800/50 rounded-xl p-4 border border-white/5">
+        <div class="text-slate-400 text-sm mb-1">总表单量</div>
+        <div id="totalContacts" class="text-2xl font-bold">-</div>
+      </div>
+      <div class="bg-slate-800/50 rounded-xl p-4 border border-white/5">
+        <div class="text-slate-400 text-sm mb-1">总文章数</div>
+        <div id="totalArticles" class="text-2xl font-bold">-</div>
+      </div>
+      <div class="bg-slate-800/50 rounded-xl p-4 border border-white/5">
+        <div class="text-slate-400 text-sm mb-1">后台版本</div>
+        <div class="text-2xl font-bold text-indigo-400">v2.0</div>
+      </div>
+    </div>
+
+    <!-- Site Status Panel -->
+    <div class="bg-slate-800/40 border border-white/5 rounded-2xl mb-8 overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-white/5">
+        <div class="flex items-center gap-2">
+          <span class="text-base font-semibold">站点状态监控</span>
+          <span id="statusSummaryBadge" class="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-400">检测中...</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="lastCheckedTime" class="text-xs text-slate-500"></span>
+          <button onclick="checkStatus()" id="refreshBtn" class="text-xs text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+            <span>🔄</span> 刷新
+          </button>
+        </div>
+      </div>
+      <div id="statusGrid" class="divide-y divide-white/5">
+        <!-- Status rows injected by JS -->
+        <div class="px-5 py-4 text-slate-400 text-sm flex items-center gap-2">
+          <span class="spinner"></span> 正在检测各站点状态...
+        </div>
+      </div>
+    </div>
+
+    <!-- Email Config Panel (Resend) -->
+    <div class="bg-slate-800/40 border border-white/5 rounded-2xl mb-8 overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-white/5 cursor-pointer select-none" onclick="toggleEmailPanel()">
+        <div class="flex items-center gap-2">
+          <span class="text-base font-semibold">📧 邮件配置</span>
+          <span id="emailStatusBadge" class="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-400">加载中...</span>
+        </div>
+        <span id="emailToggleIcon" class="text-slate-400 text-sm transition-transform">▼</span>
+      </div>
+      <div id="emailPanel">
+        <div class="px-5 py-5 space-y-4">
+          <p class="text-slate-400 text-sm">所有站点（闪阅 / 唯客智审 / 安全护栏 / 知识中台 / Fasium / Loop）统一使用 Resend 发送邮件通知，域名：jotoai.com</p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1.5">Resend API Key</label>
+              <input type="password" id="cfgResendApiKey" placeholder="re_xxxxxxxxxx"
+                class="w-full px-3 py-2 bg-slate-900 border border-white/10 rounded-lg text-sm text-white placeholder-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none font-mono">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1.5">接收邮箱</label>
+              <input type="email" id="cfgEmail" placeholder="admin@jototech.cn"
+                class="w-full px-3 py-2 bg-slate-900 border border-white/10 rounded-lg text-sm text-white placeholder-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1.5">发件人地址</label>
+              <input type="text" id="cfgEmailFrom" placeholder="noreply@mail.jotoai.com"
+                class="w-full px-3 py-2 bg-slate-900 border border-white/10 rounded-lg text-sm text-white placeholder-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none">
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <button onclick="saveEmailConfig()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg transition font-medium">保存</button>
+            <button onclick="testEmailConfig()" class="px-5 py-2 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition">发送测试邮件</button>
+            <span id="emailMsg" class="text-sm"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contacts Panel -->
+    <div class="bg-slate-800/40 border border-white/5 rounded-2xl mb-8 overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-white/5">
+        <div class="flex items-center gap-2">
+          <span class="text-base font-semibold">📩 全站留言</span>
+          <span id="contactCountBadge" class="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-400">加载中...</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <select id="contactSiteFilter" onchange="renderContacts()" class="text-xs bg-slate-900 border border-white/10 rounded-lg px-2 py-1.5 text-slate-300 outline-none">
+            <option value="all">全部站点</option>
+          </select>
+          <button onclick="loadContacts()" class="text-xs text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-lg transition">🔄 刷新</button>
+        </div>
+      </div>
+      <div id="contactsList" class="divide-y divide-white/5 max-h-[500px] overflow-y-auto">
+        <div class="px-5 py-4 text-slate-400 text-sm flex items-center gap-2">
+          <span class="spinner"></span> 加载中...
+        </div>
+      </div>
+    </div>
+
+    <!-- Site cards -->
+    <div id="siteCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="col-span-full text-center text-slate-400 py-12">加载中...</div>
+    </div>
+  </main>
+
+  <script>
+    const SITES = [
+      { id: 'audit',   name: '唯客智审',     desc: 'AI 合同审查平台',     url: 'https://audit.jotoai.com',   color: 'indigo',  icon: '📋' },
+      { id: 'shanyue', name: '闪阅',         desc: 'AI 全科阅卷平台',     url: 'https://shanyue.jotoai.com', color: 'blue',    icon: '📚' },
+      { id: 'sec',     name: '唯客 AI 护栏', desc: '企业大模型安全防护',  url: 'https://sec.jotoai.com',     color: 'red',     icon: '🛡️' },
+      { id: 'kb',      name: '唯客知识中台', desc: '企业级 AI 知识库',    url: 'https://kb.jotoai.com',      color: 'emerald', icon: '🗂️' },
+      { id: 'fasium',  name: 'FasiumAI',     desc: 'AI 时尚设计平台',     url: 'https://fasium.jotoai.com',  color: 'orange',  icon: '👗' },
+      { id: 'loop',    name: 'Loop',          desc: 'AI 浏览器自动化平台',  url: 'https://loop.jotoai.com',    color: 'cyan',    icon: '🔄' },
+    ];
+
+    const colorMap = {
+      indigo: { bg: 'bg-indigo-500/10', border: 'border-indigo-500/30', badge: 'bg-indigo-600', text: 'text-indigo-400', btn: 'bg-indigo-600 hover:bg-indigo-700' },
+      blue:   { bg: 'bg-blue-500/10',   border: 'border-blue-500/30',   badge: 'bg-blue-600',   text: 'text-blue-400',   btn: 'bg-blue-600 hover:bg-blue-700' },
+      red:    { bg: 'bg-red-500/10',    border: 'border-red-500/30',    badge: 'bg-red-600',    text: 'text-red-400',    btn: 'bg-red-600 hover:bg-red-700' },
+      emerald:{ bg: 'bg-emerald-500/10',border: 'border-emerald-500/30',badge: 'bg-emerald-600',text: 'text-emerald-400',btn: 'bg-emerald-600 hover:bg-emerald-700' },
+      orange: { bg: 'bg-orange-500/10', border: 'border-orange-500/30', badge: 'bg-orange-600', text: 'text-orange-400', btn: 'bg-orange-600 hover:bg-orange-700' },
+      cyan:   { bg: 'bg-cyan-500/10',   border: 'border-cyan-500/30',   badge: 'bg-cyan-600',   text: 'text-cyan-400',   btn: 'bg-cyan-600 hover:bg-cyan-700' },
+    };
+
+    // site status cache
+    let siteStatusMap = {};
+
+    const token = localStorage.getItem('adminToken');
+    if (!token) { window.location.href = '/admin/login.html'; }
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      document.getElementById('adminEmail').textContent = payload.email || payload.username || 'Admin';
+    } catch(e) {}
+
+    function latencyLabel(ms) {
+      if (ms === 0) return '';
+      if (ms < 500) return `<span class="text-emerald-400">${ms}ms</span>`;
+      if (ms < 1500) return `<span class="text-yellow-400">${ms}ms</span>`;
+      return `<span class="text-red-400">${ms}ms</span>`;
+    }
+
+    function statusCode(s) {
+      if (!s.ok && s.status === 0) return `<span class="text-red-400 font-mono text-xs">${s.error || '无法连接'}</span>`;
+      const cls = s.status >= 200 && s.status < 300 ? 'text-emerald-400' : s.status >= 300 && s.status < 400 ? 'text-yellow-400' : 'text-red-400';
+      return `<span class="${cls} font-mono text-xs">${s.status}</span>`;
+    }
+
+    async function checkStatus() {
+      const btn = document.getElementById('refreshBtn');
+      btn.innerHTML = '<span class="spinner"></span> 检测中';
+      btn.disabled = true;
+
+      document.getElementById('statusGrid').innerHTML = `
+        <div class="px-5 py-4 text-slate-400 text-sm flex items-center gap-2">
+          <span class="spinner"></span> 正在检测各站点状态...
+        </div>`;
+
+      try {
+        const res = await fetch('/api/admin/site-status', { headers: { Authorization: `Bearer ${token}` } });
+        const data = await res.json();
+
+        if (!data.success) throw new Error('API 返回失败');
+
+        // Build status map
+        siteStatusMap = {};
+        data.results.forEach(r => { siteStatusMap[r.site] = r; });
+
+        // Update status panel
+        const downSites = data.results.filter(r => !r.ok);
+        const slowSites = data.results.filter(r => r.ok && r.latency > 1500);
+        const allOk = downSites.length === 0;
+
+        // Summary badge
+        const badge = document.getElementById('statusSummaryBadge');
+        if (allOk && slowSites.length === 0) {
+          badge.textContent = '✅ 全部正常';
+          badge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20';
+        } else if (downSites.length > 0) {
+          badge.textContent = `⚠️ ${downSites.length} 个异常`;
+          badge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/20';
+        } else {
+          badge.textContent = `🐢 ${slowSites.length} 个较慢`;
+          badge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-yellow-500/15 text-yellow-400 border border-yellow-500/20';
+        }
+
+        // Alert banner
+        const banner = document.getElementById('alertBanner');
+        if (downSites.length > 0) {
+          banner.classList.remove('hidden');
+          document.getElementById('alertText').textContent =
+            `以下站点访问异常：${downSites.map(s => `${s.site}（${s.error || 'HTTP ' + s.status}）`).join('、')}`;
+        } else {
+          banner.classList.add('hidden');
+        }
+
+        // Last checked
+        const t = new Date(data.checkedAt);
+        document.getElementById('lastCheckedTime').textContent = `上次检测：${t.toLocaleTimeString('zh-CN')}`;
+
+        // Status grid rows
+        document.getElementById('statusGrid').innerHTML = SITES.map(site => {
+          const s = siteStatusMap[site.id] || { ok: false, status: 0, latency: 0, error: '未知' };
+          const dotClass = !s.ok ? 'dot-red' : s.latency > 1500 ? 'dot-yellow' : 'dot-green';
+          const label = !s.ok ? '异常' : s.latency > 1500 ? '较慢' : '正常';
+          const labelClass = !s.ok ? 'text-red-400' : s.latency > 1500 ? 'text-yellow-400' : 'text-emerald-400';
+          return `
+            <div class="status-bar-item px-5 py-3.5 flex items-center gap-4 hover:bg-white/[0.02]">
+              <span class="status-dot ${dotClass}"></span>
+              <span class="text-lg w-7 text-center">${site.icon}</span>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="font-medium text-sm">${site.name}</span>
+                  <span class="${labelClass} text-xs font-medium">${label}</span>
+                  ${s.error ? `<span class="text-red-400/80 text-xs truncate max-w-xs">${s.error}</span>` : ''}
+                </div>
+                <div class="text-slate-500 text-xs mt-0.5 truncate">${site.url}</div>
+              </div>
+              <div class="flex items-center gap-4 text-sm shrink-0">
+                ${statusCode(s)}
+                <span class="w-16 text-right text-sm">${s.latency ? latencyLabel(s.latency) : '-'}</span>
+                <a href="${site.url}" target="_blank" class="text-slate-500 hover:text-slate-300 text-xs transition">↗</a>
+              </div>
+            </div>`;
+        }).join('');
+
+        // Refresh site cards to show status dots
+        renderSiteCards();
+
+      } catch(e) {
+        document.getElementById('statusGrid').innerHTML = `<div class="px-5 py-4 text-red-400 text-sm">检测失败：${e.message}</div>`;
+      }
+
+      btn.innerHTML = '<span>🔄</span> 刷新';
+      btn.disabled = false;
+    }
+
+    function renderSiteCards(statsMap = {}) {
+      const container = document.getElementById('siteCards');
+      container.innerHTML = SITES.map(site => {
+        const c = colorMap[site.color];
+        const st = statsMap[site.id] || { contactCount: '…', articleCount: '…' };
+        const s = siteStatusMap[site.id];
+        const dotClass = !s ? 'dot-gray' : !s.ok ? 'dot-red' : s.latency > 1500 ? 'dot-yellow' : 'dot-green';
+        const statusTip = !s ? '' : !s.ok ? `<span class="text-red-400 text-xs">⚠ 访问异常</span>` : `<span class="text-emerald-400/70 text-xs">${s.latency}ms</span>`;
+        return `
+          <div class="card ${c.bg} border ${c.border} rounded-2xl p-6 cursor-pointer" onclick="enterSite('${site.id}')">
+            <div class="flex items-start justify-between mb-4">
+              <div>
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-3xl">${site.icon}</span>
+                  <span class="status-dot ${dotClass}"></span>
+                  ${statusTip}
+                </div>
+                <h3 class="text-xl font-bold">${site.name}</h3>
+                <p class="text-slate-400 text-sm mt-1">${site.desc}</p>
+              </div>
+              <a href="${site.url}" target="_blank" class="text-slate-500 hover:text-white text-xs border border-white/10 rounded px-2 py-1 mt-1" onclick="event.stopPropagation()">访问 ↗</a>
+            </div>
+            <div class="flex gap-4 text-sm text-slate-400 border-t border-white/5 pt-4 mb-5">
+              <span>📩 <strong class="${c.text}">${st.contactCount}</strong> 条表单</span>
+              <span>📝 <strong class="${c.text}">${st.articleCount}</strong> 篇文章</span>
+            </div>
+            <button class="${c.btn} w-full py-2.5 rounded-xl text-white text-sm font-semibold transition">进入管理 →</button>
+          </div>`;
+      }).join('');
+    }
+
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/admin/dashboard', { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) {
+          if (res.status === 401) { localStorage.removeItem('adminToken'); window.location.href = '/admin/login.html'; }
+          return;
+        }
+        const { sites } = await res.json();
+        let totalC = 0, totalA = 0;
+        const statsMap = {};
+        sites.forEach(s => { totalC += s.contactCount; totalA += s.articleCount; statsMap[s.site] = s; });
+        document.getElementById('totalContacts').textContent = totalC;
+        document.getElementById('totalArticles').textContent = totalA;
+        renderSiteCards(statsMap);
+      } catch(e) { console.error(e); }
+    }
+
+    function enterSite(siteId) { window.location.href = `/admin/admin.html?site=${siteId}`; }
+    function logout() { localStorage.removeItem('adminToken'); window.location.href = '/admin/login.html'; }
+
+    // --- Email Config ---
+    function toggleEmailPanel() {
+      const panel = document.getElementById('emailPanel');
+      const icon = document.getElementById('emailToggleIcon');
+      panel.classList.toggle('hidden');
+      icon.style.transform = panel.classList.contains('hidden') ? '' : 'rotate(180deg)';
+    }
+
+    async function loadEmailConfig() {
+      try {
+        const res = await fetch('/api/admin/config', { headers: { Authorization: `Bearer ${token}` } });
+        const cfg = await res.json();
+        document.getElementById('cfgResendApiKey').value = cfg.resendApiKey || '';
+        document.getElementById('cfgEmail').value = cfg.email || '';
+        document.getElementById('cfgEmailFrom').value = cfg.emailFrom || 'noreply@mail.jotoai.com';
+        const badge = document.getElementById('emailStatusBadge');
+        if (cfg.resendApiKey) {
+          badge.textContent = '已配置';
+          badge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20';
+        } else {
+          badge.textContent = '未配置';
+          badge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-yellow-500/15 text-yellow-400 border border-yellow-500/20';
+        }
+      } catch(e) {}
+    }
+
+    function showEmailMsg(text, ok) {
+      const el = document.getElementById('emailMsg');
+      el.textContent = text;
+      el.className = `text-sm ${ok ? 'text-emerald-400' : 'text-red-400'}`;
+      setTimeout(() => { el.textContent = ''; }, 4000);
+    }
+
+    async function saveEmailConfig() {
+      try {
+        const body = {
+          resendApiKey: document.getElementById('cfgResendApiKey').value,
+          email: document.getElementById('cfgEmail').value,
+          emailFrom: document.getElementById('cfgEmailFrom').value,
+        };
+        const res = await fetch('/api/admin/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(body),
+        });
+        const r = await res.json();
+        if (r.success) { showEmailMsg('已保存', true); loadEmailConfig(); }
+        else showEmailMsg('保存失败: ' + (r.message || ''), false);
+      } catch(e) { showEmailMsg('保存失败: ' + e.message, false); }
+    }
+
+    async function testEmailConfig() {
+      const addr = document.getElementById('cfgEmail').value;
+      if (!addr) { showEmailMsg('请先填写接收邮箱', false); return; }
+      showEmailMsg('发送中...', true);
+      try {
+        await saveEmailConfig();
+        const res = await fetch('/api/admin/test-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ testEmail: addr }),
+        });
+        const r = await res.json();
+        showEmailMsg(r.success ? '测试邮件已发送到 ' + addr : '失败: ' + (r.message || ''), r.success);
+      } catch(e) { showEmailMsg('失败: ' + e.message, false); }
+    }
+
+    // --- Contacts ---
+    const SITE_NAME_MAP = {
+      'audit.jotoai.com': '唯客智审', 'shanyue.jotoai.com': '闪阅',
+      'sec.jotoai.com': '唯客 AI 护栏', 'kb.jotoai.com': '唯客知识中台',
+      'fasium.jotoai.com': 'FasiumAI', 'loop.jotoai.com': 'Loop',
+    };
+    let allContacts = [];
+
+    async function loadContacts() {
+      try {
+        const res = await fetch('/api/admin/contacts', { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) return;
+        allContacts = await res.json();
+
+        // Build filter options
+        const filter = document.getElementById('contactSiteFilter');
+        const current = filter.value;
+        const sites = new Set();
+        allContacts.forEach(c => { if (c.site) sites.add(c.site); else if (c.siteHost) sites.add(SITE_NAME_MAP[c.siteHost] || c.siteHost); });
+        filter.innerHTML = '<option value="all">全部站点</option>' +
+          [...sites].map(s => `<option value="${s}"${s === current ? ' selected' : ''}>${s}</option>`).join('');
+
+        document.getElementById('contactCountBadge').textContent = allContacts.length + ' 条';
+        document.getElementById('contactCountBadge').className = 'text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-400 border border-indigo-500/20';
+
+        renderContacts();
+      } catch(e) {
+        document.getElementById('contactsList').innerHTML = `<div class="px-5 py-4 text-red-400 text-sm">加载失败：${e.message}</div>`;
+      }
+    }
+
+    function renderContacts() {
+      const filter = document.getElementById('contactSiteFilter').value;
+      let list = allContacts;
+      if (filter !== 'all') {
+        list = list.filter(c => c.site === filter || SITE_NAME_MAP[c.siteHost] === filter);
+      }
+
+      if (list.length === 0) {
+        document.getElementById('contactsList').innerHTML = '<div class="px-5 py-8 text-slate-500 text-sm text-center">暂无留言</div>';
+        return;
+      }
+
+      document.getElementById('contactsList').innerHTML = list.map(c => {
+        const site = c.site || SITE_NAME_MAP[c.siteHost] || '未知';
+        const time = c.submittedAt ? new Date(c.submittedAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) : '-';
+        const siteColor = {
+          '唯客智审': 'bg-indigo-500', '闪阅': 'bg-blue-500', '唯客 AI 护栏': 'bg-red-500',
+          '唯客知识中台': 'bg-emerald-500', 'FasiumAI': 'bg-orange-500', 'Loop': 'bg-cyan-500',
+        }[site] || 'bg-slate-500';
+        return `
+          <div class="px-5 py-3.5 hover:bg-white/[0.02] flex items-start gap-4">
+            <div class="shrink-0 mt-1">
+              <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold text-white ${siteColor}">${site}</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-medium text-sm text-white">${c.name || '-'}</span>
+                <span class="text-slate-500 text-xs">${c.email || ''}</span>
+                <span class="text-slate-600 text-xs">${c.phone || ''}</span>
+              </div>
+              <div class="text-slate-400 text-xs mt-1 truncate">${c.message && c.message !== '（未填写需求描述）' ? c.message : '<span class=&quot;text-slate-600&quot;>未填写</span>'}</div>
+            </div>
+            <div class="shrink-0 text-right">
+              <div class="text-slate-500 text-xs">${time}</div>
+              <div class="text-slate-600 text-[10px] mt-0.5">${c.source || ''} · ${c.deviceType || ''}</div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // Init
+    loadStats();
+    checkStatus();
+    loadEmailConfig();
+    loadContacts();
+
+    // Auto re-check every 2 minutes
+    setInterval(checkStatus, 120000);
+  </script>
+</body>
+</html>

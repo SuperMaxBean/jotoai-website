@@ -1,0 +1,13 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <text x="600" y="260" font-family="sans-serif" font-size="80" fill="white" text-anchor="middle" font-weight="bold">闪阅 AI</text>
+  <text x="600" y="360" font-family="sans-serif" font-size="36" fill="rgba(255,255,255,0.8)" text-anchor="middle">面向未来的教学评估与资产沉淀平台</text>
+  <text x="600" y="430" font-family="sans-serif" font-size="28" fill="rgba(255,255,255,0.6)" text-anchor="middle">手写识别率 98% · 全科覆盖 · 私有化部署</text>
+  <text x="600" y="560" font-family="sans-serif" font-size="20" fill="rgba(255,255,255,0.4)" text-anchor="middle">shanyue.joto.ai</text>
+</svg>

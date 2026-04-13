@@ -1,0 +1,5 @@
+{
+  "name": "JOTO Guardrails",
+  "description": "Enterprise-grade AI security guardrails and firewall system tailored for LLM applications.",
+  "requestFramePermissions": []
+}

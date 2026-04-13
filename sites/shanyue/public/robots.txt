@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# 不爬登录页
+Disallow: /login
+
+# Sitemap
+Sitemap: https://shanyue.jotoai.com/sitemap.xml
