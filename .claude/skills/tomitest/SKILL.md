@@ -13,7 +13,8 @@ Comprehensive end-to-end test suite covering all JOTO.AI product websites and No
 
 1. **Must use Puppeteer MCP to open a browser** for every verification — do NOT rely on curl or direct API calls alone. Every test item must be confirmed visually in a real browser via `mcp__puppeteer__puppeteer_navigate`, `mcp__puppeteer__puppeteer_screenshot`, etc.
 2. **All operations must go through the frontend UI** — click buttons, fill forms, and observe results in the browser. Do NOT bypass the frontend to call APIs directly. The goal is to verify the real user experience, not just the backend.
-3. **Clean up all test data after testing** — delete test users, notebooks, chat sessions, uploaded files, and any other artifacts created during the test run. The test suite must leave zero pollution in the user environment.
+3. **Always test against the PRODUCTION URLs** (e.g. `https://audit.jotoai.com`), NEVER against `localhost`. Testing localhost hits different API routes, different configs, and misses real deployment issues (nginx routing, CORS, SSL, etc.). The whole point of E2E testing is to verify what real users see on the real server.
+4. **Clean up all test data after testing** — delete test users, notebooks, chat sessions, uploaded files, and any other artifacts created during the test run. The test suite must leave zero pollution in the user environment.
 
 ## Sites Under Test
 
@@ -44,109 +45,109 @@ Comprehensive end-to-end test suite covering all JOTO.AI product websites and No
 - **Prod2 server** (124.223.93.11): ubuntu / Jototech@123
 - **Internal services** (10.200.0.102): ubuntu / Nl369099@joto (GPU server: MinerU, ASR, Xinference)
 
-### A. Infrastructure Tests
+### A. Infrastructure Tests (Browser)
 
 | # | Test | Method | Expected |
 |---|------|--------|----------|
-| A1 | HTTPS landing page loads | `curl -s https://{domain}/` | HTTP 200, HTML with landing-assets |
-| A2 | HTTP → HTTPS redirect | `curl -s http://{domain}/` | HTTP 301 |
-| A3 | API health check | `GET /api/health` | `{"status":"ok"}` |
-| A4 | SSL certificate valid | `openssl s_client` | Let's Encrypt, not expired |
-| A5 | SSL auto-renewal | Check certbot container running | Certbot running, 12h cycle |
-| A6 | Landing page i18n | Check `/landing-assets/` JS | Contains Chinese translations |
-| A7 | Login page loads | `GET /login` | HTTP 200 |
-| A8 | Features page loads | `GET /features` | HTTP 200 |
-| A9 | Nginx WebSocket headers | Check nginx config | 4x Upgrade headers (HTTP+HTTPS, /api/+/) |
+| A1 | HTTPS landing page loads | Open `https://{domain}/` in Puppeteer, screenshot | Page renders with hero, nav, content visible |
+| A2 | HTTP → HTTPS redirect | Navigate to `http://{domain}/` in Puppeteer | Browser ends up on https:// URL |
+| A3 | API health check | Navigate to `https://{domain}/api/health` in Puppeteer | Page shows `{"status":"ok"}` |
+| A4 | SSL certificate valid | Click lock icon / check via Puppeteer `evaluate` on `location.protocol` | Protocol is `https:` |
+| A5 | SSL auto-renewal | SSH to server, check certbot container | Certbot running, 12h cycle |
+| A6 | Landing page i18n | Open landing page, click EN/中文 toggle in Puppeteer | Text switches between languages |
+| A7 | Login page loads | Navigate to `/login` in Puppeteer, screenshot | Login form visible (email, password fields) |
+| A8 | Features page loads | Navigate to `/features` in Puppeteer, screenshot | Feature content renders |
+| A9 | Nginx WebSocket headers | SSH to server, check nginx config | 4x Upgrade headers (HTTP+HTTPS, /api/+/) |
 
-### B. Auth Tests
-
-| # | Test | Method | Expected |
-|---|------|--------|----------|
-| B1 | Register new user | `POST /api/auth/register` | Returns access_token + refresh_token |
-| B2 | Login | `POST /api/auth/login` | Returns tokens |
-| B3 | Get profile | `GET /api/auth/me` | Returns name, email, language, is_admin |
-| B4 | Update language | `PATCH /api/auth/profile {"language":"zh"}` | language=zh persisted |
-| B5 | Forgot password email | `POST /api/auth/forgot-password {"email":"xu.tomi3@gmail.com"}` → verify via `mcp__claude_ai_Gmail__gmail_search_messages` query `from:noreply@mail.jotoai.com subject:reset` | Email received with reset link pointing to correct domain |
-| B6 | Apple Sign In | `POST /api/auth/apple {identity_token}` | Returns tokens (iOS only) |
-| B7 | Microsoft OAuth | `GET /api/auth/microsoft` | Redirects to Microsoft login |
-
-### C. Document Upload & Processing Tests
+### B. Auth Tests (Browser)
 
 | # | Test | Method | Expected |
 |---|------|--------|----------|
-| C1 | Upload TXT file | `POST /api/notebooks/{id}/sources -F file=@test.txt` | Source created, status→ready |
-| C2 | Upload PDF + MinerU parse | Upload PDF, wait for status=ready | Parsed content with `<!-- page:N -->` markers |
-| C3 | Upload DOCX + parse | Upload DOCX, wait for ready | Content extracted, RAGFlow indexed |
-| C4 | Source content API | `GET /api/notebooks/{id}/sources/{sid}/content` | Returns full parsed markdown |
-| C5 | RAGFlow vectorization | Check source status after upload | status=ready, chunks created in RAGFlow |
-| C6 | Digest auto-generation | Check `_digest.md` file after upload | Digest file created (~2000-3000 chars) |
+| B1 | Register new user | Open `/register` in Puppeteer → fill name/email/password → click Register | Success message or redirect to dashboard |
+| B2 | Login | Open `/login` in Puppeteer → fill email/password → click Login | Redirect to dashboard, user name visible |
+| B3 | Get profile | After login, navigate to `/settings` in Puppeteer | Shows name, email, language fields |
+| B4 | Update language | In settings page, change language dropdown → save | UI switches to selected language |
+| B5 | Forgot password email | Open `/forgot-password` → fill email → click Submit | "Email sent" message, verify email arrives |
+| B6 | Apple Sign In | Open `/login`, verify Apple button exists | Button present (actual OAuth flow requires real device) |
+| B7 | Microsoft OAuth | Open `/login`, click Microsoft button | Redirects to Microsoft login page |
 
-### D. Chat Tests
-
-| # | Test | Method | Expected |
-|---|------|--------|----------|
-| D1 | Chat with RAG + citations | `POST /api/notebooks/{id}/chat` with source_ids | SSE stream with tokens, ends with `[N]` citation |
-| D2 | Chat without sources | Send message without source_ids | Response from LLM (no citations) |
-| D3 | Deep Thinking (ReAct) | `{"message":"...","deep_thinking":true}` | SSE includes `type:thinking` steps |
-| D4 | Web Search mode | `{"message":"...","web_search":true}` | Response includes web results |
-| D5 | Chat history | `GET /api/notebooks/{id}/chat/history` | Returns previous messages |
-| D6 | Chat sessions | `GET /api/notebooks/{id}/sessions` | Returns session list with names |
-| D7 | Session auto-naming | Send first message in new session | Session renamed based on content |
-| D8 | Error handling (LLM down) | Simulate primary failure | Fallback to backup LLM, friendly error message |
-
-### E. Studio Skills Tests
+### C. Document Upload & Processing Tests (Browser)
 
 | # | Test | Method | Expected |
 |---|------|--------|----------|
-| E1 | Summary | `POST /api/notebooks/{id}/studio/summary` | Returns structured summary |
-| E2 | FAQ | `POST .../studio/faq` | Returns Q&A pairs |
-| E3 | Action Items | `POST .../studio/action_items` | Returns tasks/deadlines |
-| E4 | SWOT Analysis | `POST .../studio/swot` | Returns SWOT sections |
-| E5 | Recommendations | `POST .../studio/recommendations` | Returns actionable advice |
-| E6 | Mind Map | `POST .../studio/mindmap` | Returns valid JSON tree |
-| E7 | Custom Skill CRUD | POST/GET/PATCH/DELETE custom-skills | Create, list, update, delete |
-| E8 | Custom Skill execute | `POST .../custom-skills/{id}/execute` | Returns generated content |
-| E9 | Custom Skill full_document flag | Create skill with full_document=true | Flag persisted and used |
+| C1 | Upload TXT file | In notebook page, click upload button → select test.txt via Puppeteer file input | Source appears in sidebar, status changes to "ready" |
+| C2 | Upload PDF + MinerU parse | Same upload flow with PDF file | Source ready, content viewable in viewer |
+| C3 | Upload DOCX + parse | Same upload flow with DOCX | Source ready |
+| C4 | Source content view | Click on uploaded source in sidebar | Content panel shows parsed markdown |
+| C5 | RAGFlow vectorization | Check source status badge in UI | Shows "ready" (green badge) |
+| C6 | Digest auto-generation | After upload completes, check notebook overview | AI-generated digest visible |
 
-### F. Meeting & ASR Tests
+### D. Chat Tests (Browser)
 
 | # | Test | Method | Expected |
 |---|------|--------|----------|
-| F1 | Create meeting | `POST /api/notebooks/{id}/meetings` | Meeting created with status=recording |
-| F2 | WebSocket audio connect | `WS /api/notebooks/{id}/meetings/{mid}/audio` | WebSocket accepted |
-| F3 | ASR transcription | Send PCM audio chunks via WebSocket | Receive utterance JSON with text |
-| F4 | Meeting pause/resume | `POST .../meetings/{mid}/pause` and `/resume` | Status changes |
-| F5 | Meeting end + minutes | `POST .../meetings/{mid}/end` | Transcript saved, source created |
-| F6 | Meeting hotwords | `GET/PUT .../meetings/hotwords` | Words persisted per user |
-| F7 | Active meetings API | `GET /api/meetings/my-active` | Returns active meetings across notebooks |
-| F8 | Auto-pause on WS disconnect | Disconnect WebSocket | ASR paused, 5-min auto-end timer |
-| F9 | Meeting minutes share | `POST .../chat/{msgId}/share-minutes` | Returns share token + URL |
+| D1 | Chat with RAG + citations | In notebook with sources, type question in chat input → press Enter | AI response appears with `[N]` citation markers |
+| D2 | Chat without sources | In empty notebook, type message → send | AI response without citations |
+| D3 | Deep Thinking (ReAct) | Toggle "Deep Thinking" switch → send message | Thinking steps visible before final answer |
+| D4 | Web Search mode | Toggle "Web Search" switch → send message | Response includes web search results |
+| D5 | Chat history | Send multiple messages, refresh page | Previous messages still visible |
+| D6 | Chat sessions | Click session dropdown/list in chat | Shows list of previous sessions |
+| D7 | Session auto-naming | Start new session → send first message | Session name updates based on content |
+| D8 | Error handling (LLM down) | Simulate by sending very long context | Friendly error message (not raw stack trace) |
 
-### G. Notebook & Collaboration Tests
-
-| # | Test | Method | Expected |
-|---|------|--------|----------|
-| G1 | Create notebook | `POST /api/notebooks` | Returns notebook with ID |
-| G2 | Notebook overview | `GET /api/notebooks/{id}/overview` | Returns AI-generated overview |
-| G3 | Notebook persona | `PATCH /api/notebooks/{id} {custom_prompt}` | Persona saved and used in chat |
-| G4 | 7 persona presets | Open Notebook Settings in browser | Balanced, Detailed, Strict, Advisor, Concise, Teacher, Custom |
-| G5 | Create invite link | `POST /api/notebooks/{id}/share` | Returns token with expiry |
-| G6 | Email invite | `POST /api/notebooks/{id}/share/email` | Email sent to recipient |
-| G7 | List members | `GET /api/notebooks/{id}/members` | Returns member list with roles |
-| G8 | Notes CRUD | `POST/GET /api/notebooks/{id}/notes` | Create and list notes |
-| G9 | Dashboard recording indicator | Navigate away from recording notebook | Shows REC/PAUSED on dashboard card |
-| G10 | Auto-pause on leave | Navigate away during recording | Recording pauses, 5-min timeout |
-
-### H. Admin Tests
+### E. Studio Skills Tests (Browser)
 
 | # | Test | Method | Expected |
 |---|------|--------|----------|
-| H1 | Admin dashboard | Open /admin in browser | Shows stats cards (users, notebooks, docs, storage) |
-| H2 | Admin users | `GET /api/admin/users` | Returns paginated user list |
-| H3 | Admin settings | `GET /api/admin/settings` | Returns all system settings |
-| H4 | Admin LLM config | Open /admin LLM Config | Shows Primary + Backup LLM with DB override |
-| H5 | Admin system health | `GET /api/admin/health` | 12/12 services healthy |
-| H6 | Context Window = 200K | Check admin LLM Config | glm-4.7, context_window=200000 |
+| E1 | Summary | In notebook with sources, click Studio → Summary button | Summary card generates and displays |
+| E2 | FAQ | Click Studio → FAQ button | Q&A pairs display |
+| E3 | Action Items | Click Studio → Action Items | Task/deadline list displays |
+| E4 | SWOT Analysis | Click Studio → SWOT | Four quadrant SWOT sections display |
+| E5 | Recommendations | Click Studio → Recommendations | Actionable advice list displays |
+| E6 | Mind Map | Click Studio → Mind Map | Interactive mind map renders |
+| E7 | Custom Skill CRUD | Open Studio → Custom Skills → Create/Edit/Delete | Skills list updates correctly |
+| E8 | Custom Skill execute | Select custom skill → click Generate | Generated content displays |
+| E9 | Custom Skill full_document flag | Create skill with full_document=true → execute | Uses complete document context |
+
+### F. Meeting & ASR Tests (Browser)
+
+| # | Test | Method | Expected |
+|---|------|--------|----------|
+| F1 | Create meeting | In notebook, click Record/Meeting button | Recording indicator appears (REC badge) |
+| F2 | Audio connection | Allow microphone → speak | Audio waveform/level indicator visible |
+| F3 | ASR transcription | Speak into microphone during recording | Transcript text appears in real-time |
+| F4 | Meeting pause/resume | Click pause button → resume button | Status changes between PAUSED/REC |
+| F5 | Meeting end + minutes | Click Stop → confirm end meeting | Meeting minutes generated as a source |
+| F6 | Meeting hotwords | Open meeting settings → add hotwords → save | Hotwords saved and visible on reload |
+| F7 | Active meetings | Start recording in notebook A → navigate to dashboard | Dashboard shows REC indicator on notebook A card |
+| F8 | Auto-pause on leave | Start recording → navigate away from notebook | Recording pauses automatically |
+| F9 | Meeting minutes share | After meeting, click share on minutes message | Share URL generated, copyable |
+
+### G. Notebook & Collaboration Tests (Browser)
+
+| # | Test | Method | Expected |
+|---|------|--------|----------|
+| G1 | Create notebook | Click "New Notebook" on dashboard | New notebook appears, opens |
+| G2 | Notebook overview | Open notebook → check overview panel | AI-generated overview text visible |
+| G3 | Notebook persona | Open notebook settings → set custom prompt → save → chat | AI responds according to persona |
+| G4 | 7 persona presets | Open Notebook Settings → click persona dropdown | Shows: Balanced, Detailed, Strict, Advisor, Concise, Teacher, Custom |
+| G5 | Create invite link | Click Share → Generate Link | Share URL displayed with copy button |
+| G6 | Email invite | Click Share → Enter email → Send | "Invitation sent" message |
+| G7 | List members | Click Share → Members tab | Member list with roles visible |
+| G8 | Notes CRUD | Click Notes tab → Create Note → Edit → Delete | Notes persist and update correctly |
+| G9 | Dashboard recording indicator | Start recording → go to dashboard | REC/PAUSED badge visible on notebook card |
+| G10 | Auto-pause on leave | Start recording → navigate to another notebook | Recording auto-pauses, timer starts |
+
+### H. Admin Tests (Browser)
+
+| # | Test | Method | Expected |
+|---|------|--------|----------|
+| H1 | Admin dashboard | Navigate to `/admin` in Puppeteer, screenshot | Stats cards visible (users, notebooks, docs, storage) |
+| H2 | Admin users | Click Users tab in admin | Paginated user list with search |
+| H3 | Admin settings | Click Settings tab in admin | All system settings visible and editable |
+| H4 | Admin LLM config | Click LLM Config in admin | Shows Primary + Backup LLM with DB override |
+| H5 | Admin system health | Click System Health in admin | 12/12 services green |
+| H6 | Context Window = 200K | Check LLM Config page | Shows glm-4.7, context_window=200000 |
 
 ### I. Health Check Services (12 total)
 
