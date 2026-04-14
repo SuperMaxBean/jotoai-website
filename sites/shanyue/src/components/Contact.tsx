@@ -49,7 +49,22 @@ export default function Contact() {
     email: "",
     role: "",
     message: "",
+    captchaText: "",
   });
+  const [captcha, setCaptcha] = useState<{ captchaId: string; svg: string } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const loadCaptcha = async () => {
+    try {
+      const res = await fetch('/api/captcha');
+      const data = await res.json();
+      setCaptcha(data);
+    } catch {}
+  };
+
+  useState(() => { loadCaptcha(); });
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -59,9 +74,37 @@ export default function Contact() {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Form submission logic
+    if (!captcha) { setErrorMessage(t('验证码加载失败，请刷新页面', 'Captcha failed to load, please refresh')); setSubmitStatus('error'); return; }
+    setLoading(true);
+    setSubmitStatus('idle');
+    try {
+      const res = await fetch('/api/shanyue/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          company: formData.org,
+          email: formData.email,
+          phone: formData.phone,
+          message: formData.role ? `[${formData.role}] ${formData.message}` : formData.message,
+          captchaId: captcha.captchaId,
+          captchaText: formData.captchaText,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || t('提交失败', 'Submission failed'));
+      setSubmitStatus('success');
+      setFormData({ name: '', org: '', phone: '', email: '', role: '', message: '', captchaText: '' });
+      loadCaptcha();
+    } catch (err: any) {
+      setSubmitStatus('error');
+      setErrorMessage(err.message || t('提交失败，请稍后重试', 'Submission failed, please try again'));
+      loadCaptcha();
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -223,14 +266,45 @@ export default function Contact() {
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-300 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 resize-none"
                   />
                 </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    {t('验证码', 'Captcha')} <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="text"
+                      name="captchaText"
+                      value={formData.captchaText}
+                      onChange={handleChange}
+                      required
+                      placeholder={t('请输入验证码', 'Enter captcha')}
+                      className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-300 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
+                    />
+                    {captcha?.svg && (
+                      <img src={captcha.svg} alt="captcha" className="h-10 rounded border border-slate-200 cursor-pointer" onClick={loadCaptcha} />
+                    )}
+                  </div>
+                </div>
               </div>
+
+              {submitStatus === 'success' && (
+                <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
+                  {t('提交成功！我们会尽快与您联系。', 'Submitted successfully! We will contact you shortly.')}
+                </div>
+              )}
+              {submitStatus === 'error' && errorMessage && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                  {errorMessage}
+                </div>
+              )}
 
               <button
                 type="submit"
-                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#7c3aed] px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-purple-200 transition-all hover:bg-purple-700 hover:shadow-xl sm:w-auto"
+                disabled={loading}
+                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#7c3aed] px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-purple-200 transition-all hover:bg-purple-700 hover:shadow-xl sm:w-auto disabled:opacity-50"
               >
                 <Send className="h-4 w-4" />
-                {t('提交咨询', 'Submit Inquiry')}
+                {loading ? t('提交中...', 'Submitting...') : t('提交咨询', 'Submit Inquiry')}
               </button>
             </form>
           </div>
