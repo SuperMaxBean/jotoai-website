@@ -23,7 +23,7 @@ const staggerContainer = {
 };
 
 export default function Home() {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
 
   const painPoints = [
     { icon: Hourglass, title: t('效率低下', 'Low Efficiency'), desc: t('人工阅读耗时长，面对大量合同时响应滞后，严重拖慢业务签署流程。', 'Manual reading is time-consuming. Facing large volumes of contracts leads to delayed responses, seriously slowing down business signing processes.'), color: 'text-blue-500', bg: 'bg-blue-50' },
@@ -113,8 +113,8 @@ export default function Home() {
                   style={{ backgroundImage: "linear-gradient(transparent 80%, rgba(37, 99, 235, 0.2) 0%)" }}
                 >
                   {t('AI 赋能', 'AI-Powered')}
-                </motion.span> {t('新一代', 'Next-Gen')}<br />
-                {t('合同审查平台', 'Contract Review Platform')}
+                </motion.span>{' '}{t('新一代', '')}<br className={lang === 'zh' ? '' : 'hidden'} />
+                {t('合同审查平台', 'Contract Review')}
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0 }}
@@ -122,7 +122,7 @@ export default function Home() {
                 transition={{ delay: 0.4, duration: 0.8 }}
                 className="text-xl text-slate-600 mb-8 font-medium"
               >
-                {t('[ 告别繁琐审查，拥抱智能风控 ]', '[ Say Goodbye to Tedious Reviews, Embrace Smart Risk Control ]')}
+                {t('[ 告别繁琐审查，拥抱智能风控 ]', 'Smart risk control for modern legal teams.')}
               </motion.p>
               <motion.p
                 initial={{ opacity: 0 }}
