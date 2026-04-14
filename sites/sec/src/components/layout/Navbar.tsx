@@ -48,7 +48,7 @@ const Navbar = () => {
             </svg>
           </div>
           <div className="flex flex-col justify-center">
-            <span className="text-white font-bold text-xl tracking-tight leading-none">唯客 AI 护栏</span>
+            <span className="text-white font-bold text-xl tracking-tight leading-none">{t('唯客 AI 护栏', 'JOTO AI Guardrails')}</span>
             <span className="text-[10px] text-gray-400 font-medium tracking-wide mt-0.5">{t('JOTO.AI 旗下产品', 'A JOTO.AI Product')}</span>
           </div>
         </Link>

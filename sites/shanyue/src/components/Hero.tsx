@@ -280,7 +280,7 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
                 <span className="text-slate-600 text-xs font-bold tracking-widest uppercase">{t('JOTO 旗下核心教育产品', 'JOTO Core Education Product')}</span>
             </div>
           <h1 className="text-5xl lg:text-7xl font-extrabold text-[#0A1A2F] tracking-tight leading-[1.05] mb-6 drop-shadow-sm">
-            闪阅 <span className="text-[#7c3aed]">{t('AI 全科阅卷', 'AI All-Subject Grading')}</span>
+            {t('闪阅', 'ShanYue')} <span className="text-[#7c3aed]">{t('AI 全科阅卷', 'AI All-Subject Grading')}</span>
           </h1>
           <p className="text-2xl font-medium text-slate-700 mb-6 font-mono tracking-tight opacity-90">
              {t('[ 面向未来的教学评估与资产沉淀平台 ]', '[ Future-Oriented Teaching Assessment & Asset Platform ]')}
