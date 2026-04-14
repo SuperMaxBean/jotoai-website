@@ -65,10 +65,10 @@ export default function Navbar() {
           >
             {lang === 'zh' ? 'EN' : '中文'}
           </button>
-          <a href="/admin/login.html" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-white hover:text-gray-300 transition-colors">{t('登录', 'Login')}</a>
-          <Link href="/contact" className="bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-black text-sm font-semibold px-5 py-2.5 rounded-full transition-colors">
-            {t('联系我们', 'Contact')}
-          </Link>
+          <a href="https://fasium-ai.jotoai.com/" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-white hover:text-gray-300 transition-colors">{t('登录', 'Login')}</a>
+          <a href="https://fasium-ai.jotoai.com/register" target="_blank" rel="noopener noreferrer" className="bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-black text-sm font-semibold px-5 py-2.5 rounded-full transition-colors">
+            {t('立即注册', 'Sign Up')}
+          </a>
         </div>
       </div>
     </nav>
