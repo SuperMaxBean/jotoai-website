@@ -28,7 +28,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <Link href="/" className="flex items-center space-x-3 group">
               <img src="/logo.svg" alt="唯客智审" className="h-9 w-9 transition-transform group-hover:scale-105" referrerPolicy="no-referrer" />
               <div className="flex flex-col justify-center">
-                <span className="text-base font-bold tracking-tight leading-none text-white">唯客智审</span>
+                <span className="text-base font-bold tracking-tight leading-none text-white">{t('唯客智审', 'Avaca AI Audit')}</span>
                 <span className="text-[9px] text-slate-400 font-bold tracking-wider mt-1 leading-none uppercase">{t('JOTO 旗下产品', 'A JOTO Product')}</span>
               </div>
             </Link>
@@ -82,7 +82,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center space-x-4 mb-8">
               <img src="/logo.svg" alt="唯客智审" className="h-12 w-12" referrerPolicy="no-referrer" />
               <div className="flex flex-col justify-center">
-                <span className="text-2xl font-bold text-white leading-none">唯客智审</span>
+                <span className="text-2xl font-bold text-white leading-none">{t('唯客智审', 'Avaca AI Audit')}</span>
                 <span className="text-[11px] tracking-[0.2em] text-slate-500 font-bold mt-2 uppercase">{t('JOTO 旗下产品', 'A JOTO Product')}</span>
               </div>
             </div>
@@ -98,7 +98,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="md:col-span-3">
             <h3 className="text-white font-bold text-lg mb-8">{t('产品', 'Products')}</h3>
             <ul className="space-y-4 text-sm">
-              <li><Link href="/" className="hover:text-white transition-colors">唯客智审</Link></li>
+              <li><Link href="/" className="hover:text-white transition-colors">{t('唯客智审', 'Avaca AI Audit')}</Link></li>
               <li><a href="https://www.jotoai.com/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Dify</a></li>
               <li><a href="https://sec.jotoai.com/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">{t('AI 安全', 'AI Security')}</a></li>
               <li><a href="https://kb.jotoai.com/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">{t('AI 自研产品库', 'AI Product Hub')}</a></li>

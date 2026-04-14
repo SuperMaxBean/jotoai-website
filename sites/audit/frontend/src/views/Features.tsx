@@ -78,7 +78,7 @@ export default function Features() {
           >
             {t(
               '唯客智审不仅仅是一个工具，它是您企业法务数字化的智能引擎。通过深度学习与规则引擎的双重驱动，我们重新定义合同审查标准。',
-              'WeiKe Audit is more than just a tool -- it is the intelligent engine for your enterprise legal digitization. Through the dual drive of deep learning and rule engines, we redefine contract review standards.'
+              'Avaca AI Audit is more than just a tool -- it is the intelligent engine for your enterprise legal digitization. Through the dual drive of deep learning and rule engines, we redefine contract review standards.'
             )}
           </motion.p>
         </motion.div>
@@ -104,7 +104,7 @@ export default function Features() {
               <p className="text-slate-600 mb-8 leading-relaxed text-lg">
                 {t(
                   '通用模型无法解决特定行业的合规痛点。唯客智审允许您将企业内部的合规政策、业务规范转化为结构化的数字规则。无论是付款账期、违约金比例，还是特定条款的禁用词，都能灵活配置，实现毫秒级的精准匹配与审查。',
-                  'Generic models cannot address industry-specific compliance pain points. WeiKe Audit allows you to transform internal compliance policies and business standards into structured digital rules. Whether it is payment terms, penalty ratios, or prohibited words in specific clauses, everything can be flexibly configured for millisecond-level precise matching and review.'
+                  'Generic models cannot address industry-specific compliance pain points. Avaca AI Audit allows you to transform internal compliance policies and business standards into structured digital rules. Whether it is payment terms, penalty ratios, or prohibited words in specific clauses, everything can be flexibly configured for millisecond-level precise matching and review.'
                 )}
               </p>
               <ul className="space-y-4 mb-8">
@@ -268,7 +268,7 @@ export default function Features() {
               <p className="text-slate-600 mb-8 leading-relaxed text-lg">
                 {t(
                   '不再需要法务专家耗费数周时间手动梳理规则。唯客智审支持"模板驱动建模"，您只需导入企业的标准合同模板，AI 即可自动识别关键变量、合规基准与风险敞口，并自动生成配套的审查规则库。',
-                  'No more spending weeks having legal experts manually compile rules. WeiKe Audit supports "template-driven modeling" -- simply import your standard contract templates, and AI will automatically identify key variables, compliance benchmarks, and risk exposures, generating a matching review rule library.'
+                  'No more spending weeks having legal experts manually compile rules. Avaca AI Audit supports "template-driven modeling" -- simply import your standard contract templates, and AI will automatically identify key variables, compliance benchmarks, and risk exposures, generating a matching review rule library.'
                 )}
               </p>
               <ul className="space-y-4">
@@ -310,7 +310,7 @@ export default function Features() {
               <p className="text-slate-600 mb-10 leading-relaxed text-lg">
                 {t(
                   '无需逐字阅读，系统自动扫描并识别合同中的潜在陷阱。我们按风险严重程度建立了三色分级体系，让核心问题无处遁形。更重要的是，唯客智审不仅仅是"发现问题"，它还能结合法律法规库，为您提供有理有据的"修改建议"。',
-                  'No need to read word by word -- the system automatically scans and identifies potential pitfalls in contracts. Our three-color risk classification system ensures no critical issues are missed. More importantly, WeiKe Audit does not just "find problems" -- it combines legal databases to provide well-founded "revision suggestions".'
+                  'No need to read word by word -- the system automatically scans and identifies potential pitfalls in contracts. Our three-color risk classification system ensures no critical issues are missed. More importantly, Avaca AI Audit does not just "find problems" -- it combines legal databases to provide well-founded "revision suggestions".'
                 )}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -403,7 +403,7 @@ export default function Features() {
               <p className="text-slate-600 mb-10 leading-relaxed text-lg">
                 {t(
                   '告别在Word文档和审查报告之间反复切换的痛苦。唯客智审采用符合法务工作习惯的左文右析双栏布局。左侧查看原文档，右侧实时展示AI审查结果，两者滚动联动。点击风险点，即刻定位原文；一键接受建议，自动修订文档。',
-                  'Say goodbye to the pain of switching between Word documents and review reports. WeiKe Audit features a dual-pane layout designed for legal workflows -- original document on the left, real-time AI review results on the right, with synchronized scrolling. Click a risk point to instantly locate the source; accept suggestions with one click to auto-revise the document.'
+                  'Say goodbye to the pain of switching between Word documents and review reports. Avaca AI Audit features a dual-pane layout designed for legal workflows -- original document on the left, real-time AI review results on the right, with synchronized scrolling. Click a risk point to instantly locate the source; accept suggestions with one click to auto-revise the document.'
                 )}
               </p>
               <div className="space-y-8">
@@ -556,7 +556,7 @@ export default function Features() {
             {t('准备好升级您的法务工作流了吗？', 'Ready to Upgrade Your Legal Workflow?')}
           </h2>
           <p className="text-blue-200 text-lg mb-10">
-            {t('立即预约演示，体验唯客智审如何帮您构建安全的商业护城河。', 'Book a demo now to experience how WeiKe Audit helps you build a secure business moat.')}
+            {t('立即预约演示，体验唯客智审如何帮您构建安全的商业护城河。', 'Book a demo now to experience how Avaca AI Audit helps you build a secure business moat.')}
           </p>
           <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
             <motion.div

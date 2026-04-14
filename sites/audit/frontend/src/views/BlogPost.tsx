@@ -173,7 +173,7 @@ export default function BlogPost() {
               <div className="bg-blue-600 rounded-2xl p-5 text-white text-center">
                 <BookOpen className="h-8 w-8 mx-auto mb-3 opacity-80" />
                 <h4 className="font-bold mb-2 text-sm">{t('预约产品演示', 'Book Product Demo')}</h4>
-                <p className="text-blue-100 text-xs mb-4 leading-relaxed">{t('了解唯客智审如何助力您的企业合规升级', 'Learn how WeiKe Audit can help upgrade your enterprise compliance')}</p>
+                <p className="text-blue-100 text-xs mb-4 leading-relaxed">{t('了解唯客智审如何助力您的企业合规升级', 'Learn how Avaca AI Audit can help upgrade your enterprise compliance')}</p>
                 <Link href="/contact"
                   className="block bg-white text-blue-600 text-sm font-bold py-2 rounded-xl hover:bg-blue-50 transition-colors">
                   {t('立即预约', 'Book Now')}
