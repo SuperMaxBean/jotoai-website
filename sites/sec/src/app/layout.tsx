@@ -5,6 +5,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import TrafficSourceCapture from "@/components/TrafficSourceCapture";
 import { buildPageMetadata, DEFAULT_DESCRIPTION, SITE_NAME } from "@/lib/metadata";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
 const notoSansSC = Noto_Sans_SC({
   subsets: ["latin"],
@@ -34,12 +35,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN" className={`${notoSansSC.variable} ${outfit.variable}`}>
+    <html lang="zh-CN" className={`${notoSansSC.variable} ${outfit.variable}`} suppressHydrationWarning>
       <body className="font-sans antialiased bg-brand-dark text-white selection:bg-brand-blue selection:text-white min-h-screen flex flex-col">
-        <TrafficSourceCapture />
-        <Navbar />
-        <main className="flex-grow">{children}</main>
-        <Footer />
+        <LanguageProvider>
+          <TrafficSourceCapture />
+          <Navbar />
+          <main className="flex-grow">{children}</main>
+          <Footer />
+        </LanguageProvider>
       </body>
     </html>
   );

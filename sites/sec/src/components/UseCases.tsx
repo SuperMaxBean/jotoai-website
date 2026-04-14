@@ -1,75 +1,113 @@
+'use client';
+
 import React from 'react';
 import { Building2, Landmark, Stethoscope, GraduationCap, Car, Check, Plus, ArrowRight } from 'lucide-react';
-
-const cases = [
-  {
-    title: "金融行业",
-    icon: <Landmark className="text-white" size={24} />,
-    desc: "应用于智能客服、AI 投顾、信贷审批助手。",
-    points: ["防止客户身份信息泄露", "拦截诱导性金融建议"]
-  },
-  {
-    title: "政务与公共服务",
-    icon: <Building2 className="text-white" size={24} />,
-    desc: "应用于政务问答机器人、智能审批、公共服务 AI 助手。",
-    points: ["敏感内容零容忍过滤", "公民个人信息严格保护"]
-  },
-  {
-    title: "医疗健康",
-    icon: <Stethoscope className="text-white" size={24} />,
-    desc: "应用于智能问诊、医疗知识问答、病历分析助手。",
-    points: ["患者隐私 (PHI) 遮掩", "不当医疗建议阻断"]
-  },
-  {
-    title: "教育行业",
-    icon: <GraduationCap className="text-white" size={24} />,
-    desc: "应用于 AI 助教、智能批改、知识问答平台。",
-    points: ["未成年人内容过滤", "学生信息隐私防护"]
-  },
-  {
-    title: "汽车与制造",
-    icon: <Car className="text-white" size={24} />,
-    desc: "应用于智能座舱、售后知识库、供应链分析。",
-    points: ["企业机密信息防泄露", "产品参数合规输出"]
-  }
-];
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const UseCases: React.FC = () => {
+  const { t } = useLanguage();
+
+  const cases = [
+    {
+      title: t("金融行业", "Finance"),
+      icon: <Landmark className="text-white" size={24} />,
+      desc: t(
+        "应用于智能客服、AI 投顾、信贷审批助手。",
+        "Applied to intelligent customer service, AI investment advisors, and credit approval assistants."
+      ),
+      points: [
+        t("防止客户身份信息泄露", "Prevent customer identity data leakage"),
+        t("拦截诱导性金融建议", "Block misleading financial advice")
+      ]
+    },
+    {
+      title: t("政务与公共服务", "Government & Public Services"),
+      icon: <Building2 className="text-white" size={24} />,
+      desc: t(
+        "应用于政务问答机器人、智能审批、公共服务 AI 助手。",
+        "Applied to government Q&A bots, smart approvals, and public service AI assistants."
+      ),
+      points: [
+        t("敏感内容零容忍过滤", "Zero-tolerance filtering of sensitive content"),
+        t("公民个人信息严格保护", "Strict protection of citizen personal data")
+      ]
+    },
+    {
+      title: t("医疗健康", "Healthcare"),
+      icon: <Stethoscope className="text-white" size={24} />,
+      desc: t(
+        "应用于智能问诊、医疗知识问答、病历分析助手。",
+        "Applied to intelligent diagnosis, medical Q&A, and medical record analysis."
+      ),
+      points: [
+        t("患者隐私 (PHI) 遮掩", "Patient privacy (PHI) masking"),
+        t("不当医疗建议阻断", "Blocking inappropriate medical advice")
+      ]
+    },
+    {
+      title: t("教育行业", "Education"),
+      icon: <GraduationCap className="text-white" size={24} />,
+      desc: t(
+        "应用于 AI 助教、智能批改、知识问答平台。",
+        "Applied to AI teaching assistants, smart grading, and knowledge Q&A platforms."
+      ),
+      points: [
+        t("未成年人内容过滤", "Minor-inappropriate content filtering"),
+        t("学生信息隐私防护", "Student data privacy protection")
+      ]
+    },
+    {
+      title: t("汽车与制造", "Automotive & Manufacturing"),
+      icon: <Car className="text-white" size={24} />,
+      desc: t(
+        "应用于智能座舱、售后知识库、供应链分析。",
+        "Applied to smart cockpits, after-sales knowledge bases, and supply chain analysis."
+      ),
+      points: [
+        t("企业机密信息防泄露", "Prevent confidential information leakage"),
+        t("产品参数合规输出", "Compliant product parameter output")
+      ]
+    }
+  ];
+
   return (
     <section id="cases" className="py-24 bg-[#0A1628]">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            守护每一个行业的 AI 应用
+            {t('守护每一个行业的 AI 应用', 'Safeguarding AI Applications Across Every Industry')}
           </h2>
           <p className="text-gray-400">
-            无论你在哪个行业使用大模型，唯客 AI 护栏都能提供针对性的安全防护，确保合规与信任。
+            {t(
+              '无论你在哪个行业使用大模型，唯客 AI 护栏都能提供针对性的安全防护，确保合规与信任。',
+              'No matter which industry you deploy LLMs in, JOTO AI Guardrails provides targeted security protection to ensure compliance and trust.'
+            )}
           </p>
         </div>
-        
+
         {/* 3-Column Grid Layout with equal row heights */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" style={{ gridAutoRows: '1fr' }}>
           {cases.map((c, i) => (
-            <div 
-              key={i} 
+            <div
+              key={i}
               className="bg-[#111827] border border-white/10 p-8 rounded-xl flex flex-col items-start hover:border-brand-blue/30 transition-colors h-full"
             >
               {/* Icon Box */}
               <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center mb-6">
                 {c.icon}
               </div>
-              
+
               <h3 className="text-xl font-bold text-white mb-3">{c.title}</h3>
               <p className="text-gray-400 text-sm mb-6 leading-relaxed">
                 {c.desc}
               </p>
-              
+
               {/* Divider */}
               <div className="w-full h-px bg-white/10 mb-6 mt-auto"></div>
 
               {/* Protection Focus List */}
               <div className="w-full">
-                <p className="text-gray-500 text-xs mb-4">防护重点</p>
+                <p className="text-gray-500 text-xs mb-4">{t('防护重点', 'Protection Focus')}</p>
                 <div className="space-y-3">
                     {c.points.map((p, idx) => (
                         <div key={idx} className="flex items-start gap-3">
@@ -86,19 +124,22 @@ const UseCases: React.FC = () => {
           <div className="bg-brand-blue rounded-xl p-8 flex flex-col items-center justify-center text-center relative overflow-hidden h-full">
              {/* Background decoration */}
              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl transform translate-x-10 -translate-y-10"></div>
-             
+
              <div className="relative z-10 flex flex-col items-center h-full justify-center">
                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-6 backdrop-blur-sm">
                     <Plus className="text-white" size={32} />
                  </div>
-                 
-                 <h3 className="text-2xl font-bold text-white mb-4">更多行业方案？</h3>
+
+                 <h3 className="text-2xl font-bold text-white mb-4">{t('更多行业方案？', 'More Industry Solutions?')}</h3>
                  <p className="text-blue-100 text-sm mb-8 leading-relaxed max-w-[200px]">
-                    我们的安全策略支持高度定制，满足各行业的特定安全需求。
+                    {t(
+                      '我们的安全策略支持高度定制，满足各行业的特定安全需求。',
+                      'Our security policies are highly customizable to meet the specific security needs of any industry.'
+                    )}
                  </p>
 
                  <button className="bg-white text-brand-blue px-6 py-3 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-gray-50 transition-colors shadow-lg">
-                    定制您的方案 <ArrowRight size={16}/>
+                    {t('定制您的方案', 'Customize Your Plan')} <ArrowRight size={16}/>
                  </button>
              </div>
           </div>

@@ -1,22 +1,78 @@
 "use client";
 
-import { ARCHITECTURE } from "@/constants";
-import { Server, Layers, ArrowRight } from "lucide-react";
+import { Server, Layers, ArrowRight, ShieldCheck, Cpu, Database, BrainCircuit } from "lucide-react";
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function Architecture() {
+  const { t } = useLanguage();
+
+  const ARCHITECTURE = [
+    {
+      icon: ShieldCheck,
+      title: t('物理级安全', 'Physical-Level Security'),
+      desc: t('支持完全本地离线部署，确保数字资产绝对不外泄。', 'Supports fully local offline deployment, ensuring digital assets never leak.'),
+      iconColor: 'text-purple-600',
+      iconBg: 'bg-purple-50'
+    },
+    {
+      icon: Cpu,
+      title: t('高效推理引擎', 'High-Efficiency Inference Engine'),
+      desc: t('基于 ONNX Runtime 的本地模型推理，低延迟，高吞吐。', 'Local model inference based on ONNX Runtime, low latency, high throughput.'),
+      iconColor: 'text-blue-600',
+      iconBg: 'bg-blue-50'
+    },
+    {
+      icon: Database,
+      title: t('数据主权', 'Data Sovereignty'),
+      desc: t('SeaORM 驱动的多数据库架构 (MySQL/SQLite)，存储自主可控。', 'SeaORM-driven multi-database architecture (MySQL/SQLite), self-controlled storage.'),
+      iconColor: 'text-indigo-600',
+      iconBg: 'bg-indigo-50'
+    },
+    {
+      icon: BrainCircuit,
+      title: t('多模式 AI', 'Multi-Mode AI'),
+      desc: t('支持标准答案模式、半监督模式、全自动模式，适应不同考试场景。', 'Supports standard answer mode, semi-supervised mode, and fully automatic mode for different exam scenarios.'),
+      iconColor: 'text-fuchsia-600',
+      iconBg: 'bg-fuchsia-50'
+    }
+  ];
+
+  const archLayers = [
+    {
+      layer: t("接入层", "Access Layer"),
+      items: [t("Web 端", "Web"), t("扫描仪", "Scanner"), t("移动端", "Mobile"), "API"],
+      color: "bg-purple-50 border-purple-200 text-purple-700",
+    },
+    {
+      layer: t("服务层", "Service Layer"),
+      items: [t("OCR 引擎", "OCR Engine"), t("评分引擎", "Scoring Engine"), t("分析引擎", "Analytics Engine"), t("模板引擎", "Template Engine")],
+      color: "bg-blue-50 border-blue-200 text-blue-700",
+    },
+    {
+      layer: t("AI 层", "AI Layer"),
+      items: ["ONNX Runtime", t("语义模型", "Semantic Model"), t("NLP 管线", "NLP Pipeline"), t("视觉模型", "Vision Model")],
+      color: "bg-indigo-50 border-indigo-200 text-indigo-700",
+    },
+    {
+      layer: t("数据层", "Data Layer"),
+      items: ["MySQL", "SQLite", t("文件存储", "File Storage"), t("缓存", "Cache")],
+      color: "bg-fuchsia-50 border-fuchsia-200 text-fuchsia-700",
+    },
+  ];
+
   return (
     <section className="py-24 bg-gradient-to-b from-slate-50 to-white">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 rounded-full bg-purple-50 px-4 py-1.5 text-sm font-medium text-purple-700 mb-4">
             <Server className="h-4 w-4" />
-            技术架构
+            {t('技术架构', 'Architecture')}
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-[#0A1A2F] sm:text-4xl">
-            企业级技术底座
+            {t('企业级技术底座', 'Enterprise-Grade Technical Foundation')}
           </h2>
           <p className="mt-4 text-lg text-slate-500 max-w-2xl mx-auto">
-            安全、高效、自主可控的本地化 AI 推理引擎
+            {t('安全、高效、自主可控的本地化 AI 推理引擎', 'Secure, efficient, and self-controlled local AI inference engine')}
           </p>
         </div>
 
@@ -55,32 +111,11 @@ export default function Architecture() {
           <div className="flex items-center gap-3 mb-6">
             <Layers className="h-5 w-5 text-purple-600" />
             <h3 className="text-lg font-semibold text-[#0A1A2F]">
-              系统架构概览
+              {t('系统架构概览', 'System Architecture Overview')}
             </h3>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-            {[
-              {
-                layer: "接入层",
-                items: ["Web 端", "扫描仪", "移动端", "API"],
-                color: "bg-purple-50 border-purple-200 text-purple-700",
-              },
-              {
-                layer: "服务层",
-                items: ["OCR 引擎", "评分引擎", "分析引擎", "模板引擎"],
-                color: "bg-blue-50 border-blue-200 text-blue-700",
-              },
-              {
-                layer: "AI 层",
-                items: ["ONNX Runtime", "语义模型", "NLP 管线", "视觉模型"],
-                color: "bg-indigo-50 border-indigo-200 text-indigo-700",
-              },
-              {
-                layer: "数据层",
-                items: ["MySQL", "SQLite", "文件存储", "缓存"],
-                color: "bg-fuchsia-50 border-fuchsia-200 text-fuchsia-700",
-              },
-            ].map((tier) => (
+            {archLayers.map((tier) => (
               <div
                 key={tier.layer}
                 className={`rounded-xl border p-5 ${tier.color}`}

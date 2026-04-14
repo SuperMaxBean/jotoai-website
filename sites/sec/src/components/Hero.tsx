@@ -1,7 +1,12 @@
+'use client';
+
 import React from 'react';
 import { ArrowRight, Zap, Unlock, EyeOff, AlertTriangle, Link2 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Hero = () => {
+  const { t } = useLanguage();
+
   return (
     <section id="hero" className="relative min-h-screen flex items-center pt-20 overflow-hidden bg-brand-dark">
       {/* Background Effects */}
@@ -15,27 +20,33 @@ const Hero = () => {
         <div className="space-y-8">
           <div className="inline-flex items-center space-x-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 backdrop-blur-sm">
             <span className="w-2 h-2 rounded-full bg-brand-green animate-pulse"></span>
-            <span className="text-sm text-gray-300">企业级 LLM 安全防护系统</span>
+            <span className="text-sm text-gray-300">{t('企业级 LLM 安全防护系统', 'Enterprise LLM Security Protection System')}</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-white">
-            为每一次 AI 对话，<br />
+            {t('为每一次 AI 对话，', 'For every AI conversation,')}<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-blue to-brand-green">
-              筑起安全防线
+              {t('筑起安全防线', 'build a secure defense')}
             </span>
           </h1>
 
           <p className="text-xl text-gray-400 max-w-xl leading-relaxed">
-            唯客 AI 护栏 —— 企业级大模型应用安全防护系统。<br/>
-            实时检测输入输出 · 本地私有化部署 · 与 Dify 无缝集成
+            {t(
+              '唯客 AI 护栏 —— 企业级大模型应用安全防护系统。',
+              'JOTO AI Guardrails — Enterprise-grade LLM application security system.'
+            )}<br/>
+            {t(
+              '实时检测输入输出 · 本地私有化部署 · 与 Dify 无缝集成',
+              'Real-time I/O detection · Private deployment · Seamless Dify integration'
+            )}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4">
-            <a 
+            <a
               href="/contact"
               className="px-8 py-4 bg-brand-blue hover:bg-blue-600 text-white rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors"
             >
-              联系我们 <ArrowRight size={20} />
+              {t('联系我们', 'Contact Us')} <ArrowRight size={20} />
             </a>
           </div>
 
@@ -43,37 +54,37 @@ const Hero = () => {
             <div className="flex items-center gap-4 sm:gap-2 group">
               <div className="w-10 h-10 sm:w-5 sm:h-5 bg-brand-green/10 sm:bg-transparent rounded-lg flex items-center justify-center shrink-0 group-hover:bg-brand-green/20 transition-colors">
                 <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 sm:w-full sm:h-full text-brand-green">
-                    <path 
-                        d="M20 5L8 10V19C8 26.5 13 33.5 20 36C27 33.5 32 26.5 32 19V10L20 5Z" 
-                        stroke="currentColor" 
-                        strokeWidth="3" 
-                        fill="currentColor" 
+                    <path
+                        d="M20 5L8 10V19C8 26.5 13 33.5 20 36C27 33.5 32 26.5 32 19V10L20 5Z"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        fill="currentColor"
                         fillOpacity="0.2"
-                        strokeLinecap="round" 
+                        strokeLinecap="round"
                         strokeLinejoin="round"
                     />
-                    <path 
-                        d="M14 20L18 24L26 16" 
-                        stroke="currentColor" 
-                        strokeWidth="4" 
-                        strokeLinecap="round" 
+                    <path
+                        d="M14 20L18 24L26 16"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        strokeLinecap="round"
                         strokeLinejoin="round"
                     />
                 </svg>
               </div>
-              <span className="font-medium sm:font-normal">已服务 200+ 企业</span>
+              <span className="font-medium sm:font-normal">{t('已服务 200+ 企业', 'Serving 200+ enterprises')}</span>
             </div>
             <div className="flex items-center gap-4 sm:gap-2 group">
               <div className="w-10 h-10 sm:w-5 sm:h-5 bg-brand-green/10 sm:bg-transparent rounded-lg flex items-center justify-center shrink-0 group-hover:bg-brand-green/20 transition-colors">
                 <Zap size={20} className="text-brand-green sm:w-full sm:h-full" />
               </div>
-              <span className="font-medium sm:font-normal">日均拦截 50万+ 风险请求</span>
+              <span className="font-medium sm:font-normal">{t('日均拦截 50万+ 风险请求', '500K+ risky requests blocked daily')}</span>
             </div>
             <div className="flex items-center gap-4 sm:gap-2 group">
               <div className="w-10 h-10 sm:w-5 sm:h-5 bg-brand-green/10 sm:bg-transparent rounded-lg flex items-center justify-center shrink-0 group-hover:bg-brand-green/20 transition-colors">
                 <div className="w-5 h-5 sm:w-4 sm:h-4 rounded bg-brand-green/20 flex items-center justify-center text-xs sm:text-[10px] text-brand-green font-bold">D</div>
               </div>
-              <span className="font-medium sm:font-normal">Dify 官方服务商出品</span>
+              <span className="font-medium sm:font-normal">{t('Dify 官方服务商出品', 'By Official Dify Service Provider')}</span>
             </div>
           </div>
         </div>
@@ -82,17 +93,17 @@ const Hero = () => {
         <div className="relative h-[600px] w-full hidden lg:flex items-center justify-center perspective-1000">
              {/* Central Shield System */}
              <div className="relative w-full h-full flex items-center justify-center">
-                
+
                 {/* Central Glowing Shield Group */}
                 <div className="relative z-20 flex items-center justify-center">
                     {/* Deep Glow */}
                     <div className="absolute w-[300px] h-[300px] bg-brand-blue/20 rounded-full blur-[80px] animate-pulse-slow"></div>
-                    
+
                     {/* Shield Icon - Floating Free */}
                     <div className="relative z-10 transform hover:scale-105 transition-transform duration-500">
                         {/* Shadow layer for depth */}
                         <div className="absolute inset-0 bg-brand-blue/30 blur-3xl rounded-full transform scale-75"></div>
-                        
+
                         <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[200px] h-[200px] relative z-10">
                             <defs>
                                 <linearGradient id="hero_logo_gradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -104,26 +115,26 @@ const Hero = () => {
                                     <feComposite in="SourceGraphic" in2="blur" operator="over" />
                                 </filter>
                             </defs>
-                            <path 
-                                d="M20 5L8 10V19C8 26.5 13 33.5 20 36C27 33.5 32 26.5 32 19V10L20 5Z" 
-                                fill="url(#hero_logo_gradient)" 
+                            <path
+                                d="M20 5L8 10V19C8 26.5 13 33.5 20 36C27 33.5 32 26.5 32 19V10L20 5Z"
+                                fill="url(#hero_logo_gradient)"
                                 fillOpacity="0.4"
                                 filter="url(#glow_filter)"
                             />
-                            <path 
-                                d="M20 5L8 10V19C8 26.5 13 33.5 20 36C27 33.5 32 26.5 32 19V10L20 5Z" 
-                                stroke="url(#hero_logo_gradient)" 
-                                strokeWidth="2" 
-                                fill="url(#hero_logo_gradient)" 
+                            <path
+                                d="M20 5L8 10V19C8 26.5 13 33.5 20 36C27 33.5 32 26.5 32 19V10L20 5Z"
+                                stroke="url(#hero_logo_gradient)"
+                                strokeWidth="2"
+                                fill="url(#hero_logo_gradient)"
                                 fillOpacity="0.1"
-                                strokeLinecap="round" 
+                                strokeLinecap="round"
                                 strokeLinejoin="round"
                             />
-                            <path 
-                                d="M14 20L18 24L26 16" 
-                                stroke="url(#hero_logo_gradient)" 
-                                strokeWidth="3" 
-                                strokeLinecap="round" 
+                            <path
+                                d="M14 20L18 24L26 16"
+                                stroke="url(#hero_logo_gradient)"
+                                strokeWidth="3"
+                                strokeLinecap="round"
                                 strokeLinejoin="round"
                                 filter="url(#glow_filter)"
                             />
@@ -137,8 +148,8 @@ const Hero = () => {
                         <Unlock size={24} className="text-red-400" />
                     </div>
                     <div>
-                        <div className="text-white font-bold text-sm">越狱攻击</div>
-                        <div className="text-xs text-red-300">实时拦截</div>
+                        <div className="text-white font-bold text-sm">{t('越狱攻击', 'Jailbreak')}</div>
+                        <div className="text-xs text-red-300">{t('实时拦截', 'Blocked in real-time')}</div>
                     </div>
                 </div>
 
@@ -147,8 +158,8 @@ const Hero = () => {
                         <EyeOff size={24} className="text-brand-green" />
                     </div>
                     <div>
-                        <div className="text-white font-bold text-sm">隐私泄露</div>
-                        <div className="text-xs text-brand-green">自动遮掩</div>
+                        <div className="text-white font-bold text-sm">{t('隐私泄露', 'Data Leak')}</div>
+                        <div className="text-xs text-brand-green">{t('自动遮掩', 'Auto-masked')}</div>
                     </div>
                 </div>
 
@@ -157,8 +168,8 @@ const Hero = () => {
                         <AlertTriangle size={24} className="text-yellow-400" />
                     </div>
                     <div>
-                        <div className="text-white font-bold text-sm">违规内容</div>
-                        <div className="text-xs text-yellow-300">精准过滤</div>
+                        <div className="text-white font-bold text-sm">{t('违规内容', 'Violations')}</div>
+                        <div className="text-xs text-yellow-300">{t('精准过滤', 'Precisely filtered')}</div>
                     </div>
                 </div>
 
@@ -167,8 +178,8 @@ const Hero = () => {
                         <Link2 size={24} className="text-purple-400" />
                     </div>
                     <div>
-                        <div className="text-white font-bold text-sm">恶意链接</div>
-                        <div className="text-xs text-purple-300">防钓鱼注入</div>
+                        <div className="text-white font-bold text-sm">{t('恶意链接', 'Malicious URLs')}</div>
+                        <div className="text-xs text-purple-300">{t('防钓鱼注入', 'Anti-phishing')}</div>
                     </div>
                 </div>
 

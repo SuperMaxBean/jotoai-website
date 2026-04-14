@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { apiClient } from '../utils/api';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -11,6 +12,8 @@ const fadeInUp = {
 };
 
 export default function Contact() {
+  const { t } = useLanguage();
+
   const [formData, setFormData] = useState({
     name: '',
     company: '',
@@ -25,13 +28,12 @@ export default function Contact() {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
 
-  // 加载验证码
   const loadCaptcha = async () => {
     try {
       const captchaData = await apiClient.getCaptcha();
       setCaptcha(captchaData);
     } catch (error) {
-      console.error('加载验证码失败:', error);
+      console.error('Failed to load captcha:', error);
     }
   };
 
@@ -39,7 +41,6 @@ export default function Contact() {
     loadCaptcha();
   }, []);
 
-  // 处理表单输入
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
@@ -47,19 +48,17 @@ export default function Contact() {
     });
   };
 
-  // 提交表单
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 验证必填字段
     if (!formData.name || !formData.email || !formData.phone || !formData.captchaText) {
-      setErrorMessage('请填写所有必填字段');
+      setErrorMessage(t('请填写所有必填字段', 'Please fill in all required fields'));
       setSubmitStatus('error');
       return;
     }
 
     if (!captcha) {
-      setErrorMessage('验证码加载失败，请刷新页面');
+      setErrorMessage(t('验证码加载失败，请刷新页面', 'CAPTCHA failed to load, please refresh the page'));
       setSubmitStatus('error');
       return;
     }
@@ -80,7 +79,6 @@ export default function Contact() {
       });
 
       setSubmitStatus('success');
-      // 重置表单
       setFormData({
         name: '',
         company: '',
@@ -89,12 +87,10 @@ export default function Contact() {
         message: '',
         captchaText: ''
       });
-      // 重新加载验证码
       loadCaptcha();
     } catch (error: any) {
       setSubmitStatus('error');
-      setErrorMessage(error.message || '提交失败，请稍后重试');
-      // 重新加载验证码
+      setErrorMessage(error.message || t('提交失败，请稍后重试', 'Submission failed, please try again later'));
       loadCaptcha();
     } finally {
       setLoading(false);
@@ -106,7 +102,7 @@ export default function Contact() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
           {/* Left Side: Text and Contact Info */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
@@ -114,35 +110,37 @@ export default function Contact() {
           >
             <div>
               <h1 className="text-5xl font-black text-slate-900 leading-tight mb-8">
-                准备好利用 AI <br />
-                <span className="text-blue-600 font-black">开启智能合同审查新时代</span>了吗？
+                {t('准备好利用 AI', 'Ready to Leverage AI')}<br />
+                <span className="text-blue-600 font-black">{t('开启智能合同审查新时代', 'to Start a New Era of Smart Contract Review')}</span>{t('了吗？', '?')}
               </h1>
               <p className="text-lg text-slate-600 leading-relaxed max-w-xl">
-                唯客智审专注于法律合规场景 AI 审查技术，为企业与法律机构定制 AI 合同审查解决方案。无论是日常合同批改、大型项目尽调，还是合规风险分析，我们都能帮助您突破效率瓶颈，沉淀数字资产，探索 AI 法务的无限可能。
+                {t(
+                  '唯客智审专注于法律合规场景 AI 审查技术，为企业与法律机构定制 AI 合同审查解决方案。无论是日常合同批改、大型项目尽调，还是合规风险分析，我们都能帮助您突破效率瓶颈，沉淀数字资产，探索 AI 法务的无限可能。',
+                  '唯客智审 specializes in AI review technology for legal compliance scenarios, providing customized AI contract review solutions for enterprises and legal institutions. Whether it is routine contract review, large-scale project due diligence, or compliance risk analysis, we help you break through efficiency bottlenecks, accumulate digital assets, and explore the limitless possibilities of AI-powered legal work.'
+                )}
               </p>
             </div>
 
             <div className="flex flex-wrap items-start gap-12">
               <div className="text-center">
                 <div className="bg-white p-2 rounded-xl shadow-md border border-slate-100 mb-3">
-                  {/* Placeholder for the uploaded QR code */}
-                  <img 
+                  <img
                     src="/wechat-qr.png"
-                    alt="微信咨询"
+                    alt={t('微信咨询', 'WeChat')}
                     className="w-32 h-32"
                     referrerPolicy="no-referrer"
                   />
                 </div>
-                <div className="text-sm font-bold text-slate-900">微信咨询</div>
+                <div className="text-sm font-bold text-slate-900">{t('微信咨询', 'WeChat')}</div>
               </div>
 
               <div className="space-y-6">
                 <div>
-                  <div className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">电话</div>
+                  <div className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">{t('电话', 'Phone')}</div>
                   <div className="text-lg font-bold text-slate-900">+86 (021) 6566 1628</div>
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">邮箱</div>
+                  <div className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">{t('邮箱', 'Email')}</div>
                   <div className="text-lg font-bold text-slate-900">jotoai@jototech.cn</div>
                 </div>
               </div>
@@ -150,19 +148,19 @@ export default function Contact() {
           </motion.div>
 
           {/* Right Side: Form */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
             className="bg-white rounded-3xl shadow-2xl border border-slate-100 p-10"
           >
             <h2 className="text-xl font-bold text-slate-900 mb-8">
-              留下您的联系方式，我们将在一个工作日内回复！
+              {t('留下您的联系方式，我们将在一个工作日内回复！', 'Leave your contact info and we will get back to you within one business day!')}
             </h2>
 
             {submitStatus === 'success' && (
               <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700">
-                提交成功！我们会尽快与您联系。
+                {t('提交成功！我们会尽快与您联系。', 'Submitted successfully! We will contact you shortly.')}
               </div>
             )}
 
@@ -174,74 +172,75 @@ export default function Contact() {
 
             <form className="space-y-5" onSubmit={handleSubmit}>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">姓名 <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">{t('姓名', 'Name')} <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                  placeholder="请输入您的姓名"
+                  placeholder={t('请输入您的姓名', 'Enter your name')}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">公司 / 机构名称</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">{t('公司 / 机构名称', 'Company / Organization')}</label>
                 <input
                   type="text"
                   name="company"
                   value={formData.company}
                   onChange={handleChange}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                  placeholder="请输入您的公司或机构名称"
+                  placeholder={t('请输入您的公司或机构名称', 'Enter your company or organization name')}
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">邮箱 <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">{t('邮箱', 'Email')} <span className="text-red-500">*</span></label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                  placeholder="请输入您的电子邮箱"
+                  placeholder={t('请输入您的电子邮箱', 'Enter your email address')}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">电话号码 <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">{t('电话号码', 'Phone Number')} <span className="text-red-500">*</span></label>
                 <input
                   type="tel"
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                  placeholder="请输入您的联系电话"
+                  placeholder={t('请输入您的联系电话', 'Enter your phone number')}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">留言</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">{t('留言', 'Message')} <span className="text-red-500">*</span></label>
                 <textarea
                   rows={3}
                   name="message"
                   value={formData.message}
                   onChange={handleChange}
+                  required
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                  placeholder="请描述您的具体需求..."
+                  placeholder={t('请描述您的具体需求...', 'Describe your specific needs...')}
                 ></textarea>
               </div>
 
               <div className="flex items-center space-x-4">
                 <div className="flex-1">
-                  <label className="block text-sm font-bold text-slate-700 mb-2">验证码 <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">{t('验证码', 'CAPTCHA')} <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     name="captchaText"
                     value={formData.captchaText}
                     onChange={handleChange}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                    placeholder="请输入验证码"
+                    placeholder={t('请输入验证码', 'Enter CAPTCHA')}
                     required
                   />
                 </div>
@@ -249,7 +248,7 @@ export default function Contact() {
                   {captcha && (
                     <img
                       src={captcha.svg}
-                      alt="验证码"
+                      alt={t('验证码', 'CAPTCHA')}
                       className="bg-slate-100 px-2 py-1 rounded-xl border border-slate-200 h-14 cursor-pointer"
                       onClick={loadCaptcha}
                     />
@@ -271,7 +270,7 @@ export default function Contact() {
                 disabled={loading}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-xl shadow-blue-200 mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? '提交中...' : '提交'}
+                {loading ? t('提交中...', 'Submitting...') : t('提交', 'Submit')}
               </motion.button>
             </form>
           </motion.div>

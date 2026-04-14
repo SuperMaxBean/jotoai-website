@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import LayoutWrapper from '../components/Layout';
+import { LanguageProvider } from '../contexts/LanguageContext';
 
 export const metadata: Metadata = {
   icons: {
@@ -28,9 +29,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-CN">
+    <html lang="zh-CN" suppressHydrationWarning>
       <body>
-        <LayoutWrapper>{children}</LayoutWrapper>
+        <LanguageProvider>
+          <LayoutWrapper>{children}</LayoutWrapper>
+        </LanguageProvider>
       </body>
     </html>
   );

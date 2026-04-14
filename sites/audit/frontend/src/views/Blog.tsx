@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, Calendar, ArrowRight, Mail, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
 import Link from 'next/link';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface Article {
   id: string | number;
@@ -21,13 +22,17 @@ function stripHtml(html: string) {
   return html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 }
 
-function formatDate(dateStr?: string) {
+function formatDate(dateStr?: string, lang?: string) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
+  if (lang === 'en') {
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
   return d.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 export default function Blog() {
+  const { lang, t } = useLanguage();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -62,8 +67,8 @@ export default function Blog() {
           className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center"
         >
           <div className="inline-block bg-blue-50 text-blue-600 text-[10px] font-bold tracking-widest uppercase px-3 py-1 rounded-full mb-4">BLOG</div>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4">最新行业动态</h1>
-          <p className="text-lg text-slate-500 max-w-2xl mx-auto">深入了解 AI 合同审查技术趋势、行业案例与法律风控深度洞察。</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4">{t('最新行业动态', 'Latest Industry Insights')}</h1>
+          <p className="text-lg text-slate-500 max-w-2xl mx-auto">{t('深入了解 AI 合同审查技术趋势、行业案例与法律风控深度洞察。', 'Dive into AI contract review technology trends, industry cases, and in-depth legal risk control insights.')}</p>
         </motion.div>
       </section>
 
@@ -73,12 +78,12 @@ export default function Blog() {
           {/* Sidebar */}
           <aside className="lg:w-72 shrink-0 space-y-6">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-              <h3 className="text-base font-bold text-slate-900 mb-3">搜索文章</h3>
+              <h3 className="text-base font-bold text-slate-900 mb-3">{t('搜索文章', 'Search Articles')}</h3>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input type="text" value={searchQuery}
                   onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                  placeholder="关键词搜索..."
+                  placeholder={t('关键词搜索...', 'Search by keyword...')}
                   className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -86,7 +91,7 @@ export default function Blog() {
 
             {articles.length > 0 && (
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <h3 className="text-base font-bold text-slate-900 mb-3">热门关键词</h3>
+                <h3 className="text-base font-bold text-slate-900 mb-3">{t('热门关键词', 'Trending Keywords')}</h3>
                 <div className="flex flex-wrap gap-2">
                   {[...new Set(articles.map(a => a.keyword).filter(Boolean))].slice(0, 12).map(kw => (
                     <button key={kw} onClick={() => { setSearchQuery(kw!); setCurrentPage(1); }}
@@ -100,11 +105,11 @@ export default function Blog() {
 
             <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 text-white">
               <div className="bg-white/10 p-2.5 rounded-xl w-fit mb-4"><Mail className="h-5 w-5" /></div>
-              <h3 className="font-bold text-lg mb-1">订阅行业动态</h3>
-              <p className="text-blue-100 text-xs mb-4 leading-relaxed">每周获取最新的法律科技资讯，不错过行业风向。</p>
+              <h3 className="font-bold text-lg mb-1">{t('订阅行业动态', 'Subscribe to Updates')}</h3>
+              <p className="text-blue-100 text-xs mb-4 leading-relaxed">{t('每周获取最新的法律科技资讯，不错过行业风向。', 'Get the latest legal tech news weekly -- never miss an industry trend.')}</p>
               <Link href="/contact"
                 className="block w-full bg-white text-blue-600 text-sm font-bold py-2 rounded-xl text-center hover:bg-blue-50 transition-colors">
-                立即订阅 →
+                {t('立即订阅 →', 'Subscribe Now →')}
               </Link>
             </div>
           </aside>
@@ -127,7 +132,7 @@ export default function Blog() {
             ) : current.length === 0 ? (
               <div className="text-center py-20 text-slate-400">
                 <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                <p>{searchQuery ? '未找到相关文章' : '暂无文章'}</p>
+                <p>{searchQuery ? t('未找到相关文章', 'No matching articles found') : t('暂无文章', 'No articles yet')}</p>
               </div>
             ) : (
               <AnimatePresence mode="wait">
@@ -135,7 +140,7 @@ export default function Blog() {
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                   className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {current.map((post, i) => {
-                    const excerpt = stripHtml(post.content).slice(0, 120) + '…';
+                    const excerpt = stripHtml(post.content).slice(0, 120) + '...';
                     const imgSrc = post.imageUrl || `https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop`;
                     return (
                       <motion.article key={post.id}
@@ -155,7 +160,7 @@ export default function Blog() {
                         </div>
                         <div className="p-5">
                           <div className="flex items-center text-slate-400 text-xs mb-3">
-                            <Calendar className="h-3 w-3 mr-1.5" />{formatDate(post.createdAt)}
+                            <Calendar className="h-3 w-3 mr-1.5" />{formatDate(post.createdAt, lang)}
                           </div>
                           <h2 className="text-base font-bold text-slate-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors leading-snug">
                             <Link href={`/blog/${post.id}`}>{post.title}</Link>
@@ -163,7 +168,7 @@ export default function Blog() {
                           <p className="text-slate-500 text-sm mb-4 line-clamp-3 leading-relaxed">{excerpt}</p>
                           <Link href={`/blog/${post.id}`}
                             className="inline-flex items-center text-blue-600 text-sm font-semibold hover:text-blue-700 transition-colors">
-                            阅读全文 <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                            {t('阅读全文', 'Read More')} <ArrowRight className="h-3.5 w-3.5 ml-1" />
                           </Link>
                         </div>
                       </motion.article>

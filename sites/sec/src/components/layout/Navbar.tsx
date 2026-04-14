@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Globe } from 'lucide-react';
 import Link from 'next/link';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { lang, toggleLanguage, t } = useLanguage();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -15,18 +17,18 @@ const Navbar = () => {
   }, []);
 
   const navLinks = [
-    { name: '核心功能', href: '/features' },
-    { name: '新闻博客', href: '/blog' },
-    { name: '联络我们', href: '/contact' },
+    { name: t('核心功能', 'Features'), href: '/features' },
+    { name: t('新闻博客', 'Blog'), href: '/blog' },
+    { name: t('联络我们', 'Contact'), href: '/contact' },
   ];
 
   return (
-    <nav aria-label="主导航" className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-brand-dark/90 backdrop-blur-md shadow-lg py-4' : 'bg-transparent py-6'}`}>
+    <nav aria-label={t('主导航', 'Main navigation')} className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-brand-dark/90 backdrop-blur-md shadow-lg py-4' : 'bg-transparent py-6'}`}>
       <div className="container mx-auto px-6 flex justify-between items-center">
         <Link
           href="/"
           className="flex items-center gap-2 group"
-          aria-label="唯客 AI 护栏 首页"
+          aria-label={t('唯客 AI 护栏 首页', 'JOTO AI Guardrails Home')}
         >
           <div className="w-9 h-9 relative flex items-center justify-center" aria-hidden>
             <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full transform group-hover:scale-110 transition-all duration-500">
@@ -47,7 +49,7 @@ const Navbar = () => {
           </div>
           <div className="flex flex-col justify-center">
             <span className="text-white font-bold text-xl tracking-tight leading-none">唯客 AI 护栏</span>
-            <span className="text-[10px] text-gray-400 font-medium tracking-wide mt-0.5">JOTO.AI 旗下产品</span>
+            <span className="text-[10px] text-gray-400 font-medium tracking-wide mt-0.5">{t('JOTO.AI 旗下产品', 'A JOTO.AI Product')}</span>
           </div>
         </Link>
 
@@ -57,12 +59,20 @@ const Navbar = () => {
               {link.name}
             </Link>
           ))}
+          <button
+            onClick={toggleLanguage}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-300 hover:text-white transition-colors border border-white/10 rounded-md hover:border-white/30"
+            aria-label={t('切换到英文', 'Switch to Chinese')}
+          >
+            <Globe size={14} />
+            {lang === 'zh' ? 'EN' : '中文'}
+          </button>
           <Link href="/contact" className="px-5 py-2 bg-brand-blue hover:bg-blue-600 text-white rounded-md text-sm font-semibold transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center">
-            联系我们
+            {t('联系我们', 'Contact Us')}
           </Link>
         </div>
 
-        <button type="button" className="md:hidden text-white p-2 min-h-[44px] min-w-[44px] flex items-center justify-center" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label={mobileMenuOpen ? '关闭菜单' : '打开菜单'}>
+        <button type="button" className="md:hidden text-white p-2 min-h-[44px] min-w-[44px] flex items-center justify-center" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label={mobileMenuOpen ? t('关闭菜单', 'Close menu') : t('打开菜单', 'Open menu')}>
           {mobileMenuOpen ? <X /> : <Menu />}
         </button>
       </div>
@@ -73,8 +83,15 @@ const Navbar = () => {
             {link.name}
           </Link>
         ))}
+        <button
+          onClick={toggleLanguage}
+          className="flex items-center justify-center gap-1.5 py-3 text-gray-300 hover:text-white transition-colors border border-white/10 rounded-lg"
+        >
+          <Globe size={14} />
+          {lang === 'zh' ? 'EN' : '中文'}
+        </button>
         <Link href="/contact" className="w-full py-3 bg-brand-blue text-white rounded-lg font-semibold mt-2 text-center">
-          联系我们
+          {t('联系我们', 'Contact Us')}
         </Link>
       </div>
     </nav>

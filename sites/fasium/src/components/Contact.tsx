@@ -67,9 +67,9 @@ export default function Contact() {
     setErrorMsg('');
 
     // 前端基础校验
-    if (!form.name.trim() || !form.email.trim() || !form.phone.trim() || !form.captchaText.trim()) {
+    if (!form.name.trim() || !form.email.trim() || !form.phone.trim() || !form.message.trim() || !form.captchaText.trim()) {
       setSubmitStatus('error');
-      setErrorMsg(t('请填写所有必填项（姓名、邮箱、电话、验证码）', 'Please fill in all required fields (name, email, phone, captcha)'));
+      setErrorMsg(t('请填写所有必填项（姓名、邮箱、电话、需求描述、验证码）', 'Please fill in all required fields (name, email, phone, description, captcha)'));
       return;
     }
 
@@ -83,7 +83,7 @@ export default function Contact() {
           name: form.company ? `${form.name}（${form.company}）` : form.name,
           email: form.email,
           phone: form.phone,
-          message: form.message || t('（未填写需求描述）', '(No description provided)'),
+          message: form.message,
           captchaId,
           captchaText: form.captchaText,
         }),
@@ -279,12 +279,15 @@ export default function Contact() {
 
               {/* Description */}
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-[#d1d5db]">{t('需求描述', 'Description')}</label>
+                <label className="text-sm font-semibold text-[#d1d5db]">
+                  {t('需求描述', 'Description')}<span className="text-red-500 ml-1">*</span>
+                </label>
                 <textarea
                   name="message"
                   value={form.message}
                   onChange={handleChange}
                   placeholder={t("请简要描述您的应用场景…", "Briefly describe your use case...")}
+                  required
                   className="w-full p-4 bg-[#111111] border border-[#333333] rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-[#f97316]/10 outline-none transition-all text-sm text-white placeholder-[#555555] h-[150px] resize-none"
                 />
               </div>

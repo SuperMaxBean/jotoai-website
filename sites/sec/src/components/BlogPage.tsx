@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import { Calendar, User, ArrowRight, Zap } from 'lucide-react';
 import { apiService } from '@/services/api';
 import type { Article } from '@/types/api';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const BlogPage: React.FC = () => {
   const router = useRouter();
+  const { lang, t } = useLanguage();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -18,7 +20,7 @@ const BlogPage: React.FC = () => {
         const data = await apiService.getArticles();
         setArticles(data);
       } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : '获取文章失败';
+        const msg = e instanceof Error ? e.message : t('获取文章失败', 'Failed to fetch articles');
         setError(msg);
       } finally {
         setLoading(false);
@@ -29,7 +31,7 @@ const BlogPage: React.FC = () => {
 
   const formatDate = (dateStr: string) => {
     try {
-      return new Date(dateStr).toLocaleDateString('zh-CN', {
+      return new Date(dateStr).toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
@@ -78,18 +80,21 @@ const BlogPage: React.FC = () => {
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-blue/10 border border-brand-blue/20 text-brand-blue text-xs font-bold mb-4">
             <Zap size={14} className="animate-pulse" />
-            <span>AI 实时生成中...</span>
+            <span>{t('AI 实时生成中...', 'AI generating in real-time...')}</span>
           </div>
-          <h1 className="text-4xl lg:text-5xl font-bold text-white mb-6">新闻与博客</h1>
+          <h1 className="text-4xl lg:text-5xl font-bold text-white mb-6">{t('新闻与博客', 'News & Blog')}</h1>
           <p className="text-gray-400 max-w-2xl mx-auto">
-            我们的 AI 正在实时为您整理最新的 LLM 安全技术动态。
+            {t(
+              '我们的 AI 正在实时为您整理最新的 LLM 安全技术动态。',
+              'Our AI is curating the latest LLM security technology updates for you in real-time.'
+            )}
           </p>
         </div>
 
         {loading && (
           <div className="text-center text-gray-400 py-20">
             <div className="inline-block w-8 h-8 border-2 border-brand-blue border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p>正在加载文章...</p>
+            <p>{t('正在加载文章...', 'Loading articles...')}</p>
           </div>
         )}
 
@@ -101,7 +106,7 @@ const BlogPage: React.FC = () => {
 
         {!loading && !error && articles.length === 0 && (
           <div className="text-center text-gray-400 py-20">
-            <p>暂无文章</p>
+            <p>{t('暂无文章', 'No articles yet')}</p>
           </div>
         )}
 
@@ -126,7 +131,7 @@ const BlogPage: React.FC = () => {
                   />
                   <div className="absolute top-4 left-4">
                     <span className="px-3 py-1 bg-brand-dark/90 backdrop-blur-md rounded-full text-brand-green text-xs font-medium border border-white/10">
-                      {article.keyword || article.type || 'AI 安全'}
+                      {article.keyword || article.type || t('AI 安全', 'AI Security')}
                     </span>
                   </div>
                 </div>
@@ -139,7 +144,7 @@ const BlogPage: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-1">
                       <User size={14} />
-                      唯客安全实验室
+                      {t('唯客安全实验室', 'JOTO Security Lab')}
                     </div>
                   </div>
 
@@ -152,7 +157,7 @@ const BlogPage: React.FC = () => {
                   </div>
 
                   <div className="flex items-center text-brand-blue font-semibold group-hover:translate-x-2 transition-transform mt-auto pt-4 border-t border-white/5">
-                    阅读全文 <ArrowRight size={16} className="ml-2" />
+                    {t('阅读全文', 'Read More')} <ArrowRight size={16} className="ml-2" />
                   </div>
                 </div>
               </article>

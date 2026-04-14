@@ -3,8 +3,11 @@
 import React from 'react';
 import Link from 'next/link';
 import { Hexagon, Zap } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Footer = () => {
+  const { t } = useLanguage();
+
   return (
     <footer className="bg-[#0A1A2F] text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -20,37 +23,40 @@ const Footer = () => {
               <span className="text-lg font-extrabold tracking-tight">闪阅</span>
             </Link>
             <p className="text-sm text-slate-400 leading-relaxed">
-              面向未来的教学评估与资产沉淀平台，让老师从"批卷机器"回归"教学设计者"。
+              {t(
+                '面向未来的教学评估与资产沉淀平台，让老师从"批卷机器"回归"教学设计者"。',
+                'A future-oriented teaching assessment and asset platform, freeing teachers from "grading machines" back to "instructional designers".'
+              )}
             </p>
           </div>
           <div>
-            <h4 className="text-sm font-bold uppercase tracking-widest text-slate-300 mb-4">产品</h4>
+            <h4 className="text-sm font-bold uppercase tracking-widest text-slate-300 mb-4">{t('产品', 'Product')}</h4>
             <ul className="space-y-3">
-              <li><Link href="/capabilities" className="text-sm text-slate-400 hover:text-white transition-colors">核心能力</Link></li>
-              <li><Link href="/architecture" className="text-sm text-slate-400 hover:text-white transition-colors">技术架构</Link></li>
-              <li><Link href="/login" className="text-sm text-slate-400 hover:text-white transition-colors">登录</Link></li>
+              <li><Link href="/capabilities" className="text-sm text-slate-400 hover:text-white transition-colors">{t('核心能力', 'Capabilities')}</Link></li>
+              <li><Link href="/architecture" className="text-sm text-slate-400 hover:text-white transition-colors">{t('技术架构', 'Architecture')}</Link></li>
+              <li><Link href="/login" className="text-sm text-slate-400 hover:text-white transition-colors">{t('登录', 'Login')}</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="text-sm font-bold uppercase tracking-widest text-slate-300 mb-4">资源</h4>
+            <h4 className="text-sm font-bold uppercase tracking-widest text-slate-300 mb-4">{t('资源', 'Resources')}</h4>
             <ul className="space-y-3">
-              <li><Link href="/articles" className="text-sm text-slate-400 hover:text-white transition-colors">新闻博客</Link></li>
-              <li><Link href="/privacy" className="text-sm text-slate-400 hover:text-white transition-colors">隐私政策</Link></li>
+              <li><Link href="/articles" className="text-sm text-slate-400 hover:text-white transition-colors">{t('新闻博客', 'Blog')}</Link></li>
+              <li><Link href="/privacy" className="text-sm text-slate-400 hover:text-white transition-colors">{t('隐私政策', 'Privacy Policy')}</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="text-sm font-bold uppercase tracking-widest text-slate-300 mb-4">联系</h4>
+            <h4 className="text-sm font-bold uppercase tracking-widest text-slate-300 mb-4">{t('联系', 'Contact')}</h4>
             <ul className="space-y-3">
-              <li><Link href="/contact" className="text-sm text-slate-400 hover:text-white transition-colors">联络我们</Link></li>
+              <li><Link href="/contact" className="text-sm text-slate-400 hover:text-white transition-colors">{t('联络我们', 'Contact Us')}</Link></li>
               <li><span className="text-sm text-slate-400">jotoai@jototech.cn</span></li>
             </ul>
           </div>
         </div>
         <div className="border-t border-slate-700/50 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-slate-500">&copy; {new Date().getFullYear()} 上海聚托信息科技有限公司 <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition-colors">沪ICP备15056478号-5</a></p>
+          <p className="text-xs text-slate-500">&copy; {new Date().getFullYear()} {t('上海聚托信息科技有限公司', 'Shanghai Juto Information Technology Co., Ltd.')} <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition-colors">{t('沪ICP备15056478号-5', 'ICP License: 沪ICP备15056478号-5')}</a></p>
           <div className="flex items-center gap-6">
-            <Link href="/privacy" className="text-xs text-slate-500 hover:text-slate-300 transition-colors">隐私政策</Link>
-            <span className="text-xs text-slate-500">服务条款</span>
+            <Link href="/privacy" className="text-xs text-slate-500 hover:text-slate-300 transition-colors">{t('隐私政策', 'Privacy Policy')}</Link>
+            <span className="text-xs text-slate-500">{t('服务条款', 'Terms of Service')}</span>
           </div>
         </div>
       </div>

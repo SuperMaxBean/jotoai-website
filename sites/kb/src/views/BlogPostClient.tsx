@@ -4,6 +4,7 @@ import React from 'react';
 import { ArrowLeft, Calendar, User, Layers, Share2, MessageSquare, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface Article {
   id: string;
@@ -18,16 +19,6 @@ interface Article {
   imageAuthorUrl?: string;
   imageUnsplashUrl?: string;
 }
-
-const formatDate = (dateStr: string) => {
-  try {
-    return new Date(dateStr).toLocaleDateString('zh-CN', {
-      year: 'numeric', month: 'long', day: 'numeric',
-    });
-  } catch {
-    return dateStr;
-  }
-};
 
 const renderContent = (content: string) => {
   let html = content;
@@ -64,6 +55,17 @@ const renderContent = (content: string) => {
 
 export default function BlogPostClient({ article }: { article: Article }) {
   const router = useRouter();
+  const { lang, t } = useLanguage();
+
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US', {
+        year: 'numeric', month: 'long', day: 'numeric',
+      });
+    } catch {
+      return dateStr;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white font-sans">
@@ -72,13 +74,13 @@ export default function BlogPostClient({ article }: { article: Article }) {
         <div className="flex items-center justify-between px-6 py-4 mx-auto max-w-7xl">
           <Link href="/blog" className="flex items-center gap-2 text-slate-600 hover:text-indigo-600 transition-colors">
             <ArrowLeft className="w-5 h-5" />
-            <span className="text-sm font-bold tracking-tight">返回博客列表</span>
+            <span className="text-sm font-bold tracking-tight">{t('返回博客列表', 'Back to Blog')}</span>
           </Link>
           <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-100">
               <Layers className="text-white w-5 h-5" />
             </div>
-            <span className="text-lg font-bold tracking-tight text-slate-900">唯客企业知识中台</span>
+            <span className="text-lg font-bold tracking-tight text-slate-900">{t('唯客企业知识中台', 'Enterprise Knowledge Hub')}</span>
           </Link>
           <div className="flex items-center gap-4">
             <button className="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
@@ -88,7 +90,7 @@ export default function BlogPostClient({ article }: { article: Article }) {
               onClick={() => router.push('/#contact')}
               className="px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-full hover:bg-indigo-700 transition-all shadow-sm"
             >
-              预约15分钟演示
+              {t('预约15分钟演示', 'Book a 15-min Demo')}
             </button>
           </div>
         </div>
@@ -108,7 +110,7 @@ export default function BlogPostClient({ article }: { article: Article }) {
           <div className="flex items-center justify-center gap-6 text-slate-500 text-sm">
             <div className="flex items-center gap-2">
               <User className="w-4 h-4" />
-              <span className="font-bold text-slate-900">唯客团队</span>
+              <span className="font-bold text-slate-900">{t('唯客团队', 'JOTO Team')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
@@ -160,8 +162,8 @@ export default function BlogPostClient({ article }: { article: Article }) {
               <User className="w-6 h-6" />
             </div>
             <div>
-              <div className="font-bold text-slate-900">唯客团队</div>
-              <div className="text-xs text-slate-400">唯客企业知识中台官方团队</div>
+              <div className="font-bold text-slate-900">{t('唯客团队', 'JOTO Team')}</div>
+              <div className="text-xs text-slate-400">{t('唯客企业知识中台官方团队', 'Official Enterprise Knowledge Hub Team')}</div>
             </div>
           </div>
           <button
@@ -169,7 +171,7 @@ export default function BlogPostClient({ article }: { article: Article }) {
             className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition-all active:scale-95"
           >
             <MessageSquare className="w-4 h-4" />
-            联系我们
+            {t('联系我们', 'Contact Us')}
           </button>
         </div>
       </article>
@@ -180,37 +182,37 @@ export default function BlogPostClient({ article }: { article: Article }) {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 lg:gap-8">
             <div className="space-y-6">
               <div>
-                <h3 className="text-xl font-bold text-white mb-1">唯客企业知识中台</h3>
-                <p className="text-sm text-slate-500">唯客旗下产品</p>
+                <h3 className="text-xl font-bold text-white mb-1">{t('唯客企业知识中台', 'Enterprise Knowledge Hub')}</h3>
+                <p className="text-sm text-slate-500">{t('唯客旗下产品', 'A JOTO Product')}</p>
               </div>
               <div className="space-y-3 text-sm pt-4">
-                <p className="text-slate-400">中国首家 Dify 官方服务商</p>
+                <p className="text-slate-400">{t('中国首家 Dify 官方服务商', "China's First Official Dify Service Provider")}</p>
                 <p className="text-slate-400">jotoai@jototech.cn</p>
               </div>
             </div>
             <div>
-              <h4 className="text-white font-bold mb-6">产品文档</h4>
+              <h4 className="text-white font-bold mb-6">{t('产品文档', 'Documentation')}</h4>
               <ul className="space-y-4 text-sm">
-                <li><Link href="/#capabilities" className="hover:text-white transition-colors">产品功能</Link></li>
+                <li><Link href="/#capabilities" className="hover:text-white transition-colors">{t('产品功能', 'Features')}</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-bold mb-6">产品目录</h4>
+              <h4 className="text-white font-bold mb-6">{t('产品目录', 'Products')}</h4>
               <ul className="space-y-4 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">闪阅</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t('闪阅', 'ShanYue')}</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Dify</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">AI 安全</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t('AI 安全', 'AI Security')}</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-bold mb-6">关于我们</h4>
+              <h4 className="text-white font-bold mb-6">{t('关于我们', 'About Us')}</h4>
               <ul className="space-y-4 text-sm">
-                <li><a href="https://jotoai.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">关于唯客</a></li>
+                <li><a href="https://jotoai.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">{t('关于唯客', 'About JOTO')}</a></li>
               </ul>
             </div>
           </div>
           <div className="mt-20 pt-8 border-t border-white/10 text-center text-xs text-slate-500 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p>上海聚托信息科技有限公司 © 2026</p>
+            <p>{t('上海聚托信息科技有限公司', 'Shanghai Jutuo Information Technology Co., Ltd.')} © 2026</p>
             <p>沪ICP备15056478号-5</p>
           </div>
         </div>

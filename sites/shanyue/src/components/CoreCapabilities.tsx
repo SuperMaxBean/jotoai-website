@@ -10,45 +10,7 @@ import {
   Zap,
   CheckCircle2,
 } from "lucide-react";
-
-const CAPABILITIES = [
-  {
-    icon: ScanText,
-    title: "智能 OCR 识别",
-    desc: "支持手写体、印刷体混合识别，识别准确率达 99.2%，覆盖语文、英语等主观题。",
-    accent: "purple",
-  },
-  {
-    icon: PenTool,
-    title: "语义级评分",
-    desc: "基于深度语义理解的评分引擎，不再依赖关键词匹配，真正读懂学生答案。",
-    accent: "blue",
-  },
-  {
-    icon: Languages,
-    title: "全科目覆盖",
-    desc: "语文作文、英语写作、数学解答题、理综实验题……一套系统，全科通用。",
-    accent: "indigo",
-  },
-  {
-    icon: BarChart3,
-    title: "多维度分析报告",
-    desc: "自动生成班级、年级、知识点维度的诊断报告，精准定位薄弱环节。",
-    accent: "fuchsia",
-  },
-  {
-    icon: ImagePlus,
-    title: "图像题批改",
-    desc: "支持几何图形、化学方程式、物理电路图等图像类答题的智能识别与评阅。",
-    accent: "violet",
-  },
-  {
-    icon: Zap,
-    title: "秒级出分",
-    desc: "千份试卷 5 分钟内完成批改，效率提升 50 倍以上，考后即可发布成绩。",
-    accent: "purple",
-  },
-];
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const ACCENT_MAP: Record<string, { iconBg: string; iconColor: string; border: string }> = {
   purple: { iconBg: "bg-purple-50", iconColor: "text-purple-600", border: "border-purple-200" },
@@ -59,19 +21,78 @@ const ACCENT_MAP: Record<string, { iconBg: string; iconColor: string; border: st
 };
 
 export default function CoreCapabilities() {
+  const { t } = useLanguage();
+
+  const CAPABILITIES = [
+    {
+      icon: ScanText,
+      title: t("智能 OCR 识别", "Smart OCR Recognition"),
+      desc: t(
+        "支持手写体、印刷体混合识别，识别准确率达 99.2%，覆盖语文、英语等主观题。",
+        "Supports mixed handwriting and print recognition with 99.2% accuracy, covering subjective questions in Chinese, English, and more."
+      ),
+      accent: "purple",
+    },
+    {
+      icon: PenTool,
+      title: t("语义级评分", "Semantic-Level Scoring"),
+      desc: t(
+        "基于深度语义理解的评分引擎，不再依赖关键词匹配，真正读懂学生答案。",
+        "Scoring engine based on deep semantic understanding, no longer relying on keyword matching, truly understanding student answers."
+      ),
+      accent: "blue",
+    },
+    {
+      icon: Languages,
+      title: t("全科目覆盖", "All-Subject Coverage"),
+      desc: t(
+        "语文作文、英语写作、数学解答题、理综实验题……一套系统，全科通用。",
+        "Chinese essays, English writing, math problems, science experiments... one system for all subjects."
+      ),
+      accent: "indigo",
+    },
+    {
+      icon: BarChart3,
+      title: t("多维度分析报告", "Multi-Dimensional Analytics"),
+      desc: t(
+        "自动生成班级、年级、知识点维度的诊断报告，精准定位薄弱环节。",
+        "Auto-generate diagnostic reports by class, grade, and knowledge dimensions, pinpointing weak areas precisely."
+      ),
+      accent: "fuchsia",
+    },
+    {
+      icon: ImagePlus,
+      title: t("图像题批改", "Image-Based Grading"),
+      desc: t(
+        "支持几何图形、化学方程式、物理电路图等图像类答题的智能识别与评阅。",
+        "Supports intelligent recognition and grading of image-based answers including geometric figures, chemical equations, and physics circuit diagrams."
+      ),
+      accent: "violet",
+    },
+    {
+      icon: Zap,
+      title: t("秒级出分", "Instant Scoring"),
+      desc: t(
+        "千份试卷 5 分钟内完成批改，效率提升 50 倍以上，考后即可发布成绩。",
+        "Grade 1,000 exams in under 5 minutes, 50x efficiency boost, publish results right after the exam."
+      ),
+      accent: "purple",
+    },
+  ];
+
   return (
     <section className="py-24 bg-white">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 rounded-full bg-purple-50 px-4 py-1.5 text-sm font-medium text-purple-700 mb-4">
             <Sparkles className="h-4 w-4" />
-            核心能力
+            {t('核心能力', 'Core Capabilities')}
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-[#0A1A2F] sm:text-4xl">
-            AI 驱动的全链路阅卷能力
+            {t('AI 驱动的全链路阅卷能力', 'AI-Powered End-to-End Grading')}
           </h2>
           <p className="mt-4 text-lg text-slate-500 max-w-2xl mx-auto">
-            从试卷扫描到成绩发布，每一步都由 AI 精准赋能
+            {t('从试卷扫描到成绩发布，每一步都由 AI 精准赋能', 'From exam scanning to score publishing, every step is precisely empowered by AI')}
           </p>
         </div>
 
@@ -98,7 +119,7 @@ export default function CoreCapabilities() {
                 <ul className="mt-5 space-y-2">
                   <li className="flex items-center gap-2 text-xs text-slate-400">
                     <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-                    企业级可靠性
+                    {t('企业级可靠性', 'Enterprise-grade reliability')}
                   </li>
                 </ul>
               </div>

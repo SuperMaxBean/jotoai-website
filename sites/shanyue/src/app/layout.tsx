@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
 export const metadata: Metadata = {
   icons: {
@@ -124,7 +125,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN" className="scroll-smooth">
+    <html lang="zh-CN" className="scroll-smooth" suppressHydrationWarning>
       <head>
         <link
           href="https://fonts.loli.net/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;700;900&display=swap"
@@ -146,9 +147,11 @@ export default function RootLayout({
             "'Inter', 'Noto Sans SC', ui-sans-serif, system-ui, sans-serif",
         }}
       >
-        <Navbar />
-        <main>{children}</main>
-        <Footer />
+        <LanguageProvider>
+          <Navbar />
+          <main>{children}</main>
+          <Footer />
+        </LanguageProvider>
       </body>
     </html>
   );

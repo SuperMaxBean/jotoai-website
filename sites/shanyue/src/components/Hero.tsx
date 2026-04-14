@@ -1,9 +1,8 @@
 "use client";
 
-'use client';
-
 import React, { useEffect, useRef } from 'react';
 import { ArrowRight, ScanLine, BrainCircuit, FileText, CheckCircle2, AlertCircle, XCircle } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const QUESTIONS = [
     {
@@ -103,6 +102,7 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
   const sectionRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef({ x: -1000, y: -1000 });
+  const { t } = useLanguage();
 
   const handleNavigate = (e: React.MouseEvent, page: string) => {
     e.preventDefault();
@@ -160,10 +160,10 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
             const forceDirectionX = dx / distance;
             const forceDirectionY = dy / distance;
             const force = (maxDistance - distance) / maxDistance;
-            
-            const directionX = forceDirectionX * force * 1.5; 
+
+            const directionX = forceDirectionX * force * 1.5;
             const directionY = forceDirectionY * force * 1.5;
-            
+
             this.x += directionX;
             this.y += directionY;
         }
@@ -201,11 +201,11 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
       particles.forEach((p, i) => {
         p.update();
         p.draw();
-        
+
         const dx = mouseRef.current.x - p.x;
         const dy = mouseRef.current.y - p.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        
+
         if (distance < 200) {
             ctx.beginPath();
             ctx.strokeStyle = `rgba(124, 58, 237, ${0.4 * (1 - distance / 200)})`;
@@ -260,14 +260,14 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
   };
 
   return (
-    <section 
+    <section
         ref={sectionRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         className="relative pt-36 pb-24 lg:pt-52 lg:pb-40 overflow-hidden gradient-hero grid-bg"
     >
-      <canvas 
-        ref={canvasRef} 
+      <canvas
+        ref={canvasRef}
         className="absolute inset-0 z-0 pointer-events-none"
       />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -277,32 +277,38 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
                 </span>
-                <span className="text-slate-600 text-xs font-bold tracking-widest uppercase">JOTO 旗下核心教育产品</span>
+                <span className="text-slate-600 text-xs font-bold tracking-widest uppercase">{t('JOTO 旗下核心教育产品', 'JOTO Core Education Product')}</span>
             </div>
           <h1 className="text-5xl lg:text-7xl font-extrabold text-[#0A1A2F] tracking-tight leading-[1.05] mb-6 drop-shadow-sm">
-            闪阅 <span className="text-[#7c3aed]">AI 全科阅卷</span>
+            闪阅 <span className="text-[#7c3aed]">{t('AI 全科阅卷', 'AI All-Subject Grading')}</span>
           </h1>
           <p className="text-2xl font-medium text-slate-700 mb-6 font-mono tracking-tight opacity-90">
-             [ 面向未来的教学评估与资产沉淀平台 ]
+             {t('[ 面向未来的教学评估与资产沉淀平台 ]', '[ Future-Oriented Teaching Assessment & Asset Platform ]')}
           </p>
           <p className="text-lg md:text-xl text-slate-500 mb-12 max-w-2xl mx-auto leading-relaxed font-light">
-            让老师从“批卷机器”回归“教学设计者”。<br/>
-            重构批阅工作流，实现从“批卷”走向“教学数据资产”。
+            {t(
+              '让老师从"批卷机器"回归"教学设计者"。',
+              'Free teachers from "grading machines" back to "instructional designers".'
+            )}<br/>
+            {t(
+              '重构批阅工作流，实现从"批卷"走向"教学数据资产"。',
+              'Reinvent the grading workflow, turning grading into teaching data assets.'
+            )}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-24">
             <a
               href='/contact'
-              
+
               className="bg-[#7c3aed] text-white px-10 py-4 rounded-xl text-base font-bold hover:bg-[#6d28d9] transition-all hover:-translate-y-1 hover:shadow-lg shadow-purple-500/20 w-full sm:w-auto text-center cursor-pointer"
             >
-              预约演示
+              {t('预约演示', 'Book Demo')}
             </a>
             <a
               href='/contact'
-              
+
               className="group flex items-center justify-center text-[#0A1A2F] px-10 py-4 rounded-xl text-base font-bold bg-white border border-slate-200 hover:border-purple-200 hover:shadow-lg hover:shadow-purple-500/5 transition-all w-full sm:w-auto cursor-pointer"
             >
-              定制方案咨询
+              {t('定制方案咨询', 'Custom Solution')}
               <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform text-[#7c3aed]" />
             </a>
           </div>
@@ -312,7 +318,7 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
         <div className="relative mx-auto max-w-6xl mt-4 fade-in-up" style={{ animationDelay: '0.2s' }}>
           {/* Enhanced Glow */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[110%] h-[110%] bg-gradient-to-r from-purple-300/20 via-blue-200/20 to-purple-300/20 blur-[100px] -z-10" />
-          
+
           <div className="bg-white rounded-2xl shadow-2xl shadow-slate-200/50 border border-white/60 ring-1 ring-slate-900/5 overflow-hidden relative backdrop-blur-sm">
             {/* Mac-style Header */}
             <div className="bg-slate-50/80 backdrop-blur border-b border-slate-200 px-5 py-3.5 flex items-center gap-4 relative z-20">
@@ -329,17 +335,17 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
                     </div>
                 </div>
             </div>
-            
+
             {/* Split View Interface */}
             <div className="flex flex-col md:flex-row h-[680px] bg-[#fcfcfc]">
-                
+
                 {/* Left: Scanned Paper (Scrollable) */}
                 <div className="flex-1 border-r border-slate-200 overflow-hidden relative flex flex-col bg-[#FAFAFA]">
-                    
+
                     <div className="p-3 sm:p-4 md:p-6 pb-4 border-b border-slate-100 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
                         <div className="flex justify-between items-start gap-3 sm:gap-4">
                              <div className="min-w-0 flex-1">
-                                 <h2 className="text-sm sm:text-lg md:text-xl font-bold text-slate-800 tracking-tight break-words leading-tight">利用导数研究不等式问题</h2>
+                                 <h2 className="text-sm sm:text-lg md:text-xl font-bold text-slate-800 tracking-tight break-words leading-tight">{t('利用导数研究不等式问题', 'Using Derivatives to Study Inequalities')}</h2>
                                  <p className="text-[9px] sm:text-[10px] md:text-xs text-slate-400 mt-1 font-mono">Exam ID: 2024-MATH-FINAL-01</p>
                              </div>
                              <div className="text-right flex-shrink-0">
@@ -348,7 +354,7 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
                              </div>
                          </div>
                     </div>
-                    
+
                     {/* Paper Container - Scrollable Area */}
                     <div className="flex-1 w-full h-full relative overflow-hidden">
                          {/* Scrolling Content */}
@@ -357,17 +363,17 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
                                  <div key={`${q.id}-${index}`} className="mb-8 last:mb-0">
                                      {/* Question Card */}
                                      <div className={`relative p-5 rounded-xl border transition-all duration-300 ${
-                                         q.type === 'correct' ? 'bg-white border-slate-100 hover:border-green-200 hover:shadow-lg hover:shadow-green-500/5' : 
+                                         q.type === 'correct' ? 'bg-white border-slate-100 hover:border-green-200 hover:shadow-lg hover:shadow-green-500/5' :
                                          q.type === 'wrong' ? 'bg-red-50/30 border-red-100 hover:shadow-lg hover:shadow-red-500/5' : ''
                                      }`}>
-                                         
+
                                          {/* Status Indicators */}
                                          {q.type === 'correct' && (
                                                 <div className="absolute top-4 right-4 text-green-600 bg-green-50 px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
                                                     <CheckCircle2 size={12} /> Full Score
                                                 </div>
                                          )}
-                                         
+
                                          {q.type === 'wrong' && (
                                                 <div className="absolute top-4 right-4 text-red-600 bg-red-50 px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
                                                     <XCircle size={12} /> Review
@@ -376,7 +382,7 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
 
                                          {/* Question Title */}
                                          <p className="mb-4 text-sm text-slate-700 font-bold leading-relaxed pr-20">{q.title}</p>
-                                         
+
                                          {/* Handwritten Answer */}
                                          <div className="pl-4 border-l-2 border-slate-200 font-handwriting text-[#000080]/80 relative py-1">
                                             {q.handwriting}
@@ -385,7 +391,7 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
                                  </div>
                              ))}
                          </div>
-                         
+
                          {/* Gradient Overlays */}
                          <div className="absolute top-0 left-0 right-0 h-10 bg-gradient-to-b from-[#FAFAFA] to-transparent z-10 pointer-events-none"></div>
                          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#FAFAFA] to-transparent z-10 pointer-events-none"></div>
@@ -408,10 +414,13 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
                             <div className="absolute top-0 left-0 w-1 h-full bg-green-500 rounded-l-xl"></div>
                             <h4 className="text-sm font-bold text-slate-800 mb-2 flex items-center gap-2">
                                 <span className="w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center"><CheckCircle2 size={12}/></span>
-                                逻辑推导完整
+                                {t('逻辑推导完整', 'Complete Logical Derivation')}
                             </h4>
                             <p className="text-xs text-slate-500 leading-relaxed pl-7">
-                                准确求出切线斜率，并在 x=e 处正确计算导数值。逻辑清晰，步骤完整。
+                                {t(
+                                  '准确求出切线斜率，并在 x=e 处正确计算导数值。逻辑清晰，步骤完整。',
+                                  'Accurately found the tangent slope and correctly calculated the derivative at x=e. Clear logic with complete steps.'
+                                )}
                             </p>
                         </div>
 
@@ -420,26 +429,29 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
                              <div className="absolute top-0 left-0 w-1 h-full bg-amber-500 rounded-l-xl"></div>
                             <h4 className="text-sm font-bold text-slate-800 mb-2 flex items-center gap-2">
                                 <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center"><AlertCircle size={12}/></span>
-                                论证过程跳跃
+                                {t('论证过程跳跃', 'Argument Gaps')}
                             </h4>
                             <p className="text-xs text-slate-500 leading-relaxed pl-7 mb-2">
-                                虽然结论正确，但 "单调递增" 推导过程缺乏关键步骤。建议补充 g(1)=0 的验证。
+                                {t(
+                                  '虽然结论正确，但 "单调递增" 推导过程缺乏关键步骤。建议补充 g(1)=0 的验证。',
+                                  'The conclusion is correct, but the "monotonically increasing" derivation lacks key steps. Recommend verifying g(1)=0.'
+                                )}
                             </p>
                             <div className="pl-7">
-                                <span className="inline-block bg-amber-50 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded">建议扣分: 0.5</span>
+                                <span className="inline-block bg-amber-50 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded">{t('建议扣分: 0.5', 'Suggested Deduction: 0.5')}</span>
                             </div>
                         </div>
 
                         {/* Knowledge Graph Asset */}
                         <div className="bg-gradient-to-br from-purple-50 to-white p-5 rounded-xl border border-purple-100/50">
                             <h4 className="text-xs font-bold text-slate-800 mb-4 uppercase tracking-wider flex justify-between items-center">
-                                知识点掌握度
+                                {t('知识点掌握度', 'Knowledge Mastery')}
                                 <span className="text-purple-600">High</span>
                             </h4>
                             <div className="space-y-4">
                                 <div>
                                     <div className="flex justify-between text-[11px] text-slate-600 mb-1.5 font-medium">
-                                        <span>导数应用 (Derivatives)</span>
+                                        <span>{t('导数应用 (Derivatives)', 'Derivatives Application')}</span>
                                         <span className="text-slate-900">95%</span>
                                     </div>
                                     <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -448,7 +460,7 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
                                 </div>
                                 <div>
                                     <div className="flex justify-between text-[11px] text-slate-600 mb-1.5 font-medium">
-                                        <span>逻辑推理 (Logic)</span>
+                                        <span>{t('逻辑推理 (Logic)', 'Logical Reasoning')}</span>
                                         <span className="text-slate-900">82%</span>
                                     </div>
                                     <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -462,10 +474,10 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
                     {/* Action Bar */}
                     <div className="p-4 border-t border-slate-100 bg-white flex gap-3">
                         <button className="flex-1 bg-[#0A1A2F] text-white text-xs font-bold py-3 rounded-lg hover:bg-[#0A1A2F]/90 transition-all shadow-lg shadow-slate-900/10">
-                            生成个性化作业
+                            {t('生成个性化作业', 'Generate Personalized Homework')}
                         </button>
                         <button className="flex-1 border border-slate-200 text-slate-600 text-xs font-bold py-3 rounded-lg hover:bg-slate-50 transition-colors hover:border-slate-300">
-                            查看全班分析
+                            {t('查看全班分析', 'View Class Analysis')}
                         </button>
                     </div>
                 </div>

@@ -2,25 +2,27 @@
 
 
 import React, { useEffect, useState } from 'react';
-import { FEATURES } from '../constants';
-import { 
+import {
     BookOpen, Calculator, Languages, Atom, FlaskConical,
     Dna, ScrollText, Globe, Landmark, CheckCircle2,
-    XCircle, BrainCircuit
+    XCircle, BrainCircuit, Scan, PenTool, Layout
 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Custom component for the "Subject Coverage" feature
 const CustomDiagram = () => {
+  const { t } = useLanguage();
+
   const subjects = [
-    { name: '数学', en: 'Math', icon: Calculator, color: 'text-blue-600', bg: 'bg-blue-50', border: 'group-hover:border-blue-200' },
-    { name: '语文', en: 'Chinese', icon: BookOpen, color: 'text-red-600', bg: 'bg-red-50', border: 'group-hover:border-red-200' },
-    { name: '英语', en: 'English', icon: Languages, color: 'text-purple-600', bg: 'bg-purple-50', border: 'group-hover:border-purple-200' },
-    { name: '物理', en: 'Physics', icon: Atom, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'group-hover:border-indigo-200' },
-    { name: '化学', en: 'Chemistry', icon: FlaskConical, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'group-hover:border-emerald-200' },
-    { name: '生物', en: 'Biology', icon: Dna, color: 'text-teal-600', bg: 'bg-teal-50', border: 'group-hover:border-teal-200' },
-    { name: '历史', en: 'History', icon: ScrollText, color: 'text-amber-600', bg: 'bg-amber-50', border: 'group-hover:border-amber-200' },
-    { name: '地理', en: 'Geography', icon: Globe, color: 'text-cyan-600', bg: 'bg-cyan-50', border: 'group-hover:border-cyan-200' },
-    { name: '政治', en: 'Politics', icon: Landmark, color: 'text-rose-600', bg: 'bg-rose-50', border: 'group-hover:border-rose-200' },
+    { name: t('数学', 'Math'), en: t('Math', 'Math'), icon: Calculator, color: 'text-blue-600', bg: 'bg-blue-50', border: 'group-hover:border-blue-200' },
+    { name: t('语文', 'Chinese'), en: t('Chinese', 'Chinese'), icon: BookOpen, color: 'text-red-600', bg: 'bg-red-50', border: 'group-hover:border-red-200' },
+    { name: t('英语', 'English'), en: t('English', 'English'), icon: Languages, color: 'text-purple-600', bg: 'bg-purple-50', border: 'group-hover:border-purple-200' },
+    { name: t('物理', 'Physics'), en: t('Physics', 'Physics'), icon: Atom, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'group-hover:border-indigo-200' },
+    { name: t('化学', 'Chemistry'), en: t('Chemistry', 'Chemistry'), icon: FlaskConical, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'group-hover:border-emerald-200' },
+    { name: t('生物', 'Biology'), en: t('Biology', 'Biology'), icon: Dna, color: 'text-teal-600', bg: 'bg-teal-50', border: 'group-hover:border-teal-200' },
+    { name: t('历史', 'History'), en: t('History', 'History'), icon: ScrollText, color: 'text-amber-600', bg: 'bg-amber-50', border: 'group-hover:border-amber-200' },
+    { name: t('地理', 'Geography'), en: t('Geography', 'Geography'), icon: Globe, color: 'text-cyan-600', bg: 'bg-cyan-50', border: 'group-hover:border-cyan-200' },
+    { name: t('政治', 'Politics'), en: t('Politics', 'Politics'), icon: Landmark, color: 'text-rose-600', bg: 'bg-rose-50', border: 'group-hover:border-rose-200' },
   ];
 
   // Triplicate the list to ensure seamless scrolling with buffer
@@ -41,8 +43,8 @@ const CustomDiagram = () => {
        <div className="relative z-10 w-full max-w-[460px] h-full overflow-hidden py-10">
           <div className="animate-scroll-y grid grid-cols-3 gap-4 w-full absolute top-0 left-0 px-6">
              {scrollSubjects.map((s, i) => (
-                 <div 
-                    key={i} 
+                 <div
+                    key={i}
                     className={`bg-white border border-slate-100/80 rounded-2xl p-4 flex flex-col items-center justify-center shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-lg transition-all duration-500 aspect-[4/3] ${s.border} group relative`}
                  >
                     <div className={`${s.bg} p-3 rounded-xl mb-3 ${s.color} transition-colors duration-300 ring-1 ring-inset ring-black/5`}>
@@ -77,16 +79,16 @@ const OCRDemo = () => {
   return (
     <div className="relative w-full h-full bg-[#fcfcfc] overflow-hidden flex items-center justify-center select-none font-serif border-0">
       {/* Grid Background */}
-      <div className="absolute inset-0 z-0 opacity-40" 
+      <div className="absolute inset-0 z-0 opacity-40"
            style={{
              backgroundImage: 'linear-gradient(#f1f5f9 1px, transparent 1px), linear-gradient(90deg, #f1f5f9 1px, transparent 1px)',
              backgroundSize: '32px 32px'
            }}
       />
-      
+
       {/* HUD Corners - Cleaner Look */}
       <div className="absolute inset-8 border border-slate-100 rounded-3xl z-0"></div>
-      
+
       {/* Center Focus Area */}
       <div className="absolute inset-0 z-10 flex items-center justify-center">
          <div className="w-64 h-32 border-x border-purple-100 opacity-50"></div>
@@ -94,7 +96,7 @@ const OCRDemo = () => {
 
       {/* Math Equation Container */}
       <div className="relative z-10 bg-white px-8 py-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-50 flex items-center gap-3 md:gap-5 scale-90 md:scale-100 lg:scale-110 transition-transform">
-         
+
          {/* Part 1: Integral */}
          <div className="relative group mr-1">
             <span className="text-5xl font-light italic text-slate-800 font-[Times_New_Roman]">∫</span>
@@ -115,7 +117,7 @@ const OCRDemo = () => {
              <div className="relative">
                  <span className="text-3xl font-serif italic text-slate-800">eˣ</span>
              </div>
-             
+
               {/* Group Annotation */}
               <div className="absolute -right-4 top-0 bottom-0 w-[1px] bg-purple-200 opacity-0 animate-[fadeIn_0.5s_2.5s_forwards]"></div>
               <div className="absolute -right-16 top-1/2 -translate-y-1/2 bg-purple-50 text-purple-700 text-[9px] font-sans font-bold px-2 py-1 rounded border border-purple-100 opacity-0 animate-[fadeIn_0.3s_2.7s_forwards]">
@@ -132,7 +134,7 @@ const OCRDemo = () => {
          <div className="relative mx-1 pt-1">
              <span className="text-4xl font-serif text-slate-400">=</span>
          </div>
-         
+
          {/* Result (Simulated) */}
          <div className="flex items-center gap-1 pt-1 opacity-50 blur-[1px]">
              <span className="text-3xl font-serif italic text-slate-800">...</span>
@@ -141,7 +143,7 @@ const OCRDemo = () => {
 
       {/* Modern Scanner Bar */}
       <div className="absolute top-0 bottom-0 w-[2px] bg-gradient-to-b from-transparent via-purple-500 to-transparent shadow-[0_0_25px_2px_rgba(168,85,247,0.4)] z-30 animate-[scan_5s_ease-in-out_infinite]" />
-      
+
       <style>{`
         @keyframes scan {
             0% { left: -10%; }
@@ -168,7 +170,7 @@ const GradingEngineDemo = () => {
             />
 
             <div className="relative z-10 w-full max-w-[90%] md:max-w-[85%] h-full flex items-center justify-between gap-6">
-                
+
                 {/* SVG Connections */}
                 <svg className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-visible">
                     <defs>
@@ -250,7 +252,7 @@ const GradingEngineDemo = () => {
                 </div>
 
             </div>
-            
+
             <style>{`
                 @keyframes drawPath {
                     to { stroke-dashoffset: 0; opacity: 1; }
@@ -268,6 +270,8 @@ const GradingEngineDemo = () => {
 }
 
 const TemplateEditorDemo = () => {
+    const { t } = useLanguage();
+
     return (
         <div className="relative w-full h-full bg-slate-50 flex flex-col overflow-hidden font-sans select-none">
             {/* Toolbar */}
@@ -283,12 +287,12 @@ const TemplateEditorDemo = () => {
 
             {/* Canvas Area */}
             <div className="flex-1 relative p-8 flex justify-center items-start overflow-hidden">
-                
+
                 {/* The Paper */}
                 <div className="bg-white shadow-2xl shadow-slate-200 w-full max-w-lg min-h-[500px] relative p-8 rounded-lg ring-1 ring-slate-900/5">
                     {/* Header */}
                     <div className="border-b-2 border-slate-900 pb-4 mb-8">
-                        <h3 className="text-lg font-bold text-slate-900 font-serif break-words">利用导数研究不等式问题</h3>
+                        <h3 className="text-lg font-bold text-slate-900 font-serif break-words">{t('利用导数研究不等式问题', 'Using Derivatives to Study Inequalities')}</h3>
                     </div>
 
                     {/* Content Columns */}
@@ -296,7 +300,7 @@ const TemplateEditorDemo = () => {
                         {/* Question 1 */}
                         <div className="relative group">
                             <div className="text-sm font-serif leading-relaxed mb-3 text-slate-800">
-                                <span className="font-bold">1. (15分)</span> 已知函数 f(x) = ax + x ln x 的图像在 x=e 处的切线斜率为 3.
+                                <span className="font-bold">{t('1. (15分)', '1. (15 pts)')}</span> {t('已知函数 f(x) = ax + x ln x 的图像在 x=e 处的切线斜率为 3.', 'Given f(x) = ax + x ln x, the tangent slope at x=e is 3.')}
                             </div>
                             <div className="font-handwriting text-blue-900 text-lg opacity-80 pl-4 border-l-2 border-slate-100">
                                 解: f'(x) = a + ln x + 1 <br/>
@@ -312,7 +316,7 @@ const TemplateEditorDemo = () => {
                             </div>
                         </div>
                     </div>
-                    
+
                     {/* Scanning Line Effect */}
                     <div className="absolute left-0 right-0 h-[1px] bg-red-500 shadow-[0_0_20px_2px_rgba(239,68,68,0.5)] z-30 animate-[scanVertical_4s_linear_infinite] pointer-events-none opacity-80"></div>
                 </div>
@@ -335,22 +339,72 @@ const TemplateEditorDemo = () => {
 }
 
 const Features: React.FC = () => {
+  const { t } = useLanguage();
+
+  const FEATURES = [
+    {
+      tag: 'CORE ARCHITECTURE',
+      title: t('全题型覆盖', 'All Question Types'),
+      desc: t(
+        '智能路由引擎自动分发任务，实现对纸质作业、PDF、图片及 API 数据的统一处理。全面覆盖选择、填空、计算、证明、作图等全科题型，自动生成结构化教学资产与简洁错题本。',
+        'Smart routing engine auto-distributes tasks, unifying processing of paper homework, PDFs, images, and API data. Covers all question types including multiple choice, fill-in-the-blank, calculation, proof, and drawing, automatically generating structured teaching assets and error logs.'
+      ),
+      image: '',
+      align: 'right',
+      imageFit: 'contain',
+      icon: Layout
+    },
+    {
+      tag: 'CORE 01',
+      title: t('自研 OCR 智能试卷识别', 'Proprietary OCR Smart Exam Recognition'),
+      desc: t(
+        '识别准确率较GPT-4o提升15%，针对手写公式、理科符号、几何图形深度优化，支持本地部署与API接入。',
+        '15% higher recognition accuracy than GPT-4o, deeply optimized for handwritten formulas, science symbols, and geometric figures. Supports local deployment and API access.'
+      ),
+      image: '',
+      align: 'left',
+      icon: Scan
+    },
+    {
+      tag: 'CORE 02',
+      title: t('智能分步阅卷引擎', 'Smart Step-by-Step Grading Engine'),
+      desc: t(
+        '逐步读懂解题过程，按步骤给分，自动归类相似错误并智能归因，支持一键针对性重新出题。',
+        'Reads solution processes step by step, grades by steps, auto-classifies similar errors with smart attribution, and supports one-click targeted re-questioning.'
+      ),
+      image: '',
+      align: 'right',
+      icon: BrainCircuit
+    },
+    {
+      tag: 'CORE 03',
+      title: t('自动识别题目与答题区域', 'Auto-Detect Questions & Answer Zones'),
+      desc: t(
+        'AI自动识别试卷中的题目与答题区域，支持大题/小题多层级结构。老师可手动微调，所见即所得，配置一次即可反复批改。',
+        'AI automatically detects questions and answer zones in exams, supporting multi-level structures. Teachers can fine-tune manually with WYSIWYG, configure once and reuse for repeated grading.'
+      ),
+      image: '',
+      align: 'left',
+      icon: PenTool
+    }
+  ];
+
   return (
     <section className="py-32 overflow-hidden bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-32 max-w-3xl mx-auto">
           <h2 className="text-4xl md:text-5xl font-extrabold text-[#0A1A2F] mb-6 tracking-tight leading-tight">
-            从“批卷”走向 <span className="text-[#7c3aed]">积累教学数据资产</span>
+            {t('从"批卷"走向', 'From Grading to')} <span className="text-[#7c3aed]">{t('积累教学数据资产', 'Building Teaching Data Assets')}</span>
           </h2>
           <p className="text-xl text-slate-500 font-light">
-             不仅仅是工具，更是教育数字化转型的基础设施
+             {t('不仅仅是工具，更是教育数字化转型的基础设施', 'More than a tool -- the infrastructure for digital education transformation')}
           </p>
         </div>
 
         <div className="space-y-40">
           {FEATURES.map((feature, idx) => (
-            <div 
-                key={idx} 
+            <div
+                key={idx}
                 className={`flex flex-col lg:flex-row items-center gap-16 lg:gap-24 ${
                     feature.align === 'right' ? 'lg:flex-row-reverse' : ''
                 }`}
@@ -372,25 +426,25 @@ const Features: React.FC = () => {
               {/* Image/Mockup Wrapper */}
               <div className="flex-1 w-full">
                 <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-slate-200/50 border border-slate-100 bg-white aspect-[4/3] flex items-center justify-center p-0 group hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] transition-all duration-500">
-                    
+
                     {/* Feature Visualization Switcher */}
-                    {feature.title === '全题型覆盖' ? (
+                    {feature.title === t('全题型覆盖', 'All Question Types') ? (
                         <CustomDiagram />
-                    ) : feature.title === '自研 OCR 智能试卷识别' ? (
+                    ) : feature.title === t('自研 OCR 智能试卷识别', 'Proprietary OCR Smart Exam Recognition') ? (
                         <OCRDemo />
-                    ) : feature.title === '智能分步阅卷引擎' ? (
+                    ) : feature.title === t('智能分步阅卷引擎', 'Smart Step-by-Step Grading Engine') ? (
                         <GradingEngineDemo />
-                    ) : feature.title === '自动识别题目与答题区域' ? (
+                    ) : feature.title === t('自动识别题目与答题区域', 'Auto-Detect Questions & Answer Zones') ? (
                         <TemplateEditorDemo />
                     ) : (
                         <div className="relative w-full h-full bg-slate-50 flex items-center justify-center overflow-hidden">
                             {feature.image ? (
-                                <img 
-                                    src={feature.image} 
-                                    alt={feature.title} 
+                                <img
+                                    src={feature.image}
+                                    alt={feature.title}
                                     className={`w-full h-full transition-transform duration-700 group-hover:scale-105 ${
-                                        feature.imageFit === 'contain' 
-                                            ? 'object-contain p-8' 
+                                        feature.imageFit === 'contain'
+                                            ? 'object-contain p-8'
                                             : 'object-cover'
                                     }`}
                                 />
