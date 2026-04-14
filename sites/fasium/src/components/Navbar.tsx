@@ -2,10 +2,12 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Navbar() {
   const pathname = usePathname();
   const isHomePage = pathname === '/';
+  const { lang, toggleLanguage, t } = useLanguage();
 
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     if (isHomePage) {
@@ -26,7 +28,7 @@ export default function Navbar() {
           </div>
           <div className="flex flex-col">
             <span className="text-white font-bold text-lg leading-none mb-1">FasiumAI</span>
-            <span className="text-gray-500 text-[10px] font-medium tracking-wider">JOTO 旗下产品</span>
+            <span className="text-gray-500 text-[10px] font-medium tracking-wider">{t('JOTO 旗下产品', 'A JOTO Product')}</span>
           </div>
         </Link>
 
@@ -36,30 +38,36 @@ export default function Navbar() {
             onClick={(e) => scrollToSection(e, 'product')}
             className="hover:text-white transition-colors"
           >
-            产品介绍
+            {t('产品介绍', 'Product')}
           </a>
           <a
             href={isHomePage ? "#features" : "/#features"}
             onClick={(e) => scrollToSection(e, 'features')}
             className="hover:text-white transition-colors"
           >
-            核心功能
+            {t('核心功能', 'Features')}
           </a>
           <a
             href={isHomePage ? "#use-cases" : "/#use-cases"}
             onClick={(e) => scrollToSection(e, 'use-cases')}
             className="hover:text-white transition-colors"
           >
-            应用场景
+            {t('应用场景', 'Use Cases')}
           </a>
-          <Link href="/blog" className="hover:text-white transition-colors">博客</Link>
-          <Link href="/contact" className="hover:text-white transition-colors">联系我们</Link>
+          <Link href="/blog" className="hover:text-white transition-colors">{t('博客', 'Blog')}</Link>
+          <Link href="/contact" className="hover:text-white transition-colors">{t('联系我们', 'Contact')}</Link>
         </div>
 
         <div className="flex items-center gap-6">
-          <a href="/admin/login.html" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-white hover:text-gray-300 transition-colors">登录</a>
+          <button
+            onClick={toggleLanguage}
+            className="px-3 py-1 rounded border border-white/20 text-sm text-gray-300 hover:text-white hover:border-white/40 transition-colors"
+          >
+            {lang === 'zh' ? 'EN' : '中文'}
+          </button>
+          <a href="/admin/login.html" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-white hover:text-gray-300 transition-colors">{t('登录', 'Login')}</a>
           <Link href="/contact" className="bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-black text-sm font-semibold px-5 py-2.5 rounded-full transition-colors">
-            联系我们
+            {t('联系我们', 'Contact')}
           </Link>
         </div>
       </div>

@@ -2,6 +2,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
+  icons: {
+    icon: '/favicon.svg',
+  },
   title: {
     default: '唯客企业知识中台 | JOTO 旗下 AI 企业知识管理平台',
     template: '%s | 唯客企业知识中台',

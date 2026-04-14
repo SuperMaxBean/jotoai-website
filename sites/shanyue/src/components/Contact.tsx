@@ -15,19 +15,19 @@ const CONTACT_INFO = [
   {
     icon: Phone,
     label: "咨询热线",
-    value: "400-888-6200",
+    value: "+86 (021) 6566 1628",
     desc: "工作日 9:00-18:00",
   },
   {
     icon: Mail,
     label: "商务邮箱",
-    value: "contact@shanyue-ai.com",
+    value: "jotoai@jototech.cn",
     desc: "24 小时内回复",
   },
   {
     icon: MapPin,
     label: "公司地址",
-    value: "北京市海淀区中关村科技园",
+    value: "上海市杨浦区",
     desc: "欢迎来访参观",
   },
   {

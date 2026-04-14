@@ -42,12 +42,12 @@ const Footer = () => {
             <h4 className="text-sm font-bold uppercase tracking-widest text-slate-300 mb-4">联系</h4>
             <ul className="space-y-3">
               <li><Link href="/contact" className="text-sm text-slate-400 hover:text-white transition-colors">联络我们</Link></li>
-              <li><span className="text-sm text-slate-400">contact@joto.ai</span></li>
+              <li><span className="text-sm text-slate-400">jotoai@jototech.cn</span></li>
             </ul>
           </div>
         </div>
         <div className="border-t border-slate-700/50 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-slate-500">&copy; {new Date().getFullYear()} JOTO AI. All rights reserved.</p>
+          <p className="text-xs text-slate-500">&copy; {new Date().getFullYear()} 上海聚托信息科技有限公司 <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition-colors">沪ICP备15056478号-5</a></p>
           <div className="flex items-center gap-6">
             <Link href="/privacy" className="text-xs text-slate-500 hover:text-slate-300 transition-colors">隐私政策</Link>
             <span className="text-xs text-slate-500">服务条款</span>

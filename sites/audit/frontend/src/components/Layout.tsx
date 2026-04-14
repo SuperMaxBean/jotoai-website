@@ -44,7 +44,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               ))}
             </nav>
             <div className="flex items-center space-x-4">
-              <a href="/admin/login.html" className="text-sm font-medium text-slate-300 hover:text-white">登录</a>
               <Link href="/contact" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
                 预约演示
               </Link>

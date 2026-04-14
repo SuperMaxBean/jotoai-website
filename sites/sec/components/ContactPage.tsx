@@ -89,7 +89,7 @@ const ContactPage: React.FC = () => {
               <div className="bg-white p-4 lg:p-6 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-gray-100 flex items-center gap-4 lg:gap-6 transition-transform hover:-translate-y-1 duration-300">
                 <div className="w-20 h-20 lg:w-24 lg:h-24 bg-gray-50 p-1.5 rounded-xl shrink-0 border border-gray-100">
                     <img 
-                        src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://www.jotoai.com" 
+                        src="/wechat-qr.png"
                         alt="WeChat QR" 
                         className="w-full h-full mix-blend-multiply opacity-90"
                     />

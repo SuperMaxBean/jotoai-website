@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { MessageCircle, Phone, Mail, User, Building2, RefreshCw, ArrowRight, QrCode, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const API_BASE = '/api';
 
@@ -20,6 +21,7 @@ interface FormState {
 }
 
 export default function Contact() {
+  const { lang, t } = useLanguage();
   const [form, setForm] = useState<FormState>({
     name: '',
     company: '',
@@ -67,7 +69,7 @@ export default function Contact() {
     // 前端基础校验
     if (!form.name.trim() || !form.email.trim() || !form.phone.trim() || !form.captchaText.trim()) {
       setSubmitStatus('error');
-      setErrorMsg('请填写所有必填项（姓名、邮箱、电话、验证码）');
+      setErrorMsg(t('请填写所有必填项（姓名、邮箱、电话、验证码）', 'Please fill in all required fields (name, email, phone, captcha)'));
       return;
     }
 
@@ -81,7 +83,7 @@ export default function Contact() {
           name: form.company ? `${form.name}（${form.company}）` : form.name,
           email: form.email,
           phone: form.phone,
-          message: form.message || '（未填写需求描述）',
+          message: form.message || t('（未填写需求描述）', '(No description provided)'),
           captchaId,
           captchaText: form.captchaText,
         }),
@@ -90,7 +92,7 @@ export default function Contact() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || data.error || '提交失败，请稍后重试');
+        throw new Error(data.message || data.error || t('提交失败，请稍后重试', 'Submission failed, please try again later'));
       }
 
       setSubmitStatus('success');
@@ -98,7 +100,7 @@ export default function Contact() {
       fetchCaptcha();
     } catch (err: any) {
       setSubmitStatus('error');
-      setErrorMsg(err.message || '网络错误，请稍后重试');
+      setErrorMsg(err.message || t('网络错误，请稍后重试', 'Network error, please try again later'));
       fetchCaptcha();
     } finally {
       setIsSubmitting(false);
@@ -114,14 +116,14 @@ export default function Contact() {
           <div className="space-y-8">
             <div className="space-y-6">
               <span className="inline-block px-4 py-1 rounded-full border border-[#f97316] text-[#f97316] text-xs font-bold uppercase tracking-wider">
-                联系我们
+                {t('联系我们', 'Contact Us')}
               </span>
               <h2 className="text-4xl md:text-5xl font-bold leading-tight text-white">
-                开启企业级<br />
-                <span className="text-[#f97316]">AI 时尚新时代</span>
+                {t('开启企业级', 'Start Your Enterprise')}<br />
+                <span className="text-[#f97316]">{t('AI 时尚新时代', 'AI Fashion Journey')}</span>
               </h2>
               <p className="text-[#9ca3af] max-w-md leading-relaxed">
-                FasiumAI 致力于为服装企业提供最前沿的 AI 设计解决方案。无论您是独立设计师还是大型服装集团，我们的专家团队都将为您提供全方位的技术支持。
+                {t('FasiumAI 致力于为服装企业提供最前沿的 AI 设计解决方案。无论您是独立设计师还是大型服装集团，我们的专家团队都将为您提供全方位的技术支持。', 'FasiumAI is dedicated to providing cutting-edge AI design solutions for fashion enterprises. Whether you\'re an independent designer or a large apparel group, our expert team will deliver comprehensive technical support.')}
               </p>
             </div>
 
@@ -134,13 +136,13 @@ export default function Contact() {
                 </div>
                 <div className="space-y-4">
                   <div>
-                    <h3 className="font-bold text-white">微信咨询</h3>
-                    <p className="text-sm text-[#6b7280]">扫描二维码 / 添加安全专家一对一沟通</p>
+                    <h3 className="font-bold text-white">{t('微信咨询', 'WeChat')}</h3>
+                    <p className="text-sm text-[#6b7280]">{t('扫描二维码 / 添加安全专家一对一沟通', 'Scan the QR code to connect with our expert')}</p>
                   </div>
                   <div className="w-[150px] h-[150px] rounded-xl overflow-hidden bg-white p-1">
                     <img
                       src="/wechat-qr.png"
-                      alt="企业微信二维码"
+                      alt={t("企业微信二维码", "WeChat QR Code")}
                       className="w-full h-full object-contain"
                     />
                   </div>
@@ -153,7 +155,7 @@ export default function Contact() {
                   <Phone className="text-[#f97316] w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white">致电我们</h3>
+                  <h3 className="font-bold text-white">{t('致电我们', 'Call Us')}</h3>
                   <p className="text-[#f97316] font-semibold">+86 (021) 6566 1628</p>
                 </div>
               </div>
@@ -164,7 +166,7 @@ export default function Contact() {
                   <Mail className="text-[#f97316] w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white">发送邮件</h3>
+                  <h3 className="font-bold text-white">{t('发送邮件', 'Email Us')}</h3>
                   <p className="text-[#f97316] font-semibold">jotoai@jototech.cn</p>
                 </div>
               </div>
@@ -179,8 +181,8 @@ export default function Contact() {
             className="bg-[#1a1a1a] rounded-[2rem] p-8 md:p-10 border border-[#2a2a2a]"
           >
             <div className="mb-10">
-              <h2 className="text-2xl font-bold text-white mb-2">填写需求单</h2>
-              <p className="text-sm text-[#9ca3af]">收到您的信息后，我们将在 1 个工作日内与您取得联系。</p>
+              <h2 className="text-2xl font-bold text-white mb-2">{t('填写需求单', 'Submit Your Request')}</h2>
+              <p className="text-sm text-[#9ca3af]">{t('收到您的信息后，我们将在 1 个工作日内与您取得联系。', 'We will contact you within 1 business day after receiving your information.')}</p>
             </div>
 
             {/* Success State */}
@@ -188,8 +190,8 @@ export default function Contact() {
               <div className="mb-6 flex items-start gap-3 bg-green-500/10 border border-green-500/30 rounded-xl p-4">
                 <CheckCircle className="w-5 h-5 text-green-400 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-green-400 font-bold text-sm">提交成功！</p>
-                  <p className="text-green-400/70 text-xs mt-1">我们将在 1 个工作日内与您联系，请注意查收邮件。</p>
+                  <p className="text-green-400 font-bold text-sm">{t('提交成功！', 'Submitted successfully!')}</p>
+                  <p className="text-green-400/70 text-xs mt-1">{t('我们将在 1 个工作日内与您联系，请注意查收邮件。', 'We will contact you within 1 business day. Please check your email.')}</p>
                 </div>
               </div>
             )}
@@ -207,7 +209,7 @@ export default function Contact() {
                 {/* Name */}
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-[#d1d5db] flex items-center">
-                    姓名<span className="text-red-500 ml-1">*</span>
+                    {t('姓名', 'Name')}<span className="text-red-500 ml-1">*</span>
                   </label>
                   <div className="relative">
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#555555]" />
@@ -216,7 +218,7 @@ export default function Contact() {
                       name="name"
                       value={form.name}
                       onChange={handleChange}
-                      placeholder="称呼"
+                      placeholder={t("称呼", "Your name")}
                       required
                       className="w-full pl-11 pr-4 py-3 bg-[#111111] border border-[#333333] rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-[#f97316]/10 outline-none transition-all text-sm text-white placeholder-[#555555]"
                     />
@@ -224,7 +226,7 @@ export default function Contact() {
                 </div>
                 {/* Company */}
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-[#d1d5db]">企业名称</label>
+                  <label className="text-sm font-semibold text-[#d1d5db]">{t('企业名称', 'Company')}</label>
                   <div className="relative">
                     <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#555555]" />
                     <input
@@ -232,7 +234,7 @@ export default function Contact() {
                       name="company"
                       value={form.company}
                       onChange={handleChange}
-                      placeholder="企业全称"
+                      placeholder={t("企业全称", "Company name")}
                       className="w-full pl-11 pr-4 py-3 bg-[#111111] border border-[#333333] rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-[#f97316]/10 outline-none transition-all text-sm text-white placeholder-[#555555]"
                     />
                   </div>
@@ -240,7 +242,7 @@ export default function Contact() {
                 {/* Email */}
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-[#d1d5db]">
-                    邮箱<span className="text-red-500 ml-1">*</span>
+                    {t('邮箱', 'Email')}<span className="text-red-500 ml-1">*</span>
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#555555]" />
@@ -258,7 +260,7 @@ export default function Contact() {
                 {/* Phone */}
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-[#d1d5db]">
-                    电话<span className="text-red-500 ml-1">*</span>
+                    {t('电话', 'Phone')}<span className="text-red-500 ml-1">*</span>
                   </label>
                   <div className="relative">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#555555]" />
@@ -267,7 +269,7 @@ export default function Contact() {
                       name="phone"
                       value={form.phone}
                       onChange={handleChange}
-                      placeholder="手机号"
+                      placeholder={t("手机号", "Phone number")}
                       required
                       className="w-full pl-11 pr-4 py-3 bg-[#111111] border border-[#333333] rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-[#f97316]/10 outline-none transition-all text-sm text-white placeholder-[#555555]"
                     />
@@ -277,12 +279,12 @@ export default function Contact() {
 
               {/* Description */}
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-[#d1d5db]">需求描述</label>
+                <label className="text-sm font-semibold text-[#d1d5db]">{t('需求描述', 'Description')}</label>
                 <textarea
                   name="message"
                   value={form.message}
                   onChange={handleChange}
-                  placeholder="请简要描述您的应用场景…"
+                  placeholder={t("请简要描述您的应用场景…", "Briefly describe your use case...")}
                   className="w-full p-4 bg-[#111111] border border-[#333333] rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-[#f97316]/10 outline-none transition-all text-sm text-white placeholder-[#555555] h-[150px] resize-none"
                 />
               </div>
@@ -290,7 +292,7 @@ export default function Contact() {
               {/* Captcha */}
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-[#d1d5db]">
-                  验证码<span className="text-red-500 ml-1">*</span>
+                  {t('验证码', 'Captcha')}<span className="text-red-500 ml-1">*</span>
                 </label>
                 <div className="flex items-center gap-4">
                   <input
@@ -298,7 +300,7 @@ export default function Contact() {
                     name="captchaText"
                     value={form.captchaText}
                     onChange={handleChange}
-                    placeholder="输入验证码"
+                    placeholder={t("输入验证码", "Enter captcha")}
                     required
                     className="flex-1 p-3 bg-[#111111] border border-[#333333] rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-[#f97316]/10 outline-none transition-all text-sm text-white placeholder-[#555555]"
                   />
@@ -321,7 +323,7 @@ export default function Contact() {
                       type="button"
                       onClick={fetchCaptcha}
                       className="text-gray-400 hover:text-[#f97316] transition-colors shrink-0"
-                      title="刷新验证码"
+                      title={t("刷新验证码", "Refresh captcha")}
                     >
                       <RefreshCw className={`w-4 h-4 ${captchaLoading ? 'animate-spin' : ''}`} />
                     </button>
@@ -338,11 +340,11 @@ export default function Contact() {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    提交中…
+                    {t('提交中…', 'Submitting...')}
                   </>
                 ) : (
                   <>
-                    提交申请
+                    {t('提交申请', 'Submit')}
                     <ArrowRight className="w-5 h-5" />
                   </>
                 )}

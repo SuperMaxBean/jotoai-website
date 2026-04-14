@@ -1,13 +1,17 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { LanguageProvider } from '../contexts/LanguageContext';
 
 export const metadata: Metadata = {
-  title: 'FasiumAI - AI 驱动的时尚设计平台 | 趋势预测与一键生成',
-  description: 'FasiumAI 是领先的 AI 时尚设计平台，提供实时趋势观察、灵感筛选及高保真设计稿一键生成，助力品牌缩短 70% 设计周期。',
-  keywords: 'AI时尚设计, 服装设计软件, 趋势预测, 数字化时尚, FasiumAI',
+  icons: {
+    icon: '/favicon.svg',
+  },
+  title: 'FasiumAI - AI-Powered Fashion Design Platform | AI 驱动的时尚设计平台',
+  description: 'FasiumAI is the leading AI fashion design platform offering real-time trend observation, inspiration curation, and one-click high-fidelity design generation, helping brands cut design cycles by 70%.',
+  keywords: 'AI fashion design, garment design software, trend prediction, digital fashion, FasiumAI',
   openGraph: {
-    title: 'FasiumAI - AI 驱动的时尚设计平台',
-    description: '从观察到选择，只需几步。FasiumAI 将服装设计全流程浓缩为三步：观察趋势、筛选灵感、一键生成。',
+    title: 'FasiumAI - AI-Powered Fashion Design Platform',
+    description: 'From observation to selection in just a few steps. FasiumAI condenses the entire garment design workflow into three steps: observe trends, curate inspiration, generate with one click.',
     url: 'https://fasium.jotoai.com',
     siteName: 'FasiumAI',
     locale: 'zh_CN',
@@ -17,7 +21,7 @@ export const metadata: Metadata = {
         url: 'https://fasium.jotoai.com/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'FasiumAI - AI 驱动的时尚设计平台',
+        alt: 'FasiumAI - AI-Powered Fashion Design Platform',
       },
     ],
   },
@@ -33,8 +37,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-CN">
-      <body>{children}</body>
+    <html lang="zh-CN" suppressHydrationWarning>
+      <body>
+        <LanguageProvider>
+          {children}
+        </LanguageProvider>
+      </body>
     </html>
   );
 }

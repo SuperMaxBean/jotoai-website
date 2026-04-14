@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Search, Calendar, ArrowRight, Mail, Loader2, AlertCircle, X } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const API_BASE = '/api';
 
@@ -16,48 +17,6 @@ interface Article {
   summary: string;
   image: string;
 }
-
-const CATEGORY_NAMES = ['行业趋势', 'AI 技术', '设计灵感', '品牌案例', '产品动态'];
-
-// 静态兜底数据（API 不可用时展示）
-const FALLBACK_POSTS: Article[] = [
-  {
-    id: 1,
-    slug: '1',
-    category: '行业趋势',
-    date: '2026/03/08',
-    title: '2026 春夏时尚趋势报告：AI 如何预测下一个爆款？',
-    summary: '通过分析全球社交媒体数据与电商销售趋势，FasiumAI 的趋势引擎为品牌揭示了未来一季的核心色彩与廓形方向。',
-    image: '/blog/1.jpg',
-  },
-  {
-    id: 2,
-    slug: '2',
-    category: 'AI 技术',
-    date: '2026/03/05',
-    title: '从草图到 3D 建模：FasiumAI 核心生成算法深度解析',
-    summary: '深入了解我们如何利用扩散模型与几何约束，将设计师的简单草图转化为具备生产可行性的高保真三视图。',
-    image: '/blog/2.jpg',
-  },
-  {
-    id: 3,
-    slug: '3',
-    category: '品牌案例',
-    date: '2026/03/01',
-    title: '某知名快时尚品牌如何利用 AI 将设计周期缩短 70%',
-    summary: '在该品牌的数字化转型过程中，FasiumAI 帮助其设计团队实现了从灵感搜集到版单输出的全流程自动化。',
-    image: '/blog/3.jpg',
-  },
-  {
-    id: 4,
-    slug: '4',
-    category: '设计灵感',
-    date: '2026/02/25',
-    title: '打破创意瓶颈：5 个利用 AI 激发服装设计灵感的小技巧',
-    summary: '当设计师面临创作枯竭时，AI 不仅仅是工具，更是能够提供无限可能性的创意伙伴。本文将分享实用的提示词技巧。',
-    image: '/blog/4.jpg',
-  },
-];
 
 // 将后端文章格式标准化
 function normalizeArticle(raw: any): Article {
@@ -77,6 +36,7 @@ function normalizeArticle(raw: any): Article {
 const PAGE_SIZE = 6;
 
 export default function BlogPage() {
+  const { t } = useLanguage();
   const [posts, setPosts] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
@@ -84,6 +44,53 @@ export default function BlogPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [email, setEmail] = useState('');
+
+  const CATEGORY_NAMES = [
+    t('行业趋势', 'Industry Trends'),
+    t('AI 技术', 'AI Technology'),
+    t('设计灵感', 'Design Inspiration'),
+    t('品牌案例', 'Brand Cases'),
+    t('产品动态', 'Product Updates'),
+  ];
+
+  const FALLBACK_POSTS: Article[] = [
+    {
+      id: 1,
+      slug: '1',
+      category: t('行业趋势', 'Industry Trends'),
+      date: '2026/03/08',
+      title: t('2026 春夏时尚趋势报告：AI 如何预测下一个爆款？', '2026 Spring/Summer Fashion Trend Report: How AI Predicts the Next Hit'),
+      summary: t('通过分析全球社交媒体数据与电商销售趋势，FasiumAI 的趋势引擎为品牌揭示了未来一季的核心色彩与廓形方向。', 'By analyzing global social media data and e-commerce sales trends, FasiumAI\'s trend engine reveals next season\'s key colors and silhouette directions for brands.'),
+      image: '/blog/1.jpg',
+    },
+    {
+      id: 2,
+      slug: '2',
+      category: t('AI 技术', 'AI Technology'),
+      date: '2026/03/05',
+      title: t('从草图到 3D 建模：FasiumAI 核心生成算法深度解析', 'From Sketch to 3D Modeling: A Deep Dive into FasiumAI\'s Core Generation Algorithm'),
+      summary: t('深入了解我们如何利用扩散模型与几何约束，将设计师的简单草图转化为具备生产可行性的高保真三视图。', 'Learn how we use diffusion models and geometric constraints to transform simple designer sketches into production-ready high-fidelity three-view drawings.'),
+      image: '/blog/2.jpg',
+    },
+    {
+      id: 3,
+      slug: '3',
+      category: t('品牌案例', 'Brand Cases'),
+      date: '2026/03/01',
+      title: t('某知名快时尚品牌如何利用 AI 将设计周期缩短 70%', 'How a Leading Fast Fashion Brand Used AI to Cut Design Cycles by 70%'),
+      summary: t('在该品牌的数字化转型过程中，FasiumAI 帮助其设计团队实现了从灵感搜集到版单输出的全流程自动化。', 'During the brand\'s digital transformation, FasiumAI helped its design team achieve full-process automation from inspiration collection to spec sheet output.'),
+      image: '/blog/3.jpg',
+    },
+    {
+      id: 4,
+      slug: '4',
+      category: t('设计灵感', 'Design Inspiration'),
+      date: '2026/02/25',
+      title: t('打破创意瓶颈：5 个利用 AI 激发服装设计灵感的小技巧', 'Breaking Creative Blocks: 5 Tips for Using AI to Spark Fashion Design Inspiration'),
+      summary: t('当设计师面临创作枯竭时，AI 不仅仅是工具，更是能够提供无限可能性的创意伙伴。本文将分享实用的提示词技巧。', 'When designers face creative exhaustion, AI is not just a tool but a creative partner offering unlimited possibilities. This article shares practical prompt techniques.'),
+      image: '/blog/4.jpg',
+    },
+  ];
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -159,10 +166,10 @@ export default function BlogPage() {
               BLOG
             </span>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-              探索 AI 时尚设计的最新动态
+              {t('探索 AI 时尚设计的最新动态', 'Explore the Latest in AI Fashion Design')}
             </h1>
             <p className="text-xl text-[#9ca3af] max-w-2xl mx-auto">
-              深入了解 AI 时尚趋势、行业案例与设计创新深度洞察。
+              {t('深入了解 AI 时尚趋势、行业案例与设计创新深度洞察。', 'In-depth insights into AI fashion trends, industry cases, and design innovation.')}
             </p>
           </div>
         </section>
@@ -175,14 +182,14 @@ export default function BlogPage() {
             <aside className="w-full lg:w-[260px] space-y-8 shrink-0">
               {/* Search Module */}
               <div className="bg-[#1a1a1a] p-6 rounded-xl border border-[#2a2a2a]">
-                <h3 className="text-white font-bold mb-4">搜索动态</h3>
+                <h3 className="text-white font-bold mb-4">{t('搜索动态', 'Search')}</h3>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={handleSearch}
-                    placeholder="输入关键词搜索..."
+                    placeholder={t('输入关键词搜索...', 'Search articles...')}
                     className="w-full bg-[#111111] border border-[#333] rounded-lg pl-10 pr-4 py-2 text-sm focus:border-[#f97316] outline-none transition-all placeholder-gray-600 text-white"
                   />
                 </div>
@@ -190,7 +197,7 @@ export default function BlogPage() {
 
               {/* Categories Module */}
               <div className="bg-[#1a1a1a] p-6 rounded-xl border border-[#2a2a2a]">
-                <h3 className="text-white font-bold mb-4">文章分类</h3>
+                <h3 className="text-white font-bold mb-4">{t('文章分类', 'Categories')}</h3>
                 <ul className="space-y-2">
                   {CATEGORY_NAMES.map((name) => {
                     const count = categoryCounts[name] ?? 0;
@@ -222,25 +229,25 @@ export default function BlogPage() {
                     className="mt-4 w-full flex items-center justify-center gap-1.5 text-xs text-gray-500 hover:text-[#f97316] transition-colors"
                   >
                     <X className="w-3 h-3" />
-                    清除筛选
+                    {t('清除筛选', 'Clear filter')}
                   </button>
                 )}
               </div>
 
               {/* Newsletter Module */}
               <div className="bg-[#1a1a1a] p-6 rounded-xl border border-[#2a2a2a]">
-                <h3 className="text-white font-bold mb-2">订阅我们</h3>
-                <p className="text-xs text-[#9ca3af] mb-4">获取最新 AI 时尚资讯</p>
+                <h3 className="text-white font-bold mb-2">{t('订阅我们', 'Subscribe')}</h3>
+                <p className="text-xs text-[#9ca3af] mb-4">{t('获取最新 AI 时尚资讯', 'Get the latest AI fashion insights')}</p>
                 <div className="space-y-3">
                   <input
                     type="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    placeholder="您的邮箱地址"
+                    placeholder={t('您的邮箱地址', 'Enter your email')}
                     className="w-full bg-[#111111] border border-[#333] rounded-lg px-4 py-2 text-sm focus:border-[#f97316] outline-none transition-all placeholder-gray-600 text-white"
                   />
                   <button className="w-full bg-[#f97316] text-white py-2 rounded-lg text-sm font-bold hover:bg-[#f97316]/90 transition-all flex items-center justify-center gap-2">
-                    立即订阅
+                    {t('立即订阅', 'Subscribe')}
                     <Mail className="w-4 h-4" />
                   </button>
                 </div>
@@ -252,7 +259,7 @@ export default function BlogPage() {
               {/* Active filter indicator */}
               {(selectedCategory || searchQuery) && !isLoading && (
                 <div className="mb-6 flex items-center gap-3 flex-wrap">
-                  <span className="text-sm text-gray-400">筛选：</span>
+                  <span className="text-sm text-gray-400">{t('筛选：', 'Filters:')}</span>
                   {selectedCategory && (
                     <span className="inline-flex items-center gap-1.5 bg-[#f97316]/15 border border-[#f97316]/30 text-[#f97316] text-xs font-bold px-3 py-1.5 rounded-full">
                       {selectedCategory}
@@ -269,7 +276,7 @@ export default function BlogPage() {
                       </button>
                     </span>
                   )}
-                  <span className="text-xs text-gray-500">共 {filteredPosts.length} 篇</span>
+                  <span className="text-xs text-gray-500">{t(`共 ${filteredPosts.length} 篇`, `${filteredPosts.length} articles`)}</span>
                 </div>
               )}
 
@@ -284,16 +291,16 @@ export default function BlogPage() {
               {isError && !isLoading && (
                 <div className="flex items-center gap-2 text-sm text-yellow-500/80 bg-yellow-500/10 border border-yellow-500/20 rounded-xl px-4 py-3 mb-6">
                   <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>暂时无法连接服务器，显示示例内容</span>
+                  <span>{t('暂时无法连接服务器，显示示例内容', 'Unable to connect to server, showing sample content')}</span>
                 </div>
               )}
 
               {/* No results */}
               {!isLoading && pagedPosts.length === 0 && (
                 <div className="text-center py-20 text-[#9ca3af]">
-                  <p className="text-lg">未找到相关文章</p>
+                  <p className="text-lg">{t('未找到相关文章', 'No matching articles found')}</p>
                   <button onClick={clearFilters} className="mt-4 text-[#f97316] text-sm hover:underline">
-                    清除所有筛选
+                    {t('清除所有筛选', 'Clear all filters')}
                   </button>
                 </div>
               )}
@@ -331,7 +338,7 @@ export default function BlogPage() {
                           {post.summary}
                         </p>
                         <Link href={`/blog/${post.slug}`} className="inline-flex items-center gap-2 text-sm font-bold text-[#f97316] hover:underline">
-                          阅读全文
+                          {t('阅读全文', 'Read more')}
                           <ArrowRight className="w-4 h-4" />
                         </Link>
                       </div>
@@ -348,7 +355,7 @@ export default function BlogPage() {
                     disabled={currentPage === 1}
                     className="px-4 py-2 rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] text-sm text-[#9ca3af] hover:text-white hover:border-gray-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    上一页
+                    {t('上一页', 'Previous')}
                   </button>
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                     <button
@@ -368,7 +375,7 @@ export default function BlogPage() {
                     disabled={currentPage === totalPages}
                     className="px-4 py-2 rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] text-sm text-[#9ca3af] hover:text-white hover:border-gray-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    下一页
+                    {t('下一页', 'Next')}
                   </button>
                 </div>
               )}

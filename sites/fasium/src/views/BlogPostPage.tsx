@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Calendar, User, Tag, ChevronLeft, Share2, MessageSquare, Loader2, AlertCircle } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const API_BASE = '/api';
 
@@ -187,6 +188,7 @@ const FALLBACK_RELATED: Article[] = [
 
 export default function BlogPostPage() {
   const params = useParams();
+  const { t } = useLanguage();
   const id = params?.id as string;
   const [post, setPost] = useState<Article | null>(null);
   const [relatedPosts, setRelatedPosts] = useState<Article[]>([]);
@@ -237,7 +239,7 @@ export default function BlogPostPage() {
       navigator.share({ title: post.title, url: window.location.href });
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert('链接已复制到剪贴板');
+      alert(t('链接已复制到剪贴板', 'Link copied to clipboard'));
     }
   };
 
@@ -270,7 +272,7 @@ export default function BlogPostPage() {
           <div className="max-w-4xl mx-auto px-6 pt-6">
             <div className="flex items-center gap-2 text-sm text-yellow-500/80 bg-yellow-500/10 border border-yellow-500/20 rounded-xl px-4 py-3">
               <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>暂时无法连接服务器，显示示例内容</span>
+              <span>{t('暂时无法连接服务器，显示示例内容', 'Unable to connect to server, showing sample content')}</span>
             </div>
           </div>
         )}
@@ -285,7 +287,7 @@ export default function BlogPostPage() {
           <div className="relative z-10 max-w-4xl mx-auto px-6 pb-12 w-full">
             <Link href="/blog" className="inline-flex items-center gap-2 text-sm text-[#f97316] mb-6 hover:underline group">
               <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-              返回博客列表
+              {t('返回博客列表', 'Back to Blog')}
             </Link>
             <div className="flex items-center gap-4 mb-4">
               <span className="bg-[#f97316] text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">
@@ -302,7 +304,7 @@ export default function BlogPostPage() {
               </div>
               <div>
                 <p className="text-sm font-bold text-white">{post.author}</p>
-                <p className="text-xs text-gray-500">FasiumAI 研究员</p>
+                <p className="text-xs text-gray-500">{t('FasiumAI 研究员', 'FasiumAI Researcher')}</p>
               </div>
             </div>
           </div>
@@ -332,10 +334,10 @@ export default function BlogPostPage() {
               </div>
               <div className="flex items-center gap-4">
                 <button onClick={handleShare} className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
-                  <Share2 className="w-4 h-4" />分享
+                  <Share2 className="w-4 h-4" />{t('分享', 'Share')}
                 </button>
                 <button className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
-                  <MessageSquare className="w-4 h-4" />评论
+                  <MessageSquare className="w-4 h-4" />{t('评论', 'Comment')}
                 </button>
               </div>
             </div>
@@ -343,7 +345,7 @@ export default function BlogPostPage() {
             {/* Related Posts */}
             {relatedPosts.length > 0 && (
               <div className="mt-20">
-                <h3 className="text-xl font-bold mb-8">相关阅读</h3>
+                <h3 className="text-xl font-bold mb-8">{t('相关阅读', 'Related Articles')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {relatedPosts.map(related => (
                     <Link key={related.id} to={`/blog/${related.slug}`}

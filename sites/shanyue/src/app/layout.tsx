@@ -4,6 +4,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
+  icons: {
+    icon: '/favicon.svg',
+  },
   metadataBase: new URL("https://shanyue.jotoai.com"),
   title: {
     default: "闪阅 - AI 全科阅卷 | 面向未来的教学评估平台",

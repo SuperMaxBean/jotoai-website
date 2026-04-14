@@ -18,12 +18,15 @@ const outfit = Outfit({
   variable: "--font-outfit",
 });
 
-export const metadata: Metadata = buildPageMetadata({
-  title: `${SITE_NAME} | 企业级大模型安全防护`,
-  description: DEFAULT_DESCRIPTION,
-  path: "/",
-  keywords: ["唯客 AI 护栏", "大模型安全", "Dify", "LLM 安全防护", "企业级 AI"],
-});
+export const metadata: Metadata = {
+  icons: { icon: '/favicon.svg' },
+  ...buildPageMetadata({
+    title: `${SITE_NAME} | 企业级大模型安全防护`,
+    description: DEFAULT_DESCRIPTION,
+    path: "/",
+    keywords: ["唯客 AI 护栏", "大模型安全", "Dify", "LLM 安全防护", "企业级 AI"],
+  }),
+};
 
 export default function RootLayout({
   children,

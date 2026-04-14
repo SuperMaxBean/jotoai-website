@@ -127,8 +127,8 @@ export default function Contact() {
                 <div className="bg-white p-2 rounded-xl shadow-md border border-slate-100 mb-3">
                   {/* Placeholder for the uploaded QR code */}
                   <img 
-                    src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=https://weike-zhishen.ai" 
-                    alt="微信咨询" 
+                    src="/wechat-qr.png"
+                    alt="微信咨询"
                     className="w-32 h-32"
                     referrerPolicy="no-referrer"
                   />

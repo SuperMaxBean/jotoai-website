@@ -39,7 +39,7 @@ const SECTIONS = [
       "您有权随时查阅、更正或删除您的个人信息和考试数据。",
       "您有权要求我们导出您的全部数据，我们将在 5 个工作日内提供结构化数据包。",
       "您有权撤回此前给予的数据处理授权，撤回后我们将停止处理并安全删除相关数据。",
-      "如对数据处理有任何疑问，可通过 privacy@shanyue-ai.com 联系我们的数据保护官。",
+      "如对数据处理有任何疑问，可通过 jotoai@jototech.cn 联系我们的数据保护官。",
     ],
   },
   {
@@ -120,7 +120,7 @@ export default function PrivacyPolicy() {
             如您对本隐私政策有任何疑问，请联系我们的数据保护官：
           </p>
           <p className="mt-2 text-sm font-semibold text-purple-700">
-            privacy@shanyue-ai.com
+            jotoai@jototech.cn
           </p>
         </div>
       </div>

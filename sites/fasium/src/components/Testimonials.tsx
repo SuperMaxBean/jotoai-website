@@ -1,57 +1,79 @@
+'use client';
 import React from 'react';
-
-const testimonials = [
-  {
-    name: "Sophia Lin",
-    role: "设计总监",
-    company: "某头部快时尚集团旗下女装品牌",
-    content: "以前出一套完整的系列设计稿，从趋势调研到三视图完成，至少要两周。现在用 FasiumAI，三天搞定，三视图和版单同步出，设计师终于可以把精力放在真正的创意上了。",
-    initial: "S"
-  },
-  {
-    name: "Marcus Chen",
-    role: "印花设计主管",
-    company: "某港资时尚集团面料研发部",
-    content: "纹理裂变这个功能彻底改变了我们的工作方式。一个印花素材，AI 能在两分钟内给出 30 种配色和排列变体，以前这是一个设计师做一整天的活。我们现在每季可以多推 3 个花型系列。",
-    initial: "M"
-  },
-  {
-    name: "Kevin Huang",
-    role: "商务总监",
-    company: "某中型高端服装代工厂",
-    content: "我们是做 ODM 的，最头疼的是客户描述模糊、反复改稿。现在用 FasiumAI，客户说个大概方向，我们现场就能出几套高保真方案连 Tech Pack 一起给，成单率提升了快一倍。",
-    initial: "K"
-  },
-  {
-    name: "Chloe Su",
-    role: "品牌市场负责人",
-    company: "某新锐设计师女装品牌",
-    content: "广告图生成太实用了。一张产品图输入进去，选好风格，60 秒出 6 张不同场景的广告大片，我们直接拿去投小红书和抖音，省掉了一整个外拍流程。",
-    initial: "C"
-  },
-  {
-    name: "Amélie Zhang",
-    role: "独立设计师",
-    company: "个人轻奢女装品牌主理人",
-    content: "用 FasiumAI 之后，我一个人的产出真的顶过去半个团队。画板功能让我第一次觉得灵感和执行之间没有断层，想到什么，AI 帮我立刻呈现出来。",
-    initial: "A"
-  },
-  {
-    name: "Fiona Wang",
-    role: "产品总监",
-    company: "某上市女装集团产品中心",
-    content: "虚拟试穿功能帮我们砍掉了将近 40% 的首轮打样成本。设计师在电脑上就能看到成衣效果，不满意直接改，再也不用为一个版型来回打三次样了。",
-    initial: "F"
-  }
-];
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Testimonials() {
+  const { lang, t } = useLanguage();
+
+  const testimonials = [
+    {
+      name: "Sophia Lin",
+      role: t("设计总监", "Design Director"),
+      company: t("某头部快时尚集团旗下女装品牌", "Leading fast fashion group, womenswear brand"),
+      content: t(
+        "以前出一套完整的系列设计稿，从趋势调研到三视图完成，至少要两周。现在用 FasiumAI，三天搞定，三视图和版单同步出，设计师终于可以把精力放在真正的创意上了。",
+        "It used to take at least two weeks to complete a full collection — from trend research to three-view flats. Now with FasiumAI, it's done in three days. Three-view flats and tech packs are generated simultaneously, and designers can finally focus on real creativity."
+      ),
+      initial: "S"
+    },
+    {
+      name: "Marcus Chen",
+      role: t("印花设计主管", "Print Design Lead"),
+      company: t("某港资时尚集团面料研发部", "HK fashion group, fabric R&D division"),
+      content: t(
+        "纹理裂变这个功能彻底改变了我们的工作方式。一个印花素材，AI 能在两分钟内给出 30 种配色和排列变体，以前这是一个设计师做一整天的活。我们现在每季可以多推 3 个花型系列。",
+        "The pattern derivation feature completely transformed our workflow. One print asset yields 30 colorway and layout variants in two minutes — work that used to take a designer a full day. We can now push 3 extra print collections per season."
+      ),
+      initial: "M"
+    },
+    {
+      name: "Kevin Huang",
+      role: t("商务总监", "Business Director"),
+      company: t("某中型高端服装代工厂", "Mid-size premium garment OEM"),
+      content: t(
+        "我们是做 ODM 的，最头疼的是客户描述模糊、反复改稿。现在用 FasiumAI，客户说个大概方向，我们现场就能出几套高保真方案连 Tech Pack 一起给，成单率提升了快一倍。",
+        "As an ODM, our biggest pain point was vague client briefs and endless revisions. Now with FasiumAI, clients give us a rough direction and we can present multiple high-fidelity proposals with Tech Packs on the spot — our close rate has nearly doubled."
+      ),
+      initial: "K"
+    },
+    {
+      name: "Chloe Su",
+      role: t("品牌市场负责人", "Brand Marketing Lead"),
+      company: t("某新锐设计师女装品牌", "Emerging designer womenswear brand"),
+      content: t(
+        "广告图生成太实用了。一张产品图输入进去，选好风格，60 秒出 6 张不同场景的广告大片，我们直接拿去投小红书和抖音，省掉了一整个外拍流程。",
+        "The ad image generation is incredibly useful. Input one product photo, choose a style, and get 6 different scene ads in 60 seconds. We use them directly for social media campaigns — eliminating an entire photoshoot workflow."
+      ),
+      initial: "C"
+    },
+    {
+      name: "Amélie Zhang",
+      role: t("独立设计师", "Independent Designer"),
+      company: t("个人轻奢女装品牌主理人", "Personal luxury womenswear brand founder"),
+      content: t(
+        "用 FasiumAI 之后，我一个人的产出真的顶过去半个团队。画板功能让我第一次觉得灵感和执行之间没有断层，想到什么，AI 帮我立刻呈现出来。",
+        "After using FasiumAI, my output truly rivals half a team. The canvas feature made me feel for the first time that there's no gap between inspiration and execution — whatever I imagine, AI helps me visualize instantly."
+      ),
+      initial: "A"
+    },
+    {
+      name: "Fiona Wang",
+      role: t("产品总监", "Product Director"),
+      company: t("某上市女装集团产品中心", "Listed womenswear group, product center"),
+      content: t(
+        "虚拟试穿功能帮我们砍掉了将近 40% 的首轮打样成本。设计师在电脑上就能看到成衣效果，不满意直接改，再也不用为一个版型来回打三次样了。",
+        "The virtual try-on feature helped us cut nearly 40% of first-round sampling costs. Designers can see the garment effect on screen — if they're not satisfied, they adjust directly. No more making three samples for one silhouette."
+      ),
+      initial: "F"
+    }
+  ];
+
   return (
     <section className="py-24 px-6 bg-[#0a0a0a]">
       <div className="max-w-7xl mx-auto">
         <div className="mb-16">
-          <p className="text-[#FF8A00] text-sm font-bold tracking-widest uppercase mb-4">用户反馈</p>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">他们在说什么</h2>
+          <p className="text-[#FF8A00] text-sm font-bold tracking-widest uppercase mb-4">{t('用户反馈', 'TESTIMONIALS')}</p>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">{t('他们在说什么', "What they're saying")}</h2>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">

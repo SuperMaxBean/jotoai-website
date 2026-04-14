@@ -67,7 +67,7 @@ async function startServer() {
           title: '联系我们 - 唯客智审 | 预约产品演示与商务合作',
           description: '期待与您交流。联系唯客智审团队，预约 1 对 1 产品演示，咨询企业法务数字化转型方案。',
           keywords: '联系唯客智审, 预约演示, 商务合作, 法务咨询',
-          content: '联系方式：服务热线 400-123-4567，邮箱 business@weike-zhishen.ai。地址：北京市海淀区科技园区 JOTO AI 大厦。欢迎预约产品演示。'
+          content: '联系方式：服务热线 +86 (021) 6566 1628，邮箱 jotoai@jototech.cn。欢迎预约产品演示。'
         },
         '/privacy': {
           title: '隐私政策 - 唯客智审 | 数据安全与隐私保护承诺',
@@ -106,7 +106,7 @@ async function startServer() {
     <meta name="description" content="${currentMeta.description}" />
     <meta name="keywords" content="${currentMeta.keywords}" />
     <meta name="author" content="唯客智审" />
-    <link rel="canonical" href="https://weike-zhishen.ai${req.path}" />
+    <link rel="canonical" href="https://audit.jotoai.com${req.path}" />
       `;
       template = template.replace('</head>', `${metaTags}\n  </head>`);
 
