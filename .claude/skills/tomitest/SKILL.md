@@ -32,11 +32,45 @@ Comprehensive end-to-end test suite covering all JOTO.AI product websites.
 
 ## JOTO.AI Website Tests
 
-### 1. Page Load & SSR Tests
-Verify every page on every site loads with correct status, title, meta tags, and server-rendered content.
+### 1. Page Load Tests (Browser)
 
-### 2. SEO Tests
-Verify robots.txt, sitemap.xml, canonical URLs, OG tags, meta description, and no blocked resources for all sites.
+**Open each page in Puppeteer, screenshot, verify content renders.**
+
+| # | Site | Pages to test | Expected |
+|---|------|--------------|----------|
+| PL1 | audit | `/`, `/features`, `/architecture`, `/blog`, `/contact`, `/privacy` | Each page renders with content, no blank screens |
+| PL2 | shanyue | `/`, `/capabilities`, `/architecture`, `/articles`, `/contact`, `/privacy`, `/login` | Same |
+| PL3 | sec | `/`, `/features`, `/contact`, `/articles`, `/about`, `/changelog`, `/roadmap`, `/pricing` | Same |
+| PL4 | kb | `/`, `/blog`, `/login` | Same |
+| PL5 | fasium | `/`, `/blog`, `/contact`, `/privacy` | Same |
+| PL6 | loop | `/` | Landing page renders |
+| PL7 | noteflow | `/`, `/features`, `/use-cases`, `/blog`, `/contact`, `/privacy` | Same |
+| PL8 | admin | `https://admin.jotoai.com` | Login page renders |
+
+### 2. i18n Tests (Browser)
+
+**Click language toggle, verify ALL visible text switches.**
+
+| # | Site | Test | Expected |
+|---|------|------|----------|
+| I1 | audit | Click EN → verify navbar, hero, footer all English | No Chinese text in main content (blog content excluded) |
+| I2 | shanyue | Click EN → verify | Same |
+| I3 | sec | Click EN → verify | Same |
+| I4 | kb | Click EN → verify | Same |
+| I5 | fasium | Click EN → verify | Same |
+| I6 | loop | Click EN → verify | Same |
+| I7 | noteflow | Click 中文 → verify | All UI switches to Chinese |
+| I8 | All sites | Brand names in EN mode | No Chinese brand names mixed in English text (e.g. no "唯客智审" in EN mode) |
+
+### 3. SEO Tests (Browser)
+
+| # | Test | Method | Expected |
+|---|------|--------|----------|
+| SEO1 | robots.txt | Navigate to `/{site}/robots.txt` | Valid robots.txt content |
+| SEO2 | sitemap.xml | Navigate to `/{site}/sitemap.xml` | Valid sitemap |
+| SEO3 | Favicon | Check favicon in browser tab | Each site has favicon |
+| SEO4 | ICP备案 | Scroll to footer | 沪ICP备15056478号-5 visible on all sites |
+| SEO5 | Company name | Footer | 上海聚托信息科技有限公司 (or English equivalent in EN mode) |
 
 ### 3. Contact Form E2E Tests (Browser Required)
 
@@ -69,15 +103,75 @@ Verify robots.txt, sitemap.xml, canonical URLs, OG tags, meta description, and n
 
 **Known bug (fixed):** Site-specific route `/api/:site/contact` previously did NOT send email. Fixed 2026-04-14 by adding `sendEmail()` call to the handler in `index.js`.
 
-### 4. Blog/Article Tests
-Test blog listing, article detail pages, search, and category filtering.
+### 5. Blog/Article Tests (Browser)
 
-### 5. Admin Dashboard Tests
-Test login, dashboard stats, site status monitoring, email config, contacts list, and site management.
+| # | Site | URL | Test | Expected |
+|---|------|-----|------|----------|
+| BL1 | audit | /blog | Open blog listing page | Article cards visible with titles, dates, categories |
+| BL2 | audit | /blog/{id} | Click first article | Article detail page renders with full content |
+| BL3 | shanyue | /articles | Open articles page | Article list renders |
+| BL4 | shanyue | /articles/{id} | Click article | Detail page renders |
+| BL5 | sec | /articles | Open articles page | Article list renders |
+| BL6 | sec | /articles/{id} | Click article | Detail page renders |
+| BL7 | kb | /blog | Open blog page | Article list renders |
+| BL8 | kb | /blog/{id} | Click article | Detail page renders |
+| BL9 | fasium | /blog | Open blog page | Article list renders |
+| BL10 | fasium | /blog/{id} | Click article | Detail page renders |
+| BL11 | noteflow | /blog | Open blog page | Article cards render (from admin API or fallback) |
+| BL12 | noteflow | /blog/{id} | Click article | Detail page renders |
 
-### 6. Cross-Site Tests
-Verify shared backend API, consistent branding, and navigation.
+**Admin article generation:**
 
-### 7. China Accessibility Tests
-Verify no blocked resources (Google Fonts, Analytics, reCAPTCHA, etc.).
+| # | Test | Method | Expected |
+|---|------|--------|----------|
+| AG1 | Login to admin | Open admin.jotoai.com → login with tomi@jototech.cn | Dashboard visible with Sites/Forms/Articles stats |
+| AG2 | Navigate to articles | Click 文章管理 in sidebar | Article list for selected site |
+| AG3 | Switch site | Select each site (audit/shanyue/sec/kb/fasium/noteflow) | Shows articles for that site |
+| AG4 | Generate article | Click 生成文章 → configure → generate | New article created, appears in list |
+| AG5 | Verify on frontend | After generating, open site's /blog page | New article visible on frontend |
+| AG6 | Delete test article | Select article → delete | Article removed from list and frontend |
+
+### 6. Admin Dashboard Tests (Browser)
+
+| # | Test | Method | Expected |
+|---|------|--------|----------|
+| AD1 | Login | Open admin.jotoai.com → fill email/password → login | Dashboard loads |
+| AD2 | Dashboard stats | Check stats cards | Sites=7, Forms count, Articles count, Version visible |
+| AD3 | Site status | Check Site Status section | All 7 sites show "All OK" with response times |
+| AD4 | 留言管理 | Click 留言管理 in sidebar | Contact submissions list with sender info |
+| AD5 | 文章管理 | Click 文章管理 | Article list with site selector |
+| AD6 | 站点管理 | Click 站点管理 | All 7 sites listed with URLs |
+| AD7 | 邮件设置 | Click 邮件设置 | Resend API key configured, FROM address visible |
+| AD8 | 文章配置 | Click 文章配置 | LLM model, SEO keywords configuration |
+| AD9 | 管理员 | Click 管理员 | Admin user list |
+| AD10 | SSL 证书 | Click SSL 证书 | Certificate status for each domain |
+
+### 7. Contact Info Consistency (Browser)
+
+| # | Test | Method | Expected |
+|---|------|--------|----------|
+| CI1 | Phone | Check every site's contact page | `+86 (021) 6566 1628` on all sites |
+| CI2 | Email | Check every site's contact page | `jotoai@jototech.cn` on all sites |
+| CI3 | WeChat QR | Check contact pages with QR | Real QR code image loads (not placeholder) |
+| CI4 | Company name | Check footer on all sites | 上海聚托信息科技有限公司 |
+
+### 8. Noteflow Landing Page Integration (Browser)
+
+| # | Test | Method | Expected |
+|---|------|--------|----------|
+| NF1 | Contact form | Open note.jotoai.com/contact → fill → submit with captcha | "消息已发送成功" + email received |
+| NF2 | Blog from admin API | Open note.jotoai.com/blog | Articles load (from admin API or fallback) |
+| NF3 | Blog detail | Click article | Detail page renders |
+| NF4 | Admin API proxy | note.jotoai.com/admin-api/captcha | Returns JSON captcha (not HTML) |
+| NF5 | WeChat QR | Check contact page | QR image loads correctly |
+| NF6 | i18n toggle | Click 中文/EN | Language switches |
+
+### 9. China Accessibility Tests (Browser)
+
+| # | Test | Method | Expected |
+|---|------|--------|----------|
+| CA1 | No Google Fonts | Open page, check network requests | No requests to fonts.googleapis.com |
+| CA2 | No Google Analytics | Check network requests | No requests to google-analytics.com |
+| CA3 | No blocked CDNs | Check for reCAPTCHA, Google CDN | No external blocked resources |
+| CA4 | All assets load | Open each site, check for broken images/CSS | No 404s or loading failures |
 
