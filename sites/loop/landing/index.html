@@ -11,4 +11,332 @@
   
 
 
-</body></html>
+<script>
+(function() {
+  var T = {
+    'JOTO.AI 旗下产品': 'A JOTO.AI Product',
+    '产品能力': 'Features',
+    '技能中心': 'Skills',
+    '实战运行': 'Live Demo',
+    '本地部署': 'Deployment',
+    '集成': 'Integrations',
+    '定价': 'Pricing',
+    '文档': 'Docs',
+    '登录': 'Login',
+    '免费试用': 'Free Trial',
+    '思考、规划，并在浏览器中': 'Think, plan, and',
+    'Loop 云端 AI 浏览器，让浏览器成为你的 AI 员工。像真人一样看屏、思考、操作，全天候稳定运行。': 'Loop cloud AI browser turns your browser into an AI employee. It sees, thinks, and acts like a real person — running stably around the clock.',
+    '核心能力 — AI 行动循环': 'Core Capability — AI Action Loop',
+    '看、想、做、学的闭环，像真人一样操作浏览器': 'See, Think, Act, Learn — operating the browser like a real person',
+    '传统自动化脚本页面一改版就崩。Loop 用视觉 AI 直接看懂页面，像人一样理解界面、做出判断、执行操作，遇到变化还能自己调整。': 'Traditional automation scripts break when a page changes. Loop uses visual AI to understand pages directly — reading the interface, making decisions, executing actions, and adapting to changes on its own.',
+    '实时"看到"浏览器里的每一个画面，理解页面上有什么': 'See every screen in the browser in real time and understand what is on the page',
+    '根据当前画面和目标，决定下一步该做什么': 'Based on the current screen and goal, decide what to do next',
+    '执行点击、输入、翻页、下载等操作': 'Perform clicks, inputs, page turns, downloads, and other actions',
+    '页面变了也不怕，AI 自动找到新位置并记住，越用越稳': 'Not afraid of page changes — AI finds the new location automatically and remembers it',
+    '像教员工一样教会 AI': 'Teach AI like teaching an employee',
+    '每一个自动化任务都是一个"技能"。你可以自己创建，也可以让 AI 帮你创建，还能让它定时自动跑。': 'Every automation task is a "skill". You can create them yourself, let AI create them for you, or schedule them to run automatically.',
+    'AI 自动生成': 'AI Auto-Generation',
+    '把你要做的操作演示一遍，AI 自动学会并生成可复用的技能。新场景从零到上线只需几分钟。': 'Demonstrate the operation once, and AI automatically learns and generates a reusable skill. New scenarios go from zero to live in minutes.',
+    '自定义技能': 'Custom Skills',
+    '既可以写代码，也可以用自然语言描述。复杂流程交给工程师，简单流程业务同学自己就能搭。': 'Use code or natural language. Complex workflows go to engineers; simple ones can be built by business users themselves.',
+    '定时调度': 'Scheduled Tasks',
+    '设定好时间，任务自动跑。中途断了也能从断点继续，不丢数据。': 'Set a schedule and tasks run automatically. If interrupted, they resume from where they left off without losing data.',
+    '实战运行能力': 'Production-Ready Capabilities',
+    '为真实业务场景而生': 'Built for real business scenarios',
+    '自动化不是"一键启动就撒手不管"。Loop 把那些实际会遇到的麻烦事——登录、验证码、规模化——都想好了。': 'Automation is not just "start and forget". Loop has already solved the real-world headaches — login, CAPTCHAs, and scaling.',
+    '人工接管，随时切换': 'Human Takeover, Anytime',
+    '遇到登录、验证码、二次验证这类场景，一键切换到人工操作模式，你亲自搞定后 AI 无缝接手继续跑。不用为了一个登录环节写一堆复杂代码。': 'For login, CAPTCHA, or 2FA scenarios, switch to manual mode with one click. After you handle it, AI seamlessly takes over. No need to write complex code for a login step.',
+    '登录态长期保持': 'Persistent Login Sessions',
+    '登录一次，之后长期复用，不用每次任务开始都重新输密码。账号信息加密保存在你自己的环境里，安全可控。': 'Log in once and reuse sessions long-term. No need to re-enter passwords for every task. Credentials are encrypted and stored in your own environment.',
+    '多浏览器并发执行': 'Multi-Browser Parallel Execution',
+    '一键同时启动 10 个、20 个浏览器实例并行跑任务。原来一天的工作量，几十分钟搞定。': 'Launch 10 or 20 browser instances simultaneously with one click. A full day\'s workload done in minutes.',
+    '反风控引擎设置': 'Anti-Detection Engine Settings',
+    '实时画面与操作日志': 'Real-time View & Operation Logs',
+    '每一个浏览器实例都能实时看到画面和操作轨迹。哪个卡住了、哪个出错了，一眼就能看出来，不用盲跑。': 'See the live screen and action trail of every browser instance. Instantly spot which one is stuck or errored — no blind running.',
+    '本地部署与数据安全': 'On-Premise Deployment & Data Security',
+    '企业数据不出内网': 'Enterprise data stays on your network',
+    'Loop 支持完全部署在你自己的服务器上，从运行环境到 AI 模型都在你的内网里，符合国内数据合规要求。': 'Loop supports full deployment on your own servers — from runtime to AI models, everything stays on your intranet, meeting domestic data compliance requirements.',
+    '私有化部署': 'Private Deployment',
+    '一键安装到你自己的服务器，支持离线环境，不依赖公网。': 'One-click install on your own server. Supports offline environments with no public network dependency.',
+    '接入你自己的 AI 模型': 'Bring Your Own AI Model',
+    '兼容主流国产视觉模型，也能接入企业已有的 AI 能力。': 'Compatible with mainstream domestic vision models, and can integrate with your existing enterprise AI capabilities.',
+    '任务隔离': 'Task Isolation',
+    '每个任务在独立环境中运行，账号与密码加密保存，互不干扰。': 'Each task runs in an isolated environment. Credentials are encrypted and stored separately.',
+    '审计与权限': 'Audit & Permissions',
+    '所有操作全程留痕，对接企业单点登录与权限体系，谁做了什么一目了然。': 'Full operation audit trail. Integrates with enterprise SSO and permission systems — who did what is crystal clear.',
+    '数据与集成': 'Data & Integrations',
+    '连接你的工作流': 'Connect to your workflow',
+    'Loop 跑出来的结果不会躺在系统里吃灰，而是直接流回你熟悉的工具。': 'Results from Loop flow directly back to the tools you already use.',
+    '数据管理': 'Data Management',
+    '结构化保存、状态追踪、附件归档、一键导出表格': 'Structured storage, status tracking, attachment archiving, one-click export',
+    '飞书集成': 'Lark Integration',
+    '数据直接写入多维表格，运行状态实时推送到群聊': 'Data writes directly to spreadsheets; run status pushes to group chats in real time',
+    '对外调用接口': 'External API',
+    '开箱即用的标准接口，让 Loop 成为你 AI 工作流里的浏览器执行层': 'Out-of-the-box standard APIs — making Loop the browser execution layer in your AI workflow',
+    '典型场景': 'Use Cases',
+    '网页能做的事，Loop 都能帮你做': 'Whatever you can do on the web, Loop can do for you',
+    '那些有界面、没接口的网页工作，Loop 都能接管。': 'Web tasks with a UI but no API — Loop handles them all.',
+    '竞品价格与上新监控': 'Competitor Price & New Product Monitoring',
+    '定时巡检竞品商品页，抓取价格、库存、新品信息，异常波动自动推送飞书。': 'Periodically inspect competitor product pages, scrape prices, inventory, and new items. Anomalies are automatically pushed to Lark.',
+    '品牌舆情与口碑追踪': 'Brand Sentiment & Reputation Tracking',
+    '跨平台监控品牌提及，汇总到多维表格做情绪分析与趋势洞察。': 'Monitor brand mentions across platforms and aggregate into spreadsheets for sentiment analysis and trend insights.',
+    '行业资讯与政策聚合': 'Industry News & Policy Aggregation',
+    '订阅垂直媒体与公开信息源，每日自动生成行业简报。': 'Subscribe to vertical media and public sources; auto-generate daily industry briefings.',
+    '招投标公告监控': 'Bid & Tender Monitoring',
+    '多个平台统一巡检，关键词命中后抓取公告详情与附件，推送到销售群。': 'Unified monitoring across platforms. When keywords match, scrape announcement details and attachments, then push to sales groups.',
+    '如果你的场景不在这里 ——': 'If your use case is not listed here —',
+    '联系我们': 'Contact Us',
+    '，JOTO FDE 团队可以为你共建专属技能。': ', the JOTO FDE team can co-build custom skills with you.',
+    '三个页面，覆盖全部操作': 'Three pages, covering all operations',
+    '工作台': 'Workspace',
+    '实时看到浏览器在做什么，随时对话指挥，也能随时接管。': 'See what the browser is doing in real time. Chat to direct it, or take over anytime.',
+    '按平台分组、搜索、配置、调度。团队共享的技能库。': 'Group by platform, search, configure, and schedule. A shared skill library for the team.',
+    '设置': 'Settings',
+    '模型配置、账号凭据、集成对接，一个页面搞定。': 'Model config, account credentials, integrations — all on one page.',
+    '为什么是 Loop': 'Why Loop',
+    '不是又一个 RPA，也不是另一个自动化脚本': 'Not another RPA, nor just another automation script',
+    '比传统 RPA 更聪明': 'Smarter than traditional RPA',
+    '老式 RPA 靠坐标和固定路径，页面一改就崩。Loop 能看懂页面，即使改版了也能继续跑。': 'Old-school RPA relies on coordinates and fixed paths — one page change and it breaks. Loop can read and understand pages, running even after redesigns.',
+    '比写脚本更简单': 'Simpler than writing scripts',
+    '脚本需要工程师维护。Loop 的技能可以用自然语言描述，业务同学自己也能上手。': 'Scripts need engineers to maintain. Loop skills can be described in natural language — business users can get started on their own.',
+    '比通用 Agent 更稳定': 'More stable than general Agents',
+    '通用 Agent 什么都想做，结果什么都做不好。Loop 专注企业真实场景，支持私有化，能真正跑在产线上。': 'General Agents try to do everything but excel at nothing. Loop focuses on real enterprise scenarios, supports private deployment, and truly runs in production.',
+    '比通用 Agent 更实战': 'More battle-tested than general Agents',
+    '人工接管、登录保持、并发执行，都是开箱即用，不用自己拼装。': 'Human takeover, persistent login, parallel execution — all out of the box, no assembly required.',
+    '准备好利用 AI': 'Ready to leverage AI',
+    '开启浏览器自动化新时代': 'and start a new era of browser automation',
+    '了吗？': '?',
+    'Loop 专注于浏览器自动化场景 AI 审计技术，为企业与法律机构定制 AI 自动化解决方案。无论是日常合同批改、大型项目尽调，还是合规风险分析，我们都能帮助您突破效率瓶颈，沉淀数字资产，探索 AI 法务的无限可能。': 'Loop specializes in AI audit technology for browser automation, delivering custom AI automation solutions for enterprises and legal institutions. Whether it is daily contract review, large-scale due diligence, or compliance risk analysis, we help you break through efficiency bottlenecks.',
+    '留下您的联系方式，我们将在一个工作日内回复！': 'Leave your contact info and we will get back to you within one business day!',
+    '姓名': 'Name',
+    '公司 / 机构名称': 'Company / Organization',
+    '邮箱': 'Email',
+    '电话号码': 'Phone Number',
+    '电话': 'Phone',
+    '留言': 'Message',
+    '验证码': 'Verification Code',
+    '提交': 'Submit',
+    '产品': 'Products',
+    '功能特性': 'Features',
+    '更新日志': 'Changelog',
+    '资源': 'Resources',
+    '文档中心': 'Documentation',
+    '定价方案': 'Pricing Plans',
+    'API 参考': 'API Reference',
+    '联系': 'Contact',
+    '微信公众号': 'WeChat Official Account',
+    '预约演示': 'Book a Demo',
+    '© 2026 上海聚托信息科技有限公司': '© 2026 Shanghai Jutuo Information Technology Co., Ltd.',
+    '沪ICP备15056478号-5': 'ICP License: 沪ICP备15056478号-5',
+    '隐私政策': 'Privacy Policy',
+    '服务条款': 'Terms of Service',
+    '微信咨询': 'WeChat Consultation',
+    '扫码添加专家': 'Scan to add an expert',
+    '帮我登录百度并搜索 Loop 浏览器自动化...': 'Log in to Baidu and search for Loop browser automation...',
+    '"帮我登录百度并搜索 Loop 浏览器自动化..."': '"Log in to Baidu and search for Loop browser automation..."',
+    '正在打开百度...': 'Opening Baidu...',
+    '已找到搜索框，正在输入关键词...': 'Search box found, entering keywords...',
+    '调用视觉大模型分析中': 'Analyzing with vision model...',
+    '进度': 'Progress',
+    '运行中任务': 'Running Tasks',
+    '今日任务': 'Today\'s Tasks',
+    '100+ 外部集成': '100+ External Integrations',
+    '数据抓取巡检': 'Data Scraping Patrol',
+    '舆情日报生成': 'Sentiment Report Generation',
+    '飞书自动打卡': 'Lark Auto Check-in',
+    '招投标公告抓取': 'Bid Announcement Scraping',
+    '指纹模拟模式': 'Fingerprint Simulation Mode',
+    '随机化': 'Randomized',
+    'MCP 服务配置': 'MCP Service Config',
+    '竞品价格监控': 'Competitor Price Monitoring',
+    'Loop 浏览器自动化': 'Loop Browser Automation',
+    '执行': 'execute in the browser',
+    '看': 'See',
+    '想': 'Think',
+    '做': 'Act',
+    '学': 'Learn',
+        '飞': 'F'
+  };
+
+  // Single/double char keys that should only match as standalone text nodes
+  var exactMatchKeys = {};
+  Object.keys(T).forEach(function(k) {
+    if (k.length <= 2) {
+      exactMatchKeys[k] = T[k];
+    }
+  });
+
+  var placeholderT = {
+    '请输入您的姓名': 'Enter your name',
+    '请输入您的公司或机构名称': 'Enter your company or organization name',
+    '请输入您的电子邮箱': 'Enter your email address',
+    '请输入您的联系电话': 'Enter your phone number',
+    '请描述您的具体需求...': 'Describe your specific requirements...',
+    '请输入验证码': 'Enter verification code'
+  };
+
+  var altT = {
+    '微信咨询': 'WeChat Consultation'
+  };
+
+  function applyLanguage(lang) {
+    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode: function(node) {
+        // Skip script and style tags
+        var parent = node.parentNode;
+        if (parent && (parent.tagName === 'SCRIPT' || parent.tagName === 'STYLE')) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }, false);
+    var node;
+    var nodes = [];
+    while (node = walker.nextNode()) {
+      nodes.push(node);
+    }
+
+    if (lang === 'en') {
+      nodes.forEach(function(n) {
+        var text = n.nodeValue;
+        if (!text) return;
+        if (!n._origText) n._origText = text;
+        var trimmed = text.trim();
+
+        // First check exact match for single/double char keys
+        if (exactMatchKeys[trimmed]) {
+          n.nodeValue = text.replace(trimmed, exactMatchKeys[trimmed]);
+          return;
+        }
+
+        // For longer keys, do substring replacement (longest first)
+        var newText = text;
+        var keys = Object.keys(T).sort(function(a, b) { return b.length - a.length; });
+        keys.forEach(function(zh) {
+          if (zh.length <= 2) return;
+          if (newText.indexOf(zh) !== -1) {
+            newText = newText.split(zh).join(T[zh]);
+          }
+        });
+        n.nodeValue = newText;
+      });
+
+      // Handle placeholders
+      document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(function(el) {
+        if (!el._origPlaceholder) el._origPlaceholder = el.placeholder;
+        for (var zh in placeholderT) {
+          if (el.placeholder === zh) {
+            el.placeholder = placeholderT[zh];
+            break;
+          }
+        }
+      });
+
+      // Handle alt attributes
+      document.querySelectorAll('img[alt]').forEach(function(el) {
+        if (!el._origAlt) el._origAlt = el.alt;
+        for (var zh in altT) {
+          if (el.alt === zh) {
+            el.alt = altT[zh];
+            break;
+          }
+        }
+      });
+
+      // Handle title and meta
+      if (!document._origTitle) document._origTitle = document.title;
+      document.title = 'Loop - AI Browser Automation as a Service | JOTO.AI';
+
+      var metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) {
+        if (!metaDesc._origContent) metaDesc._origContent = metaDesc.content;
+        metaDesc.content = 'Loop cloud AI browser turns your browser into an AI employee. It sees, thinks, and acts like a real person. Running stably around the clock. Supports private deployment with enterprise data staying on your network.';
+      }
+      var ogTitle = document.querySelector('meta[property="og:title"]');
+      if (ogTitle) {
+        if (!ogTitle._origContent) ogTitle._origContent = ogTitle.content;
+        ogTitle.content = 'Loop - AI Browser Automation as a Service';
+      }
+      var ogDesc = document.querySelector('meta[property="og:description"]');
+      if (ogDesc) {
+        if (!ogDesc._origContent) ogDesc._origContent = ogDesc.content;
+        ogDesc.content = 'Loop cloud AI browser turns your browser into an AI employee. It sees, thinks, and acts like a real person. Running stably around the clock.';
+      }
+    } else {
+      // Restore Chinese
+      nodes.forEach(function(n) {
+        if (n._origText) n.nodeValue = n._origText;
+      });
+      document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(function(el) {
+        if (el._origPlaceholder) el.placeholder = el._origPlaceholder;
+      });
+      document.querySelectorAll('img[alt]').forEach(function(el) {
+        if (el._origAlt) el.alt = el._origAlt;
+      });
+      if (document._origTitle) document.title = document._origTitle;
+      var metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc && metaDesc._origContent) metaDesc.content = metaDesc._origContent;
+      var ogTitle = document.querySelector('meta[property="og:title"]');
+      if (ogTitle && ogTitle._origContent) ogTitle.content = ogTitle._origContent;
+      var ogDesc = document.querySelector('meta[property="og:description"]');
+      if (ogDesc && ogDesc._origContent) ogDesc.content = ogDesc._origContent;
+    }
+
+    // Update toggle buttons
+    var btn = document.getElementById('lang-toggle-btn');
+    if (btn) btn.textContent = lang === 'en' ? '中文' : 'EN';
+    var btn2 = document.getElementById('lang-toggle-btn-mobile');
+    if (btn2) btn2.textContent = lang === 'en' ? '中文' : 'EN';
+
+    document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
+  }
+
+  function toggleLanguage() {
+    var current = localStorage.getItem('loop-lang') || 'zh';
+    var next = current === 'zh' ? 'en' : 'zh';
+    localStorage.setItem('loop-lang', next);
+    applyLanguage(next);
+  }
+
+  function injectToggle() {
+    // Desktop nav
+    var navBtnArea = document.querySelector('nav .hidden.md\\:flex.items-center.gap-4');
+    if (navBtnArea) {
+      var btn = document.createElement('button');
+      btn.id = 'lang-toggle-btn';
+      btn.className = 'text-sm font-medium text-secondary-text hover:text-gray-900 transition-colors px-2 py-1 rounded-lg hover:bg-gray-100';
+      btn.textContent = 'EN';
+      btn.onclick = toggleLanguage;
+      navBtnArea.insertBefore(btn, navBtnArea.firstChild);
+    }
+
+    // Mobile nav
+    var mobileArea = document.querySelector('nav .md\\:hidden');
+    if (mobileArea) {
+      var btn2 = document.createElement('button');
+      btn2.id = 'lang-toggle-btn-mobile';
+      btn2.className = 'p-2 text-sm font-medium text-gray-600 hover:text-gray-900';
+      btn2.textContent = 'EN';
+      btn2.onclick = toggleLanguage;
+      mobileArea.parentNode.insertBefore(btn2, mobileArea);
+    }
+  }
+
+  // Initialize
+  function init() {
+    injectToggle();
+    var saved = localStorage.getItem('loop-lang');
+    if (saved === 'en') {
+      applyLanguage('en');
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  window.toggleLanguage = toggleLanguage;
+})();
+</script></body></html>
