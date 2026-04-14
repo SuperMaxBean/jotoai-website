@@ -32,7 +32,7 @@ const Login: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.08)] border border-slate-100 p-8 md:p-10">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-[#0A1A2F] mb-2">{t('欢迎回来', 'Welcome Back')}</h1>
-            <p className="text-slate-500 text-sm">{t('登录您的闪阅管理后台', 'Sign in to your 闪阅 dashboard')}</p>
+            <p className="text-slate-500 text-sm">{t('登录您的闪阅管理后台', 'Sign in to your ShanYue dashboard')}</p>
           </div>
 
           <form onSubmit={(e) => e.preventDefault()} className="space-y-5">

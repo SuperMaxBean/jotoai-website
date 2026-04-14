@@ -68,7 +68,7 @@ export default function News() {
             <Newspaper size={16} /> {t('最新动态', 'Latest Updates')}
           </div>
           <h2 className="text-4xl font-extrabold text-[#0A1A2F] mb-4">{t('产品更新与行业洞察', 'Product Updates & Industry Insights')}</h2>
-          <p className="text-slate-500 max-w-2xl mx-auto">{t('深入了解闪阅 AI 在智能阅卷、教育数字化领域的最新进展。', 'Explore the latest developments of 闪阅 AI in smart grading and digital education.')}</p>
+          <p className="text-slate-500 max-w-2xl mx-auto">{t('深入了解闪阅 AI 在智能阅卷、教育数字化领域的最新进展。', 'Explore the latest developments of ShanYue AI in smart grading and digital education.')}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

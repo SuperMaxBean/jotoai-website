@@ -88,7 +88,7 @@ export default function Contact() {
           <div className="lg:col-span-2 space-y-6">
             <div className="rounded-2xl bg-gradient-to-br from-[#7c3aed] to-indigo-700 p-8 text-white">
               <Building2 className="h-10 w-10 mb-4 text-purple-200" />
-              <h3 className="text-xl font-semibold mb-2">{t('闪阅 AI 科技', '闪阅 AI Technology')}</h3>
+              <h3 className="text-xl font-semibold mb-2">{t('闪阅 AI 科技', 'ShanYue AI Technology')}</h3>
               <p className="text-sm text-purple-200 leading-relaxed">
                 {t(
                   '专注于教育领域的人工智能技术研发与应用，致力于用 AI 技术革新教育评估方式。',

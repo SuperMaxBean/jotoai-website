@@ -23,7 +23,7 @@ export default function Privacy() {
               <p>
                 {t(
                   '唯客智审（以下简称"我们"）非常重视您的隐私。本隐私政策旨在说明我们如何收集、使用、披露、处理和保护您在使用我们的 AI 合同审查服务时提供给我们的信息。',
-                  '唯客智审 (hereinafter referred to as "we") highly values your privacy. This Privacy Policy is intended to explain how we collect, use, disclose, process, and protect the information you provide to us when using our AI contract review services.'
+                  'WeiKe Audit (hereinafter referred to as "we") highly values your privacy. This Privacy Policy is intended to explain how we collect, use, disclose, process, and protect the information you provide to us when using our AI contract review services.'
                 )}
               </p>
             </section>

@@ -116,7 +116,7 @@ export default function Contact() {
               <p className="text-lg text-slate-600 leading-relaxed max-w-xl">
                 {t(
                   '唯客智审专注于法律合规场景 AI 审查技术，为企业与法律机构定制 AI 合同审查解决方案。无论是日常合同批改、大型项目尽调，还是合规风险分析，我们都能帮助您突破效率瓶颈，沉淀数字资产，探索 AI 法务的无限可能。',
-                  '唯客智审 specializes in AI review technology for legal compliance scenarios, providing customized AI contract review solutions for enterprises and legal institutions. Whether it is routine contract review, large-scale project due diligence, or compliance risk analysis, we help you break through efficiency bottlenecks, accumulate digital assets, and explore the limitless possibilities of AI-powered legal work.'
+                  'WeiKe Audit specializes in AI review technology for legal compliance scenarios, providing customized AI contract review solutions for enterprises and legal institutions. Whether it is routine contract review, large-scale project due diligence, or compliance risk analysis, we help you break through efficiency bottlenecks, accumulate digital assets, and explore the limitless possibilities of AI-powered legal work.'
                 )}
               </p>
             </div>

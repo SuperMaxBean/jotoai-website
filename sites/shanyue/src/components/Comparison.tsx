@@ -64,7 +64,7 @@ export default function Comparison() {
             {t('对比分析', 'Comparison')}
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-[#0A1A2F] sm:text-4xl">
-            {t('传统阅卷 vs 闪阅 AI 阅卷', 'Traditional Grading vs 闪阅 AI Grading')}
+            {t('传统阅卷 vs 闪阅 AI 阅卷', 'Traditional Grading vs ShanYue AI Grading')}
           </h2>
           <p className="mt-4 text-lg text-slate-500 max-w-2xl mx-auto">
             {t('全方位对比，让数据说话', 'A comprehensive comparison -- let the data speak')}
@@ -86,7 +86,7 @@ export default function Comparison() {
             </div>
             <div className="border-l border-slate-100 bg-purple-50 p-6 text-center">
               <span className="text-sm font-semibold text-purple-700">
-                {t('闪阅 AI 阅卷', '闪阅 AI Grading')}
+                {t('闪阅 AI 阅卷', 'ShanYue AI Grading')}
               </span>
             </div>
           </div>

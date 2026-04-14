@@ -46,9 +46,9 @@ export default function Home() {
   ];
 
   const testimonials = [
-    { quote: t('引入唯客智审后，我们的合同审核周期从平均3天缩短到了2小时。AI 的风险提示非常精准，帮我们规避了几次重大的合规风险。', 'After adopting 唯客智审, our contract review cycle was reduced from an average of 3 days to just 2 hours. The AI risk alerts are highly accurate, helping us avoid several major compliance risks.'), author: t('某上市科技集团', 'A Listed Tech Group'), role: t('法务总监 Head of Legal', 'Head of Legal'), icon: Building2 },
+    { quote: t('引入唯客智审后，我们的合同审核周期从平均3天缩短到了2小时。AI 的风险提示非常精准，帮我们规避了几次重大的合规风险。', 'After adopting WeiKe Audit, our contract review cycle was reduced from an average of 3 days to just 2 hours. The AI risk alerts are highly accurate, helping us avoid several major compliance risks.'), author: t('某上市科技集团', 'A Listed Tech Group'), role: t('法务总监 Head of Legal', 'Head of Legal'), icon: Building2 },
     { quote: t('对于采购部门来说，大量的供应商合同让人头疼。这个平台不仅能快速比对条款，还能统一我们的验收标准，效率提升太明显了。', 'For the procurement department, dealing with large volumes of supplier contracts was a headache. This platform not only compares clauses quickly but also unifies our acceptance standards. The efficiency boost is remarkable.'), author: t('某头部制造企业', 'A Leading Manufacturing Enterprise'), role: t('采购总监 Procurement Director', 'Procurement Director'), icon: Factory },
-    { quote: t('作为 CEO，我看重的是风控与速度的平衡。唯客智审做到了这一点，它让我们的业务跑得更快，同时睡得更安稳。', 'As a CEO, I value the balance between risk control and speed. 唯客智审 achieves exactly that -- it helps our business move faster while we sleep more soundly.'), author: t('创新金融服务公司', 'Innovative Financial Services Co.'), role: t('首席执行官 CEO', 'CEO'), icon: Landmark }
+    { quote: t('作为 CEO，我看重的是风控与速度的平衡。唯客智审做到了这一点，它让我们的业务跑得更快，同时睡得更安稳。', 'As a CEO, I value the balance between risk control and speed. WeiKe Audit achieves exactly that — it helps our business move faster while we sleep more soundly.'), author: t('创新金融服务公司', 'Innovative Financial Services Co.'), role: t('首席执行官 CEO', 'CEO'), icon: Landmark }
   ];
 
   const comparisonRows = [
@@ -104,7 +104,7 @@ export default function Home() {
                 transition={{ duration: 0.8, delay: 0.3 }}
                 className="text-5xl lg:text-6xl font-extrabold text-slate-900 leading-tight mb-6"
               >
-                唯客智审<br />
+                {t('唯客智审', 'WeiKe Audit')}<br />
                 <motion.span
                   initial={{ backgroundSize: "0% 100%" }}
                   animate={{ backgroundSize: "100% 100%" }}
@@ -296,7 +296,7 @@ export default function Home() {
             <p className="text-slate-400 max-w-md mt-4 md:mt-0 text-sm">
               {t(
                 '唯客智审不仅是工具，更是企业法务数字化的基础设施，帮助企业沉淀风控规则和数据资产。',
-                '唯客智审 is more than a tool -- it is the digital infrastructure for corporate legal, helping enterprises accumulate risk control rules and data assets.'
+                'WeiKe Audit is more than a tool — it is the digital infrastructure for corporate legal, helping enterprises accumulate risk control rules and data assets.'
               )}
             </p>
           </motion.div>
@@ -814,7 +814,7 @@ export default function Home() {
             className="text-center mb-16"
           >
             <h2 className="text-3xl font-bold text-slate-900 mb-4">{t('赋能法务团队、风控专家与每一个企业', 'Empowering Legal Teams, Risk Experts, and Every Enterprise')}</h2>
-            <p className="text-slate-500">{t('听听行业领袖们如何使用唯客智审提升效能。', 'Hear how industry leaders use 唯客智审 to boost efficiency.')}</p>
+            <p className="text-slate-500">{t('听听行业领袖们如何使用唯客智审提升效能。', 'Hear how industry leaders use WeiKe Audit to boost efficiency.')}</p>
           </motion.div>
           <motion.div
             variants={staggerContainer}
@@ -851,7 +851,7 @@ export default function Home() {
       <section className="py-24 bg-slate-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">{t('为什么选择唯客智审？', 'Why Choose 唯客智审?')}</h2>
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">{t('为什么选择唯客智审？', 'Why Choose WeiKe Audit?')}</h2>
             <p className="text-slate-500">{t('从效率、成本到风险控制，AI 带来的不仅仅是速度的提升，更是质的飞跃。', 'From efficiency and cost to risk control, AI delivers not just speed improvements but a qualitative leap.')}</p>
           </div>
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -860,7 +860,7 @@ export default function Home() {
               <div className="py-4 border-r border-slate-700">{t('传统人工审查', 'Traditional Manual Review')}</div>
               <div className="py-4 bg-blue-900 text-blue-100 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-8 h-8 bg-yellow-400 transform rotate-45 translate-x-4 -translate-y-4"></div>
-                唯客智审 AI
+                {t('唯客智审 AI', 'WeiKe Audit AI')}
               </div>
             </div>
             {comparisonRows.map((row, i) => (
