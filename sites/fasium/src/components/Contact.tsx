@@ -226,7 +226,7 @@ export default function Contact() {
                 </div>
                 {/* Company */}
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-[#d1d5db]">{t('企业名称', 'Company')}</label>
+                  <label className="text-sm font-semibold text-[#d1d5db]">{t('企业名称', 'Company')}<span className="text-red-500 ml-1">*</span></label>
                   <div className="relative">
                     <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#555555]" />
                     <input
@@ -234,6 +234,7 @@ export default function Contact() {
                       name="company"
                       value={form.company}
                       onChange={handleChange}
+                      required
                       placeholder={t("企业全称", "Company name")}
                       className="w-full pl-11 pr-4 py-3 bg-[#111111] border border-[#333333] rounded-xl focus:border-[#f97316] focus:ring-2 focus:ring-[#f97316]/10 outline-none transition-all text-sm text-white placeholder-[#555555]"
                     />

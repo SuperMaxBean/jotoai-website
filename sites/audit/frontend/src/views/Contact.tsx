@@ -184,12 +184,13 @@ export default function Contact() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">{t('公司 / 机构名称', 'Company / Organization')}</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">{t('公司 / 机构名称', 'Company / Organization')} <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   name="company"
                   value={formData.company}
                   onChange={handleChange}
+                  required
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   placeholder={t('请输入您的公司或机构名称', 'Enter your company or organization name')}
                 />
