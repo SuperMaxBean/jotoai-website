@@ -59,6 +59,9 @@
     <button onclick="go('integrations')" data-p="integrations" class="nav-item w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2.5">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg data-t="integrations">集成</button>
 
+    <button onclick="go('monitor')" data-p="monitor" class="nav-item w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2.5">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg data-t="monitor_nav">健康巡检</button>
+
     <div class="lbl px-2 text-gray-600 mt-5" data-t="system">系统</div>
     <button onclick="go('admins')" data-p="admins" class="nav-item w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2.5">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg data-t="admins">管理员</button>
@@ -125,30 +128,34 @@
     <div class="px-8 pt-8 pb-6 bg-white border-b border-gray-100">
       <div class="flex items-center justify-between">
         <h1 class="text-xl font-semibold" data-t="articles_title">文章管理</h1>
-        <button onclick="genArticle()" class="btn-p text-xs" data-t="gen_article">+ 生成新文章</button>
+        <div class="flex items-center gap-3">
+          <button onclick="toggleArtCfg()" class="btn-s text-xs flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span data-t="artcfg_title">文章配置</span></button>
+          <button onclick="genArticle()" class="btn-p text-xs" data-t="gen_article">+ 生成新文章</button>
+        </div>
       </div>
       <div id="artTabs" class="flex gap-2 mt-4 flex-wrap"></div>
     </div>
     <div class="px-8 py-6">
       <div id="artList" class="space-y-3"><div class="text-gray-400 text-sm"><span class="spinner"></span> " + t("loading") + "</div></div>
-      <!-- Article Config (merged) -->
-      <div class="mt-8 border-t border-gray-100 pt-6">
-        <button onclick="toggleArtCfg()" class="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 mb-4">
-          <svg id="artCfgIcon" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-          <span data-t="artcfg_title">文章配置</span>
-          <span class="text-xs text-gray-400" data-t="artcfg_desc">LLM、图片、自动发布与 SEO 关键字设置</span>
-        </button>
-        <div id="artCfgPanel" class="hidden space-y-6 max-w-2xl">
+      <!-- Article Config Panel (toggled from header button) -->
+      <div id="artCfgPanel" class="hidden mt-6 border-t border-gray-100 pt-6">
+        <!-- Scope selector: global vs per-site -->
+        <div class="flex items-center gap-2 mb-5">
+          <span class="text-xs text-gray-500">配置范围：</span>
+          <div id="cfgScopeTabs" class="flex gap-1.5 flex-wrap"></div>
+        </div>
+        <div id="cfgScopeHint" class="text-xs text-gray-400 mb-4 hidden"></div>
+        <div class="space-y-6 max-w-2xl">
           <!-- LLM Model -->
           <div class="card">
-            <h3 class="font-medium text-sm mb-4" data-t="llm_model">LLM 模型</h3>
+            <h3 class="font-medium text-sm mb-4">LLM 模型</h3>
             <div class="space-y-4">
               <div class="grid grid-cols-3 gap-4">
                 <div><label class="text-xs text-gray-500 mb-1.5 block">API Key</label><input type="password" id="llmKey" class="input font-mono"></div>
                 <div><label class="text-xs text-gray-500 mb-1.5 block">Endpoint</label><input id="llmUrl" class="input"></div>
                 <div><label class="text-xs text-gray-500 mb-1.5 block">Model</label><input id="llmMod" class="input"></div>
               </div>
-              <div class="flex gap-3"><button onclick="saveCfg()" class="btn-p text-xs" data-t="save">保存</button><button onclick="testLLM()" class="btn-s text-xs" data-t="test_conn">测试连接</button><span id="llmMsg" class="text-xs"></span></div>
+              <div class="flex gap-3"><button onclick="saveArtCfg()" class="btn-p text-xs">保存</button><button onclick="testLLM()" class="btn-s text-xs">测试连接</button><span id="llmMsg" class="text-xs"></span></div>
             </div>
           </div>
           <!-- Unsplash Image Config -->
@@ -162,17 +169,16 @@
               <div class="flex items-center gap-3"><input type="checkbox" id="dedupOn" class="w-4 h-4"><label class="text-xs text-gray-500">启用图片去重</label></div>
             </div>
           </div>
-          <!-- Auto Publish -->
+          <!-- Auto Publish + SEO -->
           <div class="card">
-            <h3 class="font-medium text-sm mb-4" data-t="auto_publish">自动发布</h3>
+            <h3 class="font-medium text-sm mb-4">自动发布</h3>
             <div class="space-y-4">
-              <div class="flex items-center gap-3"><input type="checkbox" id="apOn" class="w-4 h-4"><label class="text-xs text-gray-500" data-t="enable_auto">启用自动发布</label></div>
+              <div class="flex items-center gap-3"><input type="checkbox" id="apOn" class="w-4 h-4"><label class="text-xs text-gray-500">启用自动发布</label></div>
               <div class="grid grid-cols-3 gap-4">
-                <div><label class="text-xs text-gray-500 mb-1.5 block" data-t="pub_time">发布时间</label><input type="time" id="apTime" class="input"></div>
-                <div><label class="text-xs text-gray-500 mb-1.5 block" data-t="ai_count">AI 文章数</label><input type="number" id="apCnt" class="input" min="0" max="10"></div>
-                <div><label class="text-xs text-gray-500 mb-1.5 block" data-t="word_count">字数</label><input type="number" id="apWc" class="input" min="300" max="5000"></div>
+                <div><label class="text-xs text-gray-500 mb-1.5 block">发布时间</label><input type="time" id="apTime" class="input"></div>
+                <div><label class="text-xs text-gray-500 mb-1.5 block">AI 文章数</label><input type="number" id="apCnt" class="input" min="0" max="10"></div>
+                <div><label class="text-xs text-gray-500 mb-1.5 block">字数</label><input type="number" id="apWc" class="input" min="300" max="5000"></div>
               </div>
-              <!-- Search Rewrite -->
               <div class="border-t border-gray-100 pt-4">
                 <div class="flex items-center gap-3 mb-3"><input type="checkbox" id="rwOn" class="w-4 h-4"><label class="text-xs text-gray-600 font-medium">启用搜索改写文章</label></div>
                 <p class="text-xs text-gray-400 mb-3">从网上搜索相关文章并深度改写，降低AI特征，提高原创度</p>
@@ -181,8 +187,8 @@
                   <div><label class="text-xs text-gray-500 mb-1.5 block">发布间隔 (小时)</label><input type="number" id="rwInt" class="input" min="1" max="168"></div>
                 </div>
               </div>
-              <div><label class="text-xs text-gray-500 mb-1.5 block" data-t="seo_kw">SEO 关键字</label><textarea id="apKw" class="input !h-20" placeholder="逗号分隔"></textarea></div>
-              <button onclick="saveCfg()" class="btn-p text-xs" data-t="save">保存</button>
+              <div><label class="text-xs text-gray-500 mb-1.5 block">SEO 关键字</label><textarea id="apKw" class="input !h-20" placeholder="逗号分隔"></textarea></div>
+              <button onclick="saveArtCfg()" class="btn-p text-xs">保存</button>
             </div>
           </div>
         </div>
@@ -286,6 +292,43 @@
     </div>
   </div>
 
+  <!-- ===== MONITOR ===== -->
+  <div id="pg-monitor" class="page">
+    <div class="px-8 pt-8 pb-6 bg-white border-b border-gray-100"><h1 class="text-xl font-semibold" data-t="monitor_title">健康巡检</h1><p class="text-gray-400 text-sm mt-1" data-t="monitor_desc">配置站点健康巡检频率与邮件报告</p></div>
+    <div class="px-8 py-6 space-y-6 max-w-2xl">
+      <div class="card">
+        <h3 class="font-medium text-sm mb-4" data-t="monitor_settings">巡检设置</h3>
+        <div class="space-y-4">
+          <div class="flex items-center gap-3">
+            <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="monEnabled" class="sr-only peer"><div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:bg-green-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div></label>
+            <span class="text-sm" data-t="monitor_enable">启用巡检</span>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div><label class="text-xs text-gray-500 mb-1.5 block font-medium" data-t="monitor_interval">巡检频率（分钟）</label><input type="number" id="monInterval" class="input" value="30" min="5" max="1440"></div>
+            <div><label class="text-xs text-gray-500 mb-1.5 block font-medium" data-t="monitor_cooldown">告警冷却（小时）</label><input type="number" id="monCooldown" class="input" value="6" min="1" max="48"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 class="font-medium text-sm mb-4" data-t="monitor_report">每日报告</h3>
+        <div class="space-y-4">
+          <div class="flex items-center gap-3">
+            <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="monReportEnabled" class="sr-only peer"><div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:bg-green-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div></label>
+            <span class="text-sm" data-t="monitor_report_enable">启用每日报告邮件</span>
+          </div>
+          <div><label class="text-xs text-gray-500 mb-1.5 block font-medium" data-t="monitor_report_time">发送时间</label><input type="time" id="monReportTime" class="input" value="08:00"></div>
+          <div><label class="text-xs text-gray-500 mb-1.5 block font-medium" data-t="monitor_recipients">收件人（多个用逗号分隔）</label><input id="monRecipients" class="input" placeholder="admin@jototech.cn, dev@jototech.cn"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 class="font-medium text-sm mb-3" data-t="monitor_urls">监控 URL 列表</h3>
+        <p class="text-xs text-gray-400 mb-3" data-t="monitor_urls_desc">每行一个 URL，支持首页、登录页、API 等任意页面</p>
+        <textarea id="monUrls" class="input font-mono text-xs" rows="10" placeholder="https://audit.jotoai.com&#10;https://fasium.jotoai.com&#10;https://note.jotoai.com/login?redirect=%2Fdashboard" style="resize:vertical"></textarea>
+      </div>
+      <div class="flex items-center gap-3"><button onclick="saveMonitor()" class="btn-p text-xs" data-t="save">保存</button><button onclick="testMonitor()" class="btn-s text-xs" data-t="monitor_test">发送测试报告</button><span id="monMsg" class="text-xs"></span></div>
+    </div>
+  </div>
+
   <!-- ===== SSL ===== -->
   <div id="pg-ssl" class="page">
     <div class="px-8 pt-8 pb-6 bg-white border-b border-gray-100">
@@ -326,6 +369,7 @@ const I18N={
     integ_title:'集成',integ_desc:'配置飞书等第三方集成服务',feishu_webhook:'飞书机器人 Webhook',feishu_table:'飞书多维表格同步',test_webhook:'测试 Webhook',test_sync:'测试同步',testing:'测试中...',success:'✓ 成功',fail:'✗ 失败',
     artcfg_title:'文章配置',artcfg_desc:'LLM、图片、自动发布与 SEO 关键字设置',llm_model:'LLM 模型',api_key:'API Key',endpoint:'Endpoint',model:'Model',test_conn:'测试连接',conn_ok:'✓ 连接正常',auto_publish:'自动发布',enable_auto:'启用自动发布',pub_time:'发布时间',ai_count:'AI 文章数',word_count:'字数',seo_kw:'SEO 关键字',comma_sep:'逗号分隔',save_fail:'保存失败',
     admins_title:'管理员',admins_desc:'邀请和管理后台管理员账号',current_admins:'当前管理员',invite_admin:'邀请新管理员',email_lbl:'邮箱',name_lbl:'姓名',send_invite:'发送邀请邮件',invite_sent:'✓ 邀请已发送',change_pw:'修改密码',cur_pw:'当前密码',new_pw:'新密码',confirm_pw:'确认密码',change:'修改',pw_changed:'✓ 已修改',pw_mismatch:'两次密码不一致',fill_pw:'填写密码',remove:'移除',confirm_remove:'移除',removed:'已移除',none:'暂无',
+    monitor_nav:'健康巡检',monitor_title:'健康巡检',monitor_desc:'配置站点健康巡检频率与邮件报告',monitor_settings:'巡检设置',monitor_enable:'启用巡检',monitor_interval:'巡检频率（分钟）',monitor_cooldown:'告警冷却（小时）',monitor_report:'每日报告',monitor_report_enable:'启用每日报告邮件',monitor_report_time:'发送时间',monitor_recipients:'收件人（多个用逗号分隔）',monitor_test:'发送测试报告',monitor_urls:'监控 URL 列表',monitor_urls_desc:'每行一个 URL，支持首页、登录页、API 等任意页面',
     ssl_title:'SSL 证书',ssl_desc:"Let's Encrypt 证书状态与续订",domain:'域名',expiry:'到期时间',days_left:'剩余天数',days:'天',renew:'手动续订',renewing:'续订中...',renewed:'续订成功',renew_fail:'续订失败',ssl_unavail:'无法获取 SSL 状态',loading:'加载中...',
     lang_switch:'EN'},
   en:{admin_panel:'Admin Panel',overview:'Overview',dashboard:'Dashboard',contacts:'Messages',articles:'Articles',config:'Settings',sites_mgmt:'Sites',email_settings:'Email',integrations:'Integrations',article_config:'Article Config',system:'System',admins:'Admins',ssl_cert:'SSL Certificate',logout_title:'Logout',
@@ -337,6 +381,7 @@ const I18N={
     integ_title:'Integrations',integ_desc:'Configure Feishu and other third-party services',feishu_webhook:'Feishu Bot Webhook',feishu_table:'Feishu Table Sync',test_webhook:'Test Webhook',test_sync:'Test Sync',testing:'Testing...',success:'✓ Success',fail:'✗ Failed',
     artcfg_title:'Article Config',artcfg_desc:'LLM, images, auto-publish, and SEO keywords',llm_model:'LLM Model',api_key:'API Key',endpoint:'Endpoint',model:'Model',test_conn:'Test Connection',conn_ok:'✓ Connected',auto_publish:'Auto Publish',enable_auto:'Enable auto-publish',pub_time:'Publish Time',ai_count:'AI Articles',word_count:'Word Count',seo_kw:'SEO Keywords',comma_sep:'comma-separated',save_fail:'Save failed',
     admins_title:'Admins',admins_desc:'Invite and manage admin accounts',current_admins:'Current Admins',invite_admin:'Invite New Admin',email_lbl:'Email',name_lbl:'Name',send_invite:'Send Invite Email',invite_sent:'✓ Invite sent',change_pw:'Change Password',cur_pw:'Current Password',new_pw:'New Password',confirm_pw:'Confirm Password',change:'Change',pw_changed:'✓ Changed',pw_mismatch:'Passwords do not match',fill_pw:'Enter password',remove:'Remove',confirm_remove:'Remove',removed:'Removed',none:'None',
+    monitor_nav:'Health Monitor',monitor_title:'Health Monitor',monitor_desc:'Configure site health check frequency and email reports',monitor_settings:'Monitor Settings',monitor_enable:'Enable monitoring',monitor_interval:'Check interval (minutes)',monitor_cooldown:'Alert cooldown (hours)',monitor_report:'Daily Report',monitor_report_enable:'Enable daily report email',monitor_report_time:'Send time',monitor_recipients:'Recipients (comma separated)',monitor_test:'Send test report',monitor_urls:'Monitor URL List',monitor_urls_desc:'One URL per line — homepage, login page, API, etc.',
     ssl_title:'SSL Certificate',ssl_desc:"Let's Encrypt certificate status & renewal",domain:'Domain',expiry:'Expires',days_left:'Days Left',days:'days',renew:'Renew Now',renewing:'Renewing...',renewed:'Renewed',renew_fail:'Renewal failed',ssl_unavail:'Cannot fetch SSL status',loading:'Loading...',
     lang_switch:'中文'}
 };
@@ -354,9 +399,10 @@ function toast(t,ok=true){const el=$('toast');el.textContent=t;el.className=`toa
 function go(p){document.querySelectorAll('.page').forEach(e=>e.classList.remove('active'));$('pg-'+p).classList.add('active');
   document.querySelectorAll('[data-p]').forEach(b=>{b.classList.remove('nav-active');b.classList.add('text-gray-400')});
   const b=document.querySelector(`[data-p="${p}"]`);if(b){b.classList.add('nav-active');b.classList.remove('text-gray-400')}
-  if(p==='contacts')loadC();if(p==='articles'){loadArt();loadCfg()}if(p==='sites')renderSites();
+  if(p==='contacts')loadC();if(p==='articles')loadArt();if(p==='sites')renderSites();
   if(p==='email')loadEmail();if(p==='integrations')loadCfg();
   if(p==='admins')loadAdmins();if(p==='ssl')loadSSL();
+  if(p==='monitor')loadMonitor();
 }
 function logout(){localStorage.removeItem('adminToken');location.href='/admin/login.html'}
 
@@ -430,38 +476,61 @@ async function saveEmail(){try{const r=await(await af('/api/admin/config',{metho
 async function testEmail(){const a=$('eAddr').value;if(!a){showEM('填写接收邮箱',false);return}showEM('发送中...',true);try{await saveEmail();const r=await(await af('/api/admin/test-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({testEmail:a})})).json();showEM(r.success?'已发送':'失败: '+(r.message||''),r.success)}catch(e){showEM(e.message,false)}}
 
 // Toggle article config panel
-function toggleArtCfg(){const p=$('artCfgPanel'),i=$('artCfgIcon');p.classList.toggle('hidden');i.style.transform=p.classList.contains('hidden')?'':'rotate(180deg)'}
+function toggleArtCfg(){const p=$('artCfgPanel');p.classList.toggle('hidden');if(!p.classList.contains('hidden')){renderCfgScopeTabs();loadArtCfg()}}
 
-// Integrations & Article Config
+// Article config scope: 'global' or site id
+let cfgScope='global';
+function renderCfgScopeTabs(){
+  const tabs=['global',...S.map(s=>s.id)];
+  $('cfgScopeTabs').innerHTML=tabs.map(id=>{
+    const label=id==='global'?'全局':S.find(s=>s.id===id)?.name||id;
+    const cls=id===cfgScope?'tab-active':'';
+    return `<button onclick="cfgScope='${id}';renderCfgScopeTabs();loadArtCfg()" class="tab-btn ${cls}">${label}</button>`;
+  }).join('');
+  const hint=$('cfgScopeHint');
+  if(cfgScope==='global'){hint.classList.add('hidden')}
+  else{hint.textContent='站点级配置会覆盖全局配置。留空则使用全局值。';hint.classList.remove('hidden')}
+}
+async function loadArtCfg(){
+  try{
+    let c;
+    if(cfgScope==='global'){c=await(await af('/api/admin/config')).json()}
+    else{const r=await(await af(`/api/admin/${cfgScope}/config`)).json();c=r.config||r}
+    if($('llmKey'))$('llmKey').value=c.llmApiKey||'';
+    if($('llmUrl'))$('llmUrl').value=c.llmApiEndpoint||'';
+    if($('llmMod'))$('llmMod').value=c.llmModel||'';
+    if($('apOn'))$('apOn').checked=c.autoPostEnabled||false;
+    if($('apTime'))$('apTime').value=c.autoPostTime||'09:00';
+    if($('apCnt'))$('apCnt').value=c.aiArticleCount||c.autoPostCount||1;
+    if($('apWc'))$('apWc').value=c.articleWordCount||1000;
+    if($('apKw'))$('apKw').value=c.seoKeywords||'';
+    if($('unsplashKey'))$('unsplashKey').value=c.unsplashApiKey||'';
+    if($('dedupOn'))$('dedupOn').checked=c.enableDeduplication||false;
+    if($('dedupWindow'))$('dedupWindow').value=c.deduplicationWindow||5;
+    if($('rwOn'))$('rwOn').checked=c.enableSearchRewrite||false;
+    if($('rwCnt'))$('rwCnt').value=c.rewriteArticleCount||1;
+    if($('rwInt'))$('rwInt').value=c.publishInterval||c.autoPostInterval||24;
+  }catch(e){toast('加载配置失败',false)}
+}
+async function saveArtCfg(){
+  const d={llmApiKey:$('llmKey')?.value,llmApiEndpoint:$('llmUrl')?.value,llmModel:$('llmMod')?.value,
+    autoPostEnabled:$('apOn')?.checked,autoPostTime:$('apTime')?.value,aiArticleCount:parseInt($('apCnt')?.value)||1,articleWordCount:parseInt($('apWc')?.value)||1000,seoKeywords:$('apKw')?.value,
+    unsplashApiKey:$('unsplashKey')?.value,enableDeduplication:$('dedupOn')?.checked,deduplicationWindow:parseInt($('dedupWindow')?.value)||5,
+    enableSearchRewrite:$('rwOn')?.checked,rewriteArticleCount:parseInt($('rwCnt')?.value)||1,publishInterval:parseInt($('rwInt')?.value)||24};
+  Object.keys(d).forEach(k=>{if(d[k]===undefined)delete d[k]});
+  const url=cfgScope==='global'?'/api/admin/config':`/api/admin/${cfgScope}/config`;
+  try{const r=await(await af(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)})).json();
+    toast(r.success?`${cfgScope==='global'?'全局':'站点'}配置已保存`:'保存失败',r.success)}catch(e){toast(e.message,false)}
+}
+
+// Integrations config (separate from article config)
 async function loadCfg(){try{CFG=await(await af('/api/admin/config')).json();
-  // Integrations
   if($('fsWh'))$('fsWh').value=CFG.feishuWebhook||'';
   if($('fsAid'))$('fsAid').value=CFG.feishuAppId||'';
   if($('fsSec'))$('fsSec').value=CFG.feishuAppSecret||'';
   if($('fsTbl'))$('fsTbl').value=CFG.feishuTableUrl||'';
-  // Article config
-  if($('llmKey'))$('llmKey').value=CFG.llmApiKey||'';
-  if($('llmUrl'))$('llmUrl').value=CFG.llmApiEndpoint||'';
-  if($('llmMod'))$('llmMod').value=CFG.llmModel||'';
-  if($('apOn'))$('apOn').checked=CFG.autoPostEnabled||false;
-  if($('apTime'))$('apTime').value=CFG.autoPostTime||'09:00';
-  if($('apCnt'))$('apCnt').value=CFG.aiArticleCount||1;
-  if($('apWc'))$('apWc').value=CFG.articleWordCount||1000;
-  if($('apKw'))$('apKw').value=CFG.seoKeywords||'';
-  // Unsplash & dedup
-  if($('unsplashKey'))$('unsplashKey').value=CFG.unsplashApiKey||CFG.imageConfig?.unsplashApiKey||'';
-  if($('dedupOn'))$('dedupOn').checked=CFG.enableDeduplication||CFG.imageConfig?.enableDeduplication||false;
-  if($('dedupWindow'))$('dedupWindow').value=CFG.deduplicationWindow||CFG.imageConfig?.deduplicationWindow||5;
-  // Search rewrite
-  if($('rwOn'))$('rwOn').checked=CFG.enableSearchRewrite||false;
-  if($('rwCnt'))$('rwCnt').value=CFG.rewriteArticleCount||1;
-  if($('rwInt'))$('rwInt').value=CFG.publishInterval||24;
   }catch(e){}}
-async function saveCfg(){try{const d={feishuWebhook:$('fsWh')?.value,feishuAppId:$('fsAid')?.value,feishuAppSecret:$('fsSec')?.value,feishuTableUrl:$('fsTbl')?.value,
-  llmApiKey:$('llmKey')?.value,llmApiEndpoint:$('llmUrl')?.value,llmModel:$('llmMod')?.value,
-  autoPostEnabled:$('apOn')?.checked,autoPostTime:$('apTime')?.value,aiArticleCount:parseInt($('apCnt')?.value)||1,articleWordCount:parseInt($('apWc')?.value)||1000,seoKeywords:$('apKw')?.value,
-  unsplashApiKey:$('unsplashKey')?.value,enableDeduplication:$('dedupOn')?.checked,deduplicationWindow:parseInt($('dedupWindow')?.value)||5,
-  enableSearchRewrite:$('rwOn')?.checked,rewriteArticleCount:parseInt($('rwCnt')?.value)||1,publishInterval:parseInt($('rwInt')?.value)||24};
+async function saveCfg(){try{const d={feishuWebhook:$('fsWh')?.value,feishuAppId:$('fsAid')?.value,feishuAppSecret:$('fsSec')?.value,feishuTableUrl:$('fsTbl')?.value};
   Object.keys(d).forEach(k=>{if(d[k]===undefined)delete d[k]});
   const r=await(await af('/api/admin/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)})).json();toast(r.success?'已保存':'保存失败',r.success)}catch(e){toast(e.message,false)}}
 async function testFeishu(type){const msgEl=type==='bot'?$('fsMsg1'):$('fsMsg2');msgEl.textContent='测试中...';msgEl.className='text-xs text-gray-500';
@@ -495,6 +564,12 @@ async function loadSSL(){try{const r=await(await af('/api/admin/ssl-status')).js
   $('sslInfo').innerHTML=`<table class="w-full"><thead><tr class="border-b border-gray-200 text-xs text-gray-500 uppercase"><th class="py-2 px-4 text-left font-medium">${t('domain')}</th><th class="py-2 px-4 text-left font-medium">${t('expiry')}</th><th class="py-2 px-4 text-left font-medium">${t('days_left')}</th><th class="py-2 px-4 text-left font-medium">Issued</th></tr></thead><tbody>${rows}</tbody></table><div class="flex gap-3 pt-4 border-t border-gray-100 mt-2"><button onclick="doRenewSSL()" class="btn-p text-xs">${t('renew')}</button></div>`
   }catch(e){$('sslInfo').innerHTML=`<div class="text-red-500 text-sm">${e.message}</div>`}}
 async function doRenewSSL(){toast(t('renewing'));try{const r=await(await af('/api/admin/ssl-renew',{method:'POST'})).json();toast(r.success?t('renewed'):t('renew_fail')+': '+(r.message||''),r.success);loadSSL()}catch(e){toast(e.message,false)}}
+
+// Monitor
+async function loadMonitor(){try{CFG=await(await af('/api/admin/config')).json();const m=CFG.monitorConfig||{};$('monEnabled').checked=m.enabled!==false;$('monInterval').value=m.intervalMinutes||30;$('monCooldown').value=m.cooldownHours||6;$('monReportEnabled').checked=m.dailyReport!==false;$('monReportTime').value=m.reportTime||'08:00';$('monRecipients').value=m.recipients||CFG.email||'';$('monUrls').value=(m.urls||[]).join('\n')||'https://audit.jotoai.com\nhttps://shanyue.jotoai.com\nhttps://sec.jotoai.com\nhttps://kb.jotoai.com\nhttps://fasium.jotoai.com\nhttps://loop.jotoai.com\nhttps://note.jotoai.com/login?redirect=%2Fdashboard'}catch(e){}}
+function showMM(t,ok){$('monMsg').textContent=t;$('monMsg').className=`text-xs ${ok?'text-green-600':'text-red-500'}`;setTimeout(()=>$('monMsg').textContent='',4000)}
+async function saveMonitor(){try{const urls=$('monUrls').value.split('\n').map(s=>s.trim()).filter(Boolean);const r=await(await af('/api/admin/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({monitorEnabled:$('monEnabled').checked,monitorInterval:+$('monInterval').value,monitorCooldown:+$('monCooldown').value,monitorReportEnabled:$('monReportEnabled').checked,monitorReportTime:$('monReportTime').value,monitorRecipients:$('monRecipients').value,monitorUrls:urls})})).json();showMM(r.success?t('saved'):t('save_fail'),r.success)}catch(e){showMM(e.message,false)}}
+async function testMonitor(){showMM(t('sending'),true);try{const r=await(await af('/api/admin/monitor-test',{method:'POST'})).json();showMM(r.success?t('sent_to')+' '+($('monRecipients').value||CFG.email):r.message||t('fail'),r.success)}catch(e){showMM(e.message,false)}}
 
 // Init
 (async()=>{await loadSites();setLang(LANG);loadStats();checkStatus();setInterval(checkStatus,120000)})();

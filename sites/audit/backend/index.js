@@ -429,7 +429,17 @@ app.get('/api/admin/config', verifyToken, async (req, res) => {
     tavilyConfig: config.tavilyConfig || {},
     tavilyApiKey: config.tavilyConfig?.apiKey || '',
     tavilyMaxResults: config.tavilyConfig?.maxResults || 5,
-    rewritePrompt: config.seoConfig?.rewritePrompt || ''
+    rewritePrompt: config.seoConfig?.rewritePrompt || '',
+    // 健康巡检配置
+    monitorConfig: {
+      enabled: config.monitorConfig?.enabled !== false,
+      intervalMinutes: config.monitorConfig?.intervalMinutes || 30,
+      cooldownHours: config.monitorConfig?.cooldownHours || 6,
+      dailyReport: config.monitorConfig?.dailyReport !== false,
+      reportTime: config.monitorConfig?.reportTime || '08:00',
+      recipients: config.monitorConfig?.recipients || config.emailConfig?.adminEmail || '',
+      urls: config.monitorConfig?.urls || Object.values(MONITOR_SITES),
+    },
   });
 });
 
@@ -505,6 +515,18 @@ app.post('/api/admin/config', verifyToken, async (req, res) => {
     }
   }
   
+  // 更新健康巡检配置
+  if (data.monitorEnabled !== undefined || data.monitorInterval !== undefined || data.monitorCooldown !== undefined || data.monitorReportEnabled !== undefined || data.monitorReportTime !== undefined || data.monitorRecipients !== undefined) {
+    config.monitorConfig = config.monitorConfig || {};
+    if (data.monitorEnabled !== undefined) config.monitorConfig.enabled = data.monitorEnabled;
+    if (data.monitorInterval !== undefined) config.monitorConfig.intervalMinutes = data.monitorInterval;
+    if (data.monitorCooldown !== undefined) config.monitorConfig.cooldownHours = data.monitorCooldown;
+    if (data.monitorReportEnabled !== undefined) config.monitorConfig.dailyReport = data.monitorReportEnabled;
+    if (data.monitorReportTime !== undefined) config.monitorConfig.reportTime = data.monitorReportTime;
+    if (data.monitorRecipients !== undefined) config.monitorConfig.recipients = data.monitorRecipients;
+    if (data.monitorUrls !== undefined) config.monitorConfig.urls = data.monitorUrls;
+  }
+
   await saveConfig(config);
   res.json({ success: true });
 });
@@ -671,6 +693,36 @@ app.post('/api/admin/remove', verifyToken, async (req, res) => {
     console.error('删除管理员失败:', error);
     res.status(500).json({ success: false, message: '删除失败: ' + error.message });
   }
+});
+
+// 站点管理 API
+app.get('/api/admin/sites', verifyToken, async (req, res) => {
+  const config = await getConfig();
+  res.json({ sites: config.sites || [] });
+});
+
+app.post('/api/admin/sites/add', verifyToken, async (req, res) => {
+  const config = await getConfig();
+  const { id, name, url, desc, icon, accent } = req.body;
+  if (!id || !name || !url) return res.status(400).json({ success: false, error: '缺少必填字段' });
+  if (!config.sites) config.sites = [];
+  if (config.sites.find(s => s.id === id)) return res.status(400).json({ success: false, error: '站点已存在' });
+  config.sites.push({ id, name, url, desc: desc || '', icon: icon || '', accent: accent || '#64748b' });
+  // Create site data directory
+  const siteDir = path.join(DATA_DIR, 'sites', id);
+  try { await fs.mkdir(siteDir, { recursive: true }); } catch {}
+  try { await fs.writeFile(path.join(siteDir, 'config.json'), JSON.stringify({ brandName: name, email: '' }, null, 2)); } catch {}
+  try { await fs.writeFile(path.join(siteDir, 'articles.json'), '[]'); } catch {}
+  try { await fs.writeFile(path.join(siteDir, 'contacts.json'), '[]'); } catch {}
+  await saveConfig(config);
+  res.json({ success: true, sites: config.sites });
+});
+
+app.delete('/api/admin/sites/:id', verifyToken, async (req, res) => {
+  const config = await getConfig();
+  config.sites = (config.sites || []).filter(s => s.id !== req.params.id);
+  await saveConfig(config);
+  res.json({ success: true, sites: config.sites });
 });
 
 // 测试LLM API配置
@@ -1154,6 +1206,140 @@ async function scheduleArticleGeneration() {
     console.error('Error in scheduled article generation:', error);
   }
 }
+
+// ========== 站点健康巡检 ==========
+const MONITOR_SITES = {
+  audit:'https://audit.jotoai.com', shanyue:'https://shanyue.jotoai.com',
+  sec:'https://sec.jotoai.com', kb:'https://kb.jotoai.com',
+  fasium:'https://fasium.jotoai.com', loop:'https://loop.jotoai.com',
+  noteflow:'https://note.jotoai.com/login?redirect=%2Fdashboard',
+};
+
+async function runHealthCheck(customUrls) {
+  const urlList = customUrls && customUrls.length
+    ? customUrls.map(url => ({ site: new URL(url).hostname.replace('.jotoai.com', '').replace('note', 'noteflow'), url }))
+    : Object.entries(MONITOR_SITES).map(([site, url]) => ({ site, url }));
+  const results = await Promise.all(
+    urlList.map(async ({ site, url }) => {
+      const start = Date.now();
+      try {
+        const c = new AbortController();
+        const timer = setTimeout(() => c.abort(), 8000);
+        const r = await fetch(url, { signal: c.signal, redirect: 'follow' });
+        clearTimeout(timer);
+        const latency = Date.now() - start;
+        if (r.status >= 400) return { site, url, ok: false, status: r.status, latency, issue: `HTTP ${r.status}` };
+        const body = await r.text();
+        // SPA sites (note.jotoai.com) have small HTML shells; detect by checking for <div id="root">
+        const isSPA = body.includes('<div id="root"></div>') || body.includes('<div id="app"></div>');
+        const minSize = isSPA ? 500 : 1000;
+        if (body.length < minSize) return { site, url, ok: false, status: r.status, latency, issue: `HTML 过小(${body.length}B)，疑似白屏` };
+        const marker = HEALTH_ERROR_MARKERS.find(m => body.includes(m));
+        if (marker) return { site, url, ok: false, status: r.status, latency, issue: `错误: "${marker}"` };
+        return { site, url, ok: true, status: r.status, size: body.length, latency };
+      } catch (e) {
+        return { site, url, ok: false, status: 0, latency: Date.now() - start, issue: e.name === 'AbortError' ? '超时(8s)' : e.message };
+      }
+    })
+  );
+  return results;
+}
+
+function buildReportHtml(results, title) {
+  const now = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+  const problems = results.filter(r => !r.ok);
+  const allOk = problems.length === 0;
+  const color = allOk ? '#22c55e' : '#ef4444';
+  const icon = allOk ? '✅' : '⚠️';
+  const rows = results.map(r => {
+    const bg = r.ok ? '' : 'background:#fef2f2';
+    const statusIcon = r.ok ? '✅' : '❌';
+    const detail = r.ok ? `${r.size}B / ${r.latency}ms` : `<span style="color:red">${r.issue}</span>`;
+    return `<tr style="${bg}"><td style="padding:8px;border:1px solid #e5e7eb">${statusIcon} ${r.site}</td><td style="padding:8px;border:1px solid #e5e7eb">${r.status||'-'}</td><td style="padding:8px;border:1px solid #e5e7eb">${r.latency}ms</td><td style="padding:8px;border:1px solid #e5e7eb">${detail}</td></tr>`;
+  }).join('');
+  return `<div style="font-family:sans-serif;max-width:600px">
+    <h2 style="color:${color}">${icon} ${title}</h2>
+    <p style="color:#666">${now} — ${allOk ? '所有站点正常' : problems.length + ' 个站点异常'}</p>
+    <table style="border-collapse:collapse;width:100%;font-size:13px">
+      <tr style="background:#f9fafb"><th style="padding:8px;border:1px solid #e5e7eb;text-align:left">站点</th><th style="padding:8px;border:1px solid #e5e7eb">HTTP</th><th style="padding:8px;border:1px solid #e5e7eb">延迟</th><th style="padding:8px;border:1px solid #e5e7eb">详情</th></tr>
+      ${rows}
+    </table></div>`;
+}
+
+function getMonitorRecipients(config) {
+  const r = config.monitorConfig?.recipients || config.emailConfig?.adminEmail || '';
+  return r.split(',').map(s => s.trim()).filter(Boolean);
+}
+
+// 异常告警 cron（每分钟检查，按配置频率执行）
+let lastAlertTime = 0;
+let lastCheckMinute = -1;
+cron.schedule('* * * * *', async function() {
+  try {
+    const config = await getConfig();
+    const mc = config.monitorConfig || {};
+    if (mc.enabled === false) return;
+    const interval = mc.intervalMinutes || 30;
+    const nowMin = Math.floor(Date.now() / 60000);
+    if (nowMin - lastCheckMinute < interval) return;
+    lastCheckMinute = nowMin;
+
+    const results = await runHealthCheck(mc.urls);
+    const problems = results.filter(r => !r.ok);
+    const cooldown = (mc.cooldownHours || 6) * 60 * 60 * 1000;
+
+    if (problems.length > 0 && Date.now() - lastAlertTime > cooldown) {
+      lastAlertTime = Date.now();
+      const recipients = getMonitorRecipients(config);
+      if (recipients.length) {
+        const html = buildReportHtml(results, 'JOTO.AI 站点异常告警');
+        await sendEmail(recipients, '⚠️ JOTO.AI 站点异常告警', html);
+        console.log(`[健康巡检] ${problems.length} 个异常，已告警 → ${recipients.join(', ')}`);
+      }
+    } else if (problems.length > 0) {
+      console.log(`[健康巡检] ${problems.length} 个异常（冷却中）:`, problems.map(p => `${p.site}: ${p.issue}`).join(', '));
+    }
+  } catch (e) { console.error('[健康巡检] 出错:', e.message); }
+});
+
+// 每日报告 cron（每分钟检查是否到达配置时间）
+let lastReportDate = '';
+cron.schedule('* * * * *', async function() {
+  try {
+    const config = await getConfig();
+    const mc = config.monitorConfig || {};
+    if (mc.dailyReport === false) return;
+    const reportTime = mc.reportTime || '08:00';
+    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Shanghai' }));
+    const hhmm = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    const today = now.toISOString().slice(0, 10);
+    if (hhmm !== reportTime || lastReportDate === today) return;
+    lastReportDate = today;
+
+    const results = await runHealthCheck(mc.urls);
+    const recipients = getMonitorRecipients(config);
+    if (recipients.length) {
+      const allOk = results.every(r => r.ok);
+      const subject = allOk ? '✅ JOTO.AI 每日健康报告 — 全部正常' : '⚠️ JOTO.AI 每日健康报告 — 发现异常';
+      const html = buildReportHtml(results, 'JOTO.AI 每日健康报告');
+      await sendEmail(recipients, subject, html);
+      console.log(`[每日报告] 已发送 → ${recipients.join(', ')}`);
+    }
+  } catch (e) { console.error('[每日报告] 出错:', e.message); }
+});
+
+// 测试报告 API
+app.post('/api/admin/monitor-test', verifyToken, async (req, res) => {
+  try {
+    const config = await getConfig();
+    const recipients = getMonitorRecipients(config);
+    if (!recipients.length) return res.json({ success: false, message: '未配置收件人' });
+    const results = await runHealthCheck(config.monitorConfig?.urls);
+    const html = buildReportHtml(results, 'JOTO.AI 健康巡检 — 测试报告');
+    await sendEmail(recipients, '🧪 JOTO.AI 健康巡检 — 测试报告', html);
+    res.json({ success: true });
+  } catch (e) { res.json({ success: false, message: e.message }); }
+});
 
 // 动态定时任务：每分钟检查是否到达配置的发布时间
 // 修复：增加 lastPublishDate 防重复机制 + 10分钟补发窗口（防止服务重启错过整点）
@@ -2080,15 +2266,17 @@ app.get('/api/admin/dashboard', verifyToken, async (req, res) => {
 });
 
 
-// 管理员：站点状态检测
+// 管理员：站点状态检测（含 HTML 内容验证，防止"进程活着但页面白屏"误报绿色）
+const HEALTH_ERROR_MARKERS = ['Application error', '__next_error__', 'Internal Server Error', 'a client-side exception has occurred', 'ChunkLoadError'];
 app.get('/api/admin/site-status', verifyToken, async (req, res) => {
   const SITE_URLS = {
-    audit:   'https://audit.jotoai.com',
-    shanyue: 'https://shanyue.jotoai.com',
-    sec:     'https://sec.jotoai.com',
-    kb:      'https://kb.jotoai.com',
-    fasium:  'https://fasium.jotoai.com',
-    loop:    'https://loop.jotoai.com',
+    audit:    'https://audit.jotoai.com',
+    shanyue:  'https://shanyue.jotoai.com',
+    sec:      'https://sec.jotoai.com',
+    kb:       'https://kb.jotoai.com',
+    fasium:   'https://fasium.jotoai.com',
+    loop:     'https://loop.jotoai.com',
+    noteflow: 'https://note.jotoai.com/login?redirect=%2Fdashboard',
   };
   const results = await Promise.all(
     Object.entries(SITE_URLS).map(async ([site, url]) => {
@@ -2098,9 +2286,26 @@ app.get('/api/admin/site-status', verifyToken, async (req, res) => {
         const timer = setTimeout(() => controller.abort(), 8000);
         const r = await fetch(url, { signal: controller.signal, redirect: 'follow' });
         clearTimeout(timer);
-        return { site, url, status: r.status, ok: r.status >= 200 && r.status < 400, latency: Date.now() - start };
+        const latency = Date.now() - start;
+        const httpOk = r.status >= 200 && r.status < 400;
+
+        // Read body and check for error markers
+        const body = await r.text();
+        const isSPA = body.includes('<div id="root"></div>') || body.includes('<div id="app"></div>');
+        const minSize = isSPA ? 500 : 1000;
+        const tooSmall = body.length < minSize;
+        const errorMarker = HEALTH_ERROR_MARKERS.find(m => body.includes(m));
+        const contentOk = !tooSmall && !errorMarker;
+
+        const ok = httpOk && contentOk;
+        const issues = [];
+        if (!httpOk) issues.push(`HTTP ${r.status}`);
+        if (tooSmall) issues.push(`HTML 过小(${body.length}B)，疑似白屏`);
+        if (errorMarker) issues.push(`检测到错误标记: "${errorMarker}"`);
+
+        return { site, url, status: r.status, ok, latency, ...(issues.length ? { issues } : {}) };
       } catch (e) {
-        return { site, url, status: 0, ok: false, latency: Date.now() - start, error: e.name === 'AbortError' ? '超时(8s)' : e.message };
+        return { site, url, status: 0, ok: false, latency: Date.now() - start, issues: [e.name === 'AbortError' ? '超时(8s)' : e.message] };
       }
     })
   );
