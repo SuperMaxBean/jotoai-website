@@ -129,68 +129,95 @@
       <div class="flex items-center justify-between">
         <h1 class="text-xl font-semibold" data-t="articles_title">文章管理</h1>
         <div class="flex items-center gap-3">
-          <button onclick="toggleArtCfg()" class="btn-s text-xs flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span data-t="artcfg_title">文章配置</span></button>
+          <button onclick="openArtCfg()" class="btn-s text-xs flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span data-t="artcfg_title">文章配置</span></button>
           <button onclick="genArticle()" class="btn-p text-xs" data-t="gen_article">+ 生成新文章</button>
         </div>
       </div>
       <div id="artTabs" class="flex gap-2 mt-4 flex-wrap"></div>
     </div>
     <div class="px-8 py-6">
-      <div id="artList" class="space-y-3"><div class="text-gray-400 text-sm"><span class="spinner"></span> " + t("loading") + "</div></div>
-      <!-- Article Config Panel (toggled from header button) -->
-      <div id="artCfgPanel" class="hidden mt-6 border-t border-gray-100 pt-6">
-        <!-- Scope selector: global vs per-site -->
-        <div class="flex items-center gap-2 mb-5">
-          <span class="text-xs text-gray-500">配置范围：</span>
-          <div id="cfgScopeTabs" class="flex gap-1.5 flex-wrap"></div>
+      <div id="artList" class="space-y-3"><div class="text-gray-400 text-sm"><span class="spinner"></span></div></div>
+    </div>
+  </div>
+
+  <!-- ===== ARTICLE CONFIG MODAL ===== -->
+  <div id="artCfgModal" class="modal-bg hidden" style="display:none" onclick="if(event.target===this)closeArtCfg()">
+    <div class="modal-box !max-w-3xl">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-semibold" data-t="artcfg_title">文章配置</h2>
+        <button onclick="closeArtCfg()" class="text-gray-400 hover:text-gray-700 text-2xl leading-none">&times;</button>
+      </div>
+
+      <!-- Section 1: Global Settings -->
+      <div class="card mb-5 border-l-4 border-l-gray-800">
+        <h3 class="font-medium text-sm mb-4" data-t="global_settings">全局设置</h3>
+        <div class="space-y-4">
+          <!-- LLM -->
+          <div class="grid grid-cols-3 gap-3">
+            <div><label class="text-xs text-gray-500 mb-1 block">API Key</label><input type="password" id="gLlmKey" class="input font-mono text-xs"></div>
+            <div><label class="text-xs text-gray-500 mb-1 block">Endpoint</label><input id="gLlmUrl" class="input text-xs"></div>
+            <div><label class="text-xs text-gray-500 mb-1 block">Model</label><input id="gLlmMod" class="input text-xs"></div>
+          </div>
+          <!-- Unsplash + Dedup -->
+          <div class="grid grid-cols-3 gap-3">
+            <div><label class="text-xs text-gray-500 mb-1 block">Unsplash Key</label><input type="password" id="gUnsplash" class="input font-mono text-xs"></div>
+            <div><label class="text-xs text-gray-500 mb-1 block" data-t="dedup_window">去重窗口</label><input type="number" id="gDedupWin" class="input text-xs" min="0" max="50" value="5"></div>
+            <div class="flex items-center pt-5"><input type="checkbox" id="gDedupOn" class="w-4 h-4 mr-2"><label class="text-xs text-gray-500" data-t="enable_dedup">启用图片去重</label></div>
+          </div>
+          <!-- Auto Publish -->
+          <div class="border-t border-gray-100 pt-3">
+            <div class="flex items-center gap-3 mb-3"><input type="checkbox" id="gApOn" class="w-4 h-4"><label class="text-xs text-gray-600 font-medium" data-t="enable_auto">启用自动发布</label></div>
+            <div class="grid grid-cols-4 gap-3">
+              <div><label class="text-xs text-gray-500 mb-1 block" data-t="pub_time">发布时间</label><input type="time" id="gApTime" class="input text-xs"></div>
+              <div><label class="text-xs text-gray-500 mb-1 block" data-t="ai_count">AI 文章数</label><input type="number" id="gApCnt" class="input text-xs" min="0" max="10"></div>
+              <div><label class="text-xs text-gray-500 mb-1 block" data-t="word_count">字数</label><input type="number" id="gApWc" class="input text-xs" min="300" max="5000"></div>
+              <div><label class="text-xs text-gray-500 mb-1 block" data-t="pub_interval">发布间隔(h)</label><input type="number" id="gRwInt" class="input text-xs" min="1" max="168"></div>
+            </div>
+          </div>
+          <!-- Search Rewrite -->
+          <div class="border-t border-gray-100 pt-3">
+            <div class="flex items-center gap-3 mb-3"><input type="checkbox" id="gRwOn" class="w-4 h-4"><label class="text-xs text-gray-600 font-medium" data-t="enable_rewrite">启用搜索改写</label></div>
+            <div class="grid grid-cols-2 gap-3">
+              <div><label class="text-xs text-gray-500 mb-1 block" data-t="rw_count">改写数量</label><input type="number" id="gRwCnt" class="input text-xs" min="0" max="10"></div>
+              <div><label class="text-xs text-gray-500 mb-1 block" data-t="rw_prompt">改写提示词</label><input id="gRwPrompt" class="input text-xs" placeholder="留空使用默认"></div>
+            </div>
+          </div>
+          <!-- Global Default Prompt -->
+          <div class="border-t border-gray-100 pt-3">
+            <label class="text-xs text-gray-500 mb-1 block" data-t="global_prompt">全局默认提示词</label>
+            <textarea id="gPrompt" class="input text-xs !h-16" placeholder="生成文章时的 system prompt，留空使用内置默认"></textarea>
+          </div>
+          <!-- AI Humanizer -->
+          <div class="border-t border-gray-100 pt-3">
+            <div class="flex items-center gap-3 mb-2">
+              <input type="checkbox" id="gHumanizerOn" class="w-4 h-4">
+              <label class="text-xs text-gray-600 font-medium" data-t="humanizer_enable">启用 AI 拟人化（去 AI 味）</label>
+            </div>
+            <p class="text-xs text-gray-400 mb-2" data-t="humanizer_desc">开启后，生成的文章会额外过一遍 LLM 去除 AI 写作痕迹</p>
+            <details id="humanizerDetails">
+              <summary class="text-xs text-blue-500 cursor-pointer mb-2" data-t="humanizer_view_prompt">查看/编辑拟人化提示词</summary>
+              <textarea id="gHumanizerPrompt" class="input text-xs !h-40 font-mono" placeholder="Humanizer prompt..."></textarea>
+            </details>
+          </div>
+          <div class="flex gap-3"><button onclick="saveGlobalCfg()" class="btn-p text-xs" data-t="save_global">保存全局</button><button onclick="testLLM()" class="btn-s text-xs" data-t="test_conn">测试 LLM</button><span id="gCfgMsg" class="text-xs"></span></div>
         </div>
-        <div id="cfgScopeHint" class="text-xs text-gray-400 mb-4 hidden"></div>
-        <div class="space-y-6 max-w-2xl">
-          <!-- LLM Model -->
-          <div class="card">
-            <h3 class="font-medium text-sm mb-4">LLM 模型</h3>
-            <div class="space-y-4">
-              <div class="grid grid-cols-3 gap-4">
-                <div><label class="text-xs text-gray-500 mb-1.5 block">API Key</label><input type="password" id="llmKey" class="input font-mono"></div>
-                <div><label class="text-xs text-gray-500 mb-1.5 block">Endpoint</label><input id="llmUrl" class="input"></div>
-                <div><label class="text-xs text-gray-500 mb-1.5 block">Model</label><input id="llmMod" class="input"></div>
-              </div>
-              <div class="flex gap-3"><button onclick="saveArtCfg()" class="btn-p text-xs">保存</button><button onclick="testLLM()" class="btn-s text-xs">测试连接</button><span id="llmMsg" class="text-xs"></span></div>
-            </div>
+      </div>
+
+      <!-- Section 2: Per-Site Settings -->
+      <div class="card" id="cfgSiteCard">
+        <h3 class="font-medium text-sm mb-3" data-t="site_settings">站点设置</h3>
+        <div id="cfgSiteTabs" class="flex gap-1.5 flex-wrap mb-4"></div>
+        <div id="cfgSiteBanner" class="text-xs text-gray-400 mb-3"></div>
+        <div class="space-y-4">
+          <div>
+            <label class="text-xs text-gray-500 mb-1 block" data-t="seo_kw">SEO 关键字</label>
+            <textarea id="sKw" class="input text-xs !h-20" data-tp="comma_sep"></textarea>
           </div>
-          <!-- Unsplash Image Config -->
-          <div class="card">
-            <h3 class="font-medium text-sm mb-4">Unsplash 图片配置</h3>
-            <div class="space-y-4">
-              <div class="grid grid-cols-2 gap-4">
-                <div><label class="text-xs text-gray-500 mb-1.5 block">Access Key</label><input type="password" id="unsplashKey" class="input font-mono" placeholder="Unsplash Access Key"></div>
-                <div><label class="text-xs text-gray-500 mb-1.5 block">图片去重窗口</label><input type="number" id="dedupWindow" class="input" min="0" max="50" placeholder="5"></div>
-              </div>
-              <div class="flex items-center gap-3"><input type="checkbox" id="dedupOn" class="w-4 h-4"><label class="text-xs text-gray-500">启用图片去重</label></div>
-            </div>
+          <div>
+            <label class="text-xs text-gray-500 mb-1 block" data-t="site_prompt">站点提示词</label>
+            <textarea id="sPrompt" class="input text-xs !h-20" placeholder="覆盖全局提示词，留空继承全局"></textarea>
           </div>
-          <!-- Auto Publish + SEO -->
-          <div class="card">
-            <h3 class="font-medium text-sm mb-4">自动发布</h3>
-            <div class="space-y-4">
-              <div class="flex items-center gap-3"><input type="checkbox" id="apOn" class="w-4 h-4"><label class="text-xs text-gray-500">启用自动发布</label></div>
-              <div class="grid grid-cols-3 gap-4">
-                <div><label class="text-xs text-gray-500 mb-1.5 block">发布时间</label><input type="time" id="apTime" class="input"></div>
-                <div><label class="text-xs text-gray-500 mb-1.5 block">AI 文章数</label><input type="number" id="apCnt" class="input" min="0" max="10"></div>
-                <div><label class="text-xs text-gray-500 mb-1.5 block">字数</label><input type="number" id="apWc" class="input" min="300" max="5000"></div>
-              </div>
-              <div class="border-t border-gray-100 pt-4">
-                <div class="flex items-center gap-3 mb-3"><input type="checkbox" id="rwOn" class="w-4 h-4"><label class="text-xs text-gray-600 font-medium">启用搜索改写文章</label></div>
-                <p class="text-xs text-gray-400 mb-3">从网上搜索相关文章并深度改写，降低AI特征，提高原创度</p>
-                <div class="grid grid-cols-2 gap-4">
-                  <div><label class="text-xs text-gray-500 mb-1.5 block">改写文章数量</label><input type="number" id="rwCnt" class="input" min="0" max="10"></div>
-                  <div><label class="text-xs text-gray-500 mb-1.5 block">发布间隔 (小时)</label><input type="number" id="rwInt" class="input" min="1" max="168"></div>
-                </div>
-              </div>
-              <div><label class="text-xs text-gray-500 mb-1.5 block">SEO 关键字</label><textarea id="apKw" class="input !h-20" placeholder="逗号分隔"></textarea></div>
-              <button onclick="saveArtCfg()" class="btn-p text-xs">保存</button>
-            </div>
-          </div>
+          <div class="flex gap-3"><button onclick="saveSiteCfg()" class="btn-p text-xs" data-t="save_site">保存站点配置</button><button onclick="resetSiteCfg()" class="btn-s text-xs" data-t="reset_to_global">重置为全局默认</button><span id="sCfgMsg" class="text-xs"></span></div>
         </div>
       </div>
     </div>
@@ -367,7 +394,9 @@ const I18N={
     sites_title:'站点管理',sites_desc:'管理所有产品站点，新增站点自动同步到 Dashboard',add_site:'+ 添加站点',add_new_site:'添加新站点',site_id:'站点 ID',site_name:'名称',site_url:'URL',site_desc:'描述',add:'添加',cancel:'取消',confirm_del_site:'删除',added:'已添加',fill_required:'填写 ID、名称和 URL',
     email_title:'邮件设置',email_desc:'所有站点统一使用 Resend 发送邮件（域名：mail.jotoai.com）',resend_key:'Resend API Key',recv_email:'接收邮箱',sender:'发件人',save:'保存',test_email:'发送测试邮件',saved:'已保存',sending:'发送中...',sent_to:'已发送',fill_email:'填写接收邮箱',from_resend:'从 resend.com 获取',
     integ_title:'集成',integ_desc:'配置飞书等第三方集成服务',feishu_webhook:'飞书机器人 Webhook',feishu_table:'飞书多维表格同步',test_webhook:'测试 Webhook',test_sync:'测试同步',testing:'测试中...',success:'✓ 成功',fail:'✗ 失败',
-    artcfg_title:'文章配置',artcfg_desc:'LLM、图片、自动发布与 SEO 关键字设置',llm_model:'LLM 模型',api_key:'API Key',endpoint:'Endpoint',model:'Model',test_conn:'测试连接',conn_ok:'✓ 连接正常',auto_publish:'自动发布',enable_auto:'启用自动发布',pub_time:'发布时间',ai_count:'AI 文章数',word_count:'字数',seo_kw:'SEO 关键字',comma_sep:'逗号分隔',save_fail:'保存失败',
+    artcfg_title:'文章配置',global_settings:'全局设置',site_settings:'站点设置',global_default:'全局默认',global_prompt:'全局默认提示词',site_prompt:'站点提示词',save_global:'保存全局',save_site:'保存站点配置',reset_to_global:'重置为全局默认',configuring:'正在配置',dedup_window:'去重窗口',enable_dedup:'启用图片去重',pub_interval:'发布间隔(h)',enable_rewrite:'启用搜索改写',rw_count:'改写数量',rw_prompt:'改写提示词',
+    humanizer_enable:'启用 AI 拟人化（去 AI 味）',humanizer_desc:'开启后，生成的文章会额外过一遍 LLM 去除 AI 写作痕迹',humanizer_view_prompt:'查看/编辑拟人化提示词',
+    llm_model:'LLM 模型',api_key:'API Key',endpoint:'Endpoint',model:'Model',test_conn:'测试连接',conn_ok:'✓ 连接正常',auto_publish:'自动发布',enable_auto:'启用自动发布',pub_time:'发布时间',ai_count:'AI 文章数',word_count:'字数',seo_kw:'SEO 关键字',comma_sep:'逗号分隔',save_fail:'保存失败',
     admins_title:'管理员',admins_desc:'邀请和管理后台管理员账号',current_admins:'当前管理员',invite_admin:'邀请新管理员',email_lbl:'邮箱',name_lbl:'姓名',send_invite:'发送邀请邮件',invite_sent:'✓ 邀请已发送',change_pw:'修改密码',cur_pw:'当前密码',new_pw:'新密码',confirm_pw:'确认密码',change:'修改',pw_changed:'✓ 已修改',pw_mismatch:'两次密码不一致',fill_pw:'填写密码',remove:'移除',confirm_remove:'移除',removed:'已移除',none:'暂无',
     monitor_nav:'健康巡检',monitor_title:'健康巡检',monitor_desc:'配置站点健康巡检频率与邮件报告',monitor_settings:'巡检设置',monitor_enable:'启用巡检',monitor_interval:'巡检频率（分钟）',monitor_cooldown:'告警冷却（小时）',monitor_report:'每日报告',monitor_report_enable:'启用每日报告邮件',monitor_report_time:'发送时间',monitor_recipients:'收件人（多个用逗号分隔）',monitor_test:'发送测试报告',monitor_urls:'监控 URL 列表',monitor_urls_desc:'每行一个 URL，支持首页、登录页、API 等任意页面',
     ssl_title:'SSL 证书',ssl_desc:"Let's Encrypt 证书状态与续订",domain:'域名',expiry:'到期时间',days_left:'剩余天数',days:'天',renew:'手动续订',renewing:'续订中...',renewed:'续订成功',renew_fail:'续订失败',ssl_unavail:'无法获取 SSL 状态',loading:'加载中...',
@@ -379,7 +408,9 @@ const I18N={
     sites_title:'Site Management',sites_desc:'Manage product sites. New sites auto-sync to Dashboard.',add_site:'+ Add Site',add_new_site:'Add New Site',site_id:'Site ID',site_name:'Name',site_url:'URL',site_desc:'Description',add:'Add',cancel:'Cancel',confirm_del_site:'Delete',added:'Added',fill_required:'Fill in ID, name, and URL',
     email_title:'Email Settings',email_desc:'All sites use Resend for email (domain: mail.jotoai.com)',resend_key:'Resend API Key',recv_email:'Recipient',sender:'Sender',save:'Save',test_email:'Send Test Email',saved:'Saved',sending:'Sending...',sent_to:'Sent to',fill_email:'Enter recipient email',from_resend:'Get from resend.com',
     integ_title:'Integrations',integ_desc:'Configure Feishu and other third-party services',feishu_webhook:'Feishu Bot Webhook',feishu_table:'Feishu Table Sync',test_webhook:'Test Webhook',test_sync:'Test Sync',testing:'Testing...',success:'✓ Success',fail:'✗ Failed',
-    artcfg_title:'Article Config',artcfg_desc:'LLM, images, auto-publish, and SEO keywords',llm_model:'LLM Model',api_key:'API Key',endpoint:'Endpoint',model:'Model',test_conn:'Test Connection',conn_ok:'✓ Connected',auto_publish:'Auto Publish',enable_auto:'Enable auto-publish',pub_time:'Publish Time',ai_count:'AI Articles',word_count:'Word Count',seo_kw:'SEO Keywords',comma_sep:'comma-separated',save_fail:'Save failed',
+    artcfg_title:'Article Config',global_settings:'Global Settings',site_settings:'Site Settings',global_default:'Global default',global_prompt:'Global Default Prompt',site_prompt:'Site Prompt',save_global:'Save Global',save_site:'Save Site Config',reset_to_global:'Reset to Global',configuring:'Configuring',dedup_window:'Dedup Window',enable_dedup:'Enable image dedup',pub_interval:'Interval (h)',enable_rewrite:'Enable search rewrite',rw_count:'Rewrite Count',rw_prompt:'Rewrite Prompt',
+    humanizer_enable:'Enable AI Humanizer',humanizer_desc:'When enabled, articles go through an extra LLM pass to remove AI writing artifacts',humanizer_view_prompt:'View/edit humanizer prompt',
+    llm_model:'LLM Model',api_key:'API Key',endpoint:'Endpoint',model:'Model',test_conn:'Test Connection',conn_ok:'✓ Connected',auto_publish:'Auto Publish',enable_auto:'Enable auto-publish',pub_time:'Publish Time',ai_count:'AI Articles',word_count:'Word Count',seo_kw:'SEO Keywords',comma_sep:'comma-separated',save_fail:'Save failed',
     admins_title:'Admins',admins_desc:'Invite and manage admin accounts',current_admins:'Current Admins',invite_admin:'Invite New Admin',email_lbl:'Email',name_lbl:'Name',send_invite:'Send Invite Email',invite_sent:'✓ Invite sent',change_pw:'Change Password',cur_pw:'Current Password',new_pw:'New Password',confirm_pw:'Confirm Password',change:'Change',pw_changed:'✓ Changed',pw_mismatch:'Passwords do not match',fill_pw:'Enter password',remove:'Remove',confirm_remove:'Remove',removed:'Removed',none:'None',
     monitor_nav:'Health Monitor',monitor_title:'Health Monitor',monitor_desc:'Configure site health check frequency and email reports',monitor_settings:'Monitor Settings',monitor_enable:'Enable monitoring',monitor_interval:'Check interval (minutes)',monitor_cooldown:'Alert cooldown (hours)',monitor_report:'Daily Report',monitor_report_enable:'Enable daily report email',monitor_report_time:'Send time',monitor_recipients:'Recipients (comma separated)',monitor_test:'Send test report',monitor_urls:'Monitor URL List',monitor_urls_desc:'One URL per line — homepage, login page, API, etc.',
     ssl_title:'SSL Certificate',ssl_desc:"Let's Encrypt certificate status & renewal",domain:'Domain',expiry:'Expires',days_left:'Days Left',days:'days',renew:'Renew Now',renewing:'Renewing...',renewed:'Renewed',renew_fail:'Renewal failed',ssl_unavail:'Cannot fetch SSL status',loading:'Loading...',
@@ -475,52 +506,76 @@ function showEM(t,ok){$('eMsg').textContent=t;$('eMsg').className=`text-xs ${ok?
 async function saveEmail(){try{const r=await(await af('/api/admin/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({resendApiKey:$('eKey').value,email:$('eAddr').value,emailFrom:$('eFrom').value})})).json();r.success?showEM('已保存',true):showEM(r.message||'失败',false)}catch(e){showEM(e.message,false)}}
 async function testEmail(){const a=$('eAddr').value;if(!a){showEM('填写接收邮箱',false);return}showEM('发送中...',true);try{await saveEmail();const r=await(await af('/api/admin/test-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({testEmail:a})})).json();showEM(r.success?'已发送':'失败: '+(r.message||''),r.success)}catch(e){showEM(e.message,false)}}
 
-// Toggle article config panel
-function toggleArtCfg(){const p=$('artCfgPanel');p.classList.toggle('hidden');if(!p.classList.contains('hidden')){renderCfgScopeTabs();loadArtCfg()}}
+// Article Config Modal
+let globalCfgCache={};
+let cfgSiteId='';
+function openArtCfg(){const m=$('artCfgModal');m.style.display='flex';m.classList.remove('hidden');loadGlobalCfg();cfgSiteId=artSite&&artSite!=='all'?artSite:(S[0]?.id||'');renderCfgSiteTabs();loadSiteCfg()}
+function closeArtCfg(){$('artCfgModal').style.display='none';$('artCfgModal').classList.add('hidden')}
+function showGMsg(t,ok){$('gCfgMsg').textContent=t;$('gCfgMsg').className=`text-xs ${ok?'text-green-600':'text-red-500'}`;setTimeout(()=>$('gCfgMsg').textContent='',4000)}
+function showSMsg(t,ok){$('sCfgMsg').textContent=t;$('sCfgMsg').className=`text-xs ${ok?'text-green-600':'text-red-500'}`;setTimeout(()=>$('sCfgMsg').textContent='',4000)}
 
-// Article config scope: 'global' or site id
-let cfgScope='global';
-function renderCfgScopeTabs(){
-  const tabs=['global',...S.map(s=>s.id)];
-  $('cfgScopeTabs').innerHTML=tabs.map(id=>{
-    const label=id==='global'?'全局':S.find(s=>s.id===id)?.name||id;
-    const cls=id===cfgScope?'tab-active':'';
-    return `<button onclick="cfgScope='${id}';renderCfgScopeTabs();loadArtCfg()" class="tab-btn ${cls}">${label}</button>`;
-  }).join('');
-  const hint=$('cfgScopeHint');
-  if(cfgScope==='global'){hint.classList.add('hidden')}
-  else{hint.textContent='站点级配置会覆盖全局配置。留空则使用全局值。';hint.classList.remove('hidden')}
-}
-async function loadArtCfg(){
+async function loadGlobalCfg(){
   try{
-    let c;
-    if(cfgScope==='global'){c=await(await af('/api/admin/config')).json()}
-    else{const r=await(await af(`/api/admin/${cfgScope}/config`)).json();c=r.config||r}
-    if($('llmKey'))$('llmKey').value=c.llmApiKey||'';
-    if($('llmUrl'))$('llmUrl').value=c.llmApiEndpoint||'';
-    if($('llmMod'))$('llmMod').value=c.llmModel||'';
-    if($('apOn'))$('apOn').checked=c.autoPostEnabled||false;
-    if($('apTime'))$('apTime').value=c.autoPostTime||'09:00';
-    if($('apCnt'))$('apCnt').value=c.aiArticleCount||c.autoPostCount||1;
-    if($('apWc'))$('apWc').value=c.articleWordCount||1000;
-    if($('apKw'))$('apKw').value=c.seoKeywords||'';
-    if($('unsplashKey'))$('unsplashKey').value=c.unsplashApiKey||'';
-    if($('dedupOn'))$('dedupOn').checked=c.enableDeduplication||false;
-    if($('dedupWindow'))$('dedupWindow').value=c.deduplicationWindow||5;
-    if($('rwOn'))$('rwOn').checked=c.enableSearchRewrite||false;
-    if($('rwCnt'))$('rwCnt').value=c.rewriteArticleCount||1;
-    if($('rwInt'))$('rwInt').value=c.publishInterval||c.autoPostInterval||24;
-  }catch(e){toast('加载配置失败',false)}
+    const c=await(await af('/api/admin/config')).json();
+    globalCfgCache=c;
+    $('gLlmKey').value=c.llmApiKey||'';$('gLlmUrl').value=c.llmApiEndpoint||'';$('gLlmMod').value=c.llmModel||'';
+    $('gUnsplash').value=c.unsplashApiKey||'';$('gDedupWin').value=c.deduplicationWindow||5;$('gDedupOn').checked=c.enableImageDeduplication||false;
+    $('gApOn').checked=c.autoPostEnabled||false;$('gApTime').value=c.autoPostTime||'09:00';
+    $('gApCnt').value=c.aiArticleCount||1;$('gApWc').value=c.articleWordCount||1000;$('gRwInt').value=c.autoPostInterval||24;
+    $('gRwOn').checked=c.enableSearchRewrite||false;$('gRwCnt').value=c.rewriteArticleCount||1;$('gRwPrompt').value=c.rewritePrompt||'';
+    $('gPrompt').value=c.globalPrompt||'';
+    const hc=c.humanizerConfig||{};$('gHumanizerOn').checked=hc.enabled||false;$('gHumanizerPrompt').value=hc.prompt||'';
+  }catch(e){showGMsg('加载失败',false)}
 }
-async function saveArtCfg(){
-  const d={llmApiKey:$('llmKey')?.value,llmApiEndpoint:$('llmUrl')?.value,llmModel:$('llmMod')?.value,
-    autoPostEnabled:$('apOn')?.checked,autoPostTime:$('apTime')?.value,aiArticleCount:parseInt($('apCnt')?.value)||1,articleWordCount:parseInt($('apWc')?.value)||1000,seoKeywords:$('apKw')?.value,
-    unsplashApiKey:$('unsplashKey')?.value,enableDeduplication:$('dedupOn')?.checked,deduplicationWindow:parseInt($('dedupWindow')?.value)||5,
-    enableSearchRewrite:$('rwOn')?.checked,rewriteArticleCount:parseInt($('rwCnt')?.value)||1,publishInterval:parseInt($('rwInt')?.value)||24};
-  Object.keys(d).forEach(k=>{if(d[k]===undefined)delete d[k]});
-  const url=cfgScope==='global'?'/api/admin/config':`/api/admin/${cfgScope}/config`;
-  try{const r=await(await af(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)})).json();
-    toast(r.success?`${cfgScope==='global'?'全局':'站点'}配置已保存`:'保存失败',r.success)}catch(e){toast(e.message,false)}
+async function saveGlobalCfg(){
+  const d={
+    llmApiKey:$('gLlmKey').value,llmApiEndpoint:$('gLlmUrl').value,llmModel:$('gLlmMod').value,
+    unsplashApiKey:$('gUnsplash').value,enableImageDeduplication:$('gDedupOn').checked,deduplicationWindow:parseInt($('gDedupWin').value)||5,
+    autoPostEnabled:$('gApOn').checked,autoPostTime:$('gApTime').value,aiArticleCount:parseInt($('gApCnt').value)||1,
+    articleWordCount:parseInt($('gApWc').value)||1000,autoPostInterval:parseInt($('gRwInt').value)||24,
+    enableSearchRewrite:$('gRwOn').checked,rewriteArticleCount:parseInt($('gRwCnt').value)||1,rewritePrompt:$('gRwPrompt').value,
+    globalPrompt:$('gPrompt').value,
+    humanizerEnabled:$('gHumanizerOn').checked,humanizerPrompt:$('gHumanizerPrompt').value
+  };
+  try{const r=await(await af('/api/admin/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)})).json();
+    showGMsg(r.success?t('saved'):t('save_fail'),r.success);if(r.success)globalCfgCache={...globalCfgCache,...d}}catch(e){showGMsg(e.message,false)}
+}
+
+function renderCfgSiteTabs(){
+  $('cfgSiteTabs').innerHTML=S.map(s=>{
+    const active=s.id===cfgSiteId;
+    const bg=active?s.accent||'#111':'transparent';
+    const fg=active?'#fff':s.accent||'#6b7280';
+    const border=active?'transparent':s.accent||'#e5e7eb';
+    return `<button onclick="cfgSiteId='${s.id}';renderCfgSiteTabs();loadSiteCfg()" class="tab-btn" style="background:${bg};color:${fg};border-color:${border}">${s.name}</button>`;
+  }).join('');
+  const site=S.find(s=>s.id===cfgSiteId);
+  $('cfgSiteBanner').innerHTML=site?`${t('configuring')}：<strong>${site.name}</strong> <span class="text-gray-300">(${site.id})</span>`:'';
+  if(site)$('cfgSiteCard').style.borderLeftColor=site.accent||'#94a3b8';
+}
+async function loadSiteCfg(){
+  if(!cfgSiteId)return;
+  try{
+    const r=await(await af(`/api/admin/${cfgSiteId}/config`)).json();
+    const c=r.config||r;
+    $('sKw').value=c.seoKeywords||'';
+    $('sKw').placeholder=globalCfgCache.seoKeywords?`${t('global_default')}: ${globalCfgCache.seoKeywords.substring(0,60)}...`:t('comma_sep');
+    $('sPrompt').value=c.systemPrompt||'';
+    $('sPrompt').placeholder=globalCfgCache.globalPrompt?`${t('global_default')}: ${globalCfgCache.globalPrompt.substring(0,60)}...`:'覆盖全局提示词，留空继承全局';
+  }catch(e){showSMsg('加载失败',false)}
+}
+async function saveSiteCfg(){
+  if(!cfgSiteId)return;
+  const d={};
+  if($('sKw').value)d.seoKeywords=$('sKw').value;
+  if($('sPrompt').value)d.systemPrompt=$('sPrompt').value;
+  try{const r=await(await af(`/api/admin/${cfgSiteId}/config`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)})).json();
+    showSMsg(r.success?`${S.find(s=>s.id===cfgSiteId)?.name||cfgSiteId} 配置已保存`:t('save_fail'),r.success)}catch(e){showSMsg(e.message,false)}
+}
+async function resetSiteCfg(){
+  if(!cfgSiteId||!confirm('重置将清除该站点的 SEO 关键字和提示词覆盖，使用全局默认值。确定？'))return;
+  try{const r=await(await af(`/api/admin/${cfgSiteId}/config`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({seoKeywords:'',systemPrompt:''})})).json();
+    if(r.success){loadSiteCfg();showSMsg('已重置为全局默认',true)}else showSMsg(t('save_fail'),false)}catch(e){showSMsg(e.message,false)}
 }
 
 // Integrations config (separate from article config)
@@ -536,9 +591,9 @@ async function saveCfg(){try{const d={feishuWebhook:$('fsWh')?.value,feishuAppId
 async function testFeishu(type){const msgEl=type==='bot'?$('fsMsg1'):$('fsMsg2');msgEl.textContent='测试中...';msgEl.className='text-xs text-gray-500';
   try{await saveCfg();const ep=type==='bot'?'test-feishu-bot':'test-feishu-table';const r=await(await af(`/api/admin/${ep}`,{method:'POST',headers:{'Content-Type':'application/json'}})).json();
   msgEl.textContent=r.success?'✓ 成功':'✗ 失败';msgEl.className=`text-xs ${r.success?'text-green-600':'text-red-500'}`}catch(e){msgEl.textContent='✗ '+e.message;msgEl.className='text-xs text-red-500'}}
-async function testLLM(){$('llmMsg').textContent='测试中...';$('llmMsg').className='text-xs text-gray-500';
-  try{await saveCfg();const r=await(await af('/api/admin/test-llm',{method:'POST',headers:{'Content-Type':'application/json'}})).json();
-  $('llmMsg').textContent=r.success?'✓ 连接正常':'✗ 失败';$('llmMsg').className=`text-xs ${r.success?'text-green-600':'text-red-500'}`}catch(e){$('llmMsg').textContent='✗ '+e.message;$('llmMsg').className='text-xs text-red-500'}}
+async function testLLM(){showGMsg('测试中...',true);
+  try{await saveGlobalCfg();const r=await(await af('/api/admin/test-llm',{method:'POST',headers:{'Content-Type':'application/json'}})).json();
+  showGMsg(r.success?'✓ 连接正常':'✗ 失败',r.success)}catch(e){showGMsg('✗ '+e.message,false)}}
 
 // Admins
 async function loadAdmins(){try{const r=await(await af('/api/admin/admins')).json();const admins=r.admins||r||[];

@@ -430,6 +430,12 @@ app.get('/api/admin/config', verifyToken, async (req, res) => {
     tavilyApiKey: config.tavilyConfig?.apiKey || '',
     tavilyMaxResults: config.tavilyConfig?.maxResults || 5,
     rewritePrompt: config.seoConfig?.rewritePrompt || '',
+    globalPrompt: config.globalPrompt || '',
+    // AI 拟人化配置
+    humanizerConfig: {
+      enabled: config.humanizerConfig?.enabled || false,
+      prompt: config.humanizerConfig?.prompt || '',
+    },
     // 健康巡检配置
     monitorConfig: {
       enabled: config.monitorConfig?.enabled !== false,
@@ -515,6 +521,16 @@ app.post('/api/admin/config', verifyToken, async (req, res) => {
     }
   }
   
+  // 更新全局提示词
+  if (data.globalPrompt !== undefined) config.globalPrompt = data.globalPrompt;
+
+  // 更新 AI 拟人化配置
+  if (data.humanizerEnabled !== undefined || data.humanizerPrompt !== undefined) {
+    config.humanizerConfig = config.humanizerConfig || {};
+    if (data.humanizerEnabled !== undefined) config.humanizerConfig.enabled = data.humanizerEnabled;
+    if (data.humanizerPrompt !== undefined) config.humanizerConfig.prompt = data.humanizerPrompt;
+  }
+
   // 更新健康巡检配置
   if (data.monitorEnabled !== undefined || data.monitorInterval !== undefined || data.monitorCooldown !== undefined || data.monitorReportEnabled !== undefined || data.monitorReportTime !== undefined || data.monitorRecipients !== undefined) {
     config.monitorConfig = config.monitorConfig || {};
@@ -788,7 +804,9 @@ app.post('/api/admin/generate-article', verifyToken, async (req, res) => {
     };
     console.log('[DEBUG] dedupConfig:', dedupConfig);
 
-    const article = await generateArticleNew(llmConfig, imageConfig, dedupConfig, wordCount, seoKeywords, existingArticles);
+    const promptOverrides = { globalPrompt: config.globalPrompt || '' };
+    const humanizerConfig = config.humanizerConfig || {};
+    const article = await generateArticleNew(llmConfig, imageConfig, dedupConfig, wordCount, seoKeywords, existingArticles, null, promptOverrides, humanizerConfig);
     existingArticles.unshift(article);
     await saveArticles(existingArticles);
     res.json({ success: true, article });
@@ -1217,7 +1235,7 @@ const MONITOR_SITES = {
 
 async function runHealthCheck(customUrls) {
   const urlList = customUrls && customUrls.length
-    ? customUrls.map(url => ({ site: new URL(url).hostname.replace('.jotoai.com', '').replace('note', 'noteflow'), url }))
+    ? customUrls.map(url => { const u = new URL(url); return { site: u.hostname + (u.pathname !== '/' ? u.pathname.split('?')[0] : ''), url }; })
     : Object.entries(MONITOR_SITES).map(([site, url]) => ({ site, url }));
   const results = await Promise.all(
     urlList.map(async ({ site, url }) => {
@@ -2213,21 +2231,25 @@ async function readSiteFile(filePath, defaultVal = []) {
 
 // 公开：获取各站点文章
 app.get('/api/:site/articles', async (req, res) => {
+  const { enrichLegacyArticle } = require('./article-enrichment');
   const { site } = req.params;
   if (!SITES.includes(site)) return res.status(404).json({ error: 'Unknown site' });
   const articles = await readSiteFile(getSitePaths(site).articles, []);
   const published = articles.filter(a => a.status === 'published' || !a.status);
-  res.json({ articles: published });
+  const enriched = published.map(a => a.schemaVersion ? a : enrichLegacyArticle(a));
+  res.json({ articles: enriched });
 });
 
 // 公开：获取单篇文章
 app.get('/api/:site/articles/:id', async (req, res) => {
+  const { enrichLegacyArticle } = require('./article-enrichment');
   const { site, id } = req.params;
   if (!SITES.includes(site)) return res.status(404).json({ error: 'Unknown site' });
   const articles = await readSiteFile(getSitePaths(site).articles, []);
   const article = articles.find(a => String(a.id) === id || a.slug === id);
   if (!article) return res.status(404).json({ error: 'Article not found' });
-  res.json({ article });
+  const enriched = article.schemaVersion ? article : enrichLegacyArticle(article);
+  res.json({ article: enriched });
 });
 
 // 公开：提交表单（各站点）
@@ -2255,11 +2277,17 @@ app.post('/api/:site/contact', async (req, res) => {
 // 管理员：获取各站点统计
 app.get('/api/admin/dashboard', verifyToken, async (req, res) => {
   try {
+    // 读取根目录 contacts（/api/contact 提交的数据存在这里）
+    const allContacts = await getContacts();
     const stats = await Promise.all(SITES.map(async site => {
       const p = getSitePaths(site);
       const articles = await readSiteFile(p.articles, []);
-      const contacts = await readSiteFile(p.contacts, []);
-      return { site, name: SITE_NAMES[site], articleCount: articles.length, contactCount: contacts.length };
+      const siteContacts = await readSiteFile(p.contacts, []);
+      // 合并：子目录 contacts + 根目录中属于该站点的 contacts
+      const HOST_MAP = { audit:'audit.jotoai.com', shanyue:'shanyue.jotoai.com', sec:'sec.jotoai.com', kb:'kb.jotoai.com', fasium:'fasium.jotoai.com', loop:'loop.jotoai.com' };
+      const rootContacts = allContacts.filter(c => c.siteHost === HOST_MAP[site]);
+      const totalContacts = siteContacts.length + rootContacts.length;
+      return { site, name: SITE_NAMES[site], articleCount: articles.length, contactCount: totalContacts };
     }));
     res.json({ success: true, sites: stats });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -2367,7 +2395,12 @@ app.post('/api/admin/:site/generate-article', verifyToken, async (req, res) => {
       deduplicationWindow: config.imageConfig?.deduplicationWindow ?? 5
     };
 
-    const article = await generateArticleNew(llmConfig, imageConfig, dedupConfig, wordCount, seoKeywords, existingArticles, site);
+    // Prompt overrides: site-level systemPrompt > global prompt > hardcoded
+    const globalConfig = await getConfig();
+    const promptOverrides = { systemPrompt: siteConfig.systemPrompt || '', globalPrompt: globalConfig.globalPrompt || '' };
+    const humanizerConfig = globalConfig.humanizerConfig || {};
+
+    const article = await generateArticleNew(llmConfig, imageConfig, dedupConfig, wordCount, seoKeywords, existingArticles, site, promptOverrides, humanizerConfig);
     if (!article) return res.status(500).json({ success: false, error: '生成失败' });
     const newArticle = { id: Date.now(), site, status: 'published', createdAt: new Date().toISOString(), ...article };
     existingArticles.unshift(newArticle);
