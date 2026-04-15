@@ -58,8 +58,6 @@
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg data-t="email_settings">邮件设置</button>
     <button onclick="go('integrations')" data-p="integrations" class="nav-item w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2.5">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg data-t="integrations">集成</button>
-    <button onclick="go('artconfig')" data-p="artconfig" class="nav-item w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2.5">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg data-t="article_config">文章配置</button>
 
     <div class="lbl px-2 text-gray-600 mt-5" data-t="system">系统</div>
     <button onclick="go('admins')" data-p="admins" class="nav-item w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2.5">
@@ -116,7 +114,7 @@
     </div>
     <div class="px-8 py-6">
       <div class="bg-white border border-gray-100 rounded-xl overflow-hidden">
-        <div class="grid grid-cols-[100px_1fr_180px_120px_80px] px-5 py-2.5 bg-gray-50 text-xs text-gray-500 font-medium border-b border-gray-100"><div>" data-t="col_source">来源</div><div data-t="col_contact">联系人</div><div data-t="col_message">留言</div><div data-t="col_time">时间</div><div data-t="col_channel">渠道</div></div>
+        <div class="grid grid-cols-[100px_1fr_180px_120px_80px] px-5 py-2.5 bg-gray-50 text-xs text-gray-500 font-medium border-b border-gray-100"><div data-t="col_source">来源</div><div data-t="col_contact">联系人</div><div data-t="col_message">留言</div><div data-t="col_time">时间</div><div data-t="col_channel">渠道</div></div>
         <div id="cList" class="divide-y divide-gray-50 max-h-[600px] overflow-y-auto"><div class="px-5 py-4 text-gray-400 text-sm"><span class="spinner"></span></div></div>
       </div>
     </div>
@@ -133,6 +131,62 @@
     </div>
     <div class="px-8 py-6">
       <div id="artList" class="space-y-3"><div class="text-gray-400 text-sm"><span class="spinner"></span> " + t("loading") + "</div></div>
+      <!-- Article Config (merged) -->
+      <div class="mt-8 border-t border-gray-100 pt-6">
+        <button onclick="toggleArtCfg()" class="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 mb-4">
+          <svg id="artCfgIcon" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          <span data-t="artcfg_title">文章配置</span>
+          <span class="text-xs text-gray-400" data-t="artcfg_desc">LLM、图片、自动发布与 SEO 关键字设置</span>
+        </button>
+        <div id="artCfgPanel" class="hidden space-y-6 max-w-2xl">
+          <!-- LLM Model -->
+          <div class="card">
+            <h3 class="font-medium text-sm mb-4" data-t="llm_model">LLM 模型</h3>
+            <div class="space-y-4">
+              <div class="grid grid-cols-3 gap-4">
+                <div><label class="text-xs text-gray-500 mb-1.5 block">API Key</label><input type="password" id="llmKey" class="input font-mono"></div>
+                <div><label class="text-xs text-gray-500 mb-1.5 block">Endpoint</label><input id="llmUrl" class="input"></div>
+                <div><label class="text-xs text-gray-500 mb-1.5 block">Model</label><input id="llmMod" class="input"></div>
+              </div>
+              <div class="flex gap-3"><button onclick="saveCfg()" class="btn-p text-xs" data-t="save">保存</button><button onclick="testLLM()" class="btn-s text-xs" data-t="test_conn">测试连接</button><span id="llmMsg" class="text-xs"></span></div>
+            </div>
+          </div>
+          <!-- Unsplash Image Config -->
+          <div class="card">
+            <h3 class="font-medium text-sm mb-4">Unsplash 图片配置</h3>
+            <div class="space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div><label class="text-xs text-gray-500 mb-1.5 block">Access Key</label><input type="password" id="unsplashKey" class="input font-mono" placeholder="Unsplash Access Key"></div>
+                <div><label class="text-xs text-gray-500 mb-1.5 block">图片去重窗口</label><input type="number" id="dedupWindow" class="input" min="0" max="50" placeholder="5"></div>
+              </div>
+              <div class="flex items-center gap-3"><input type="checkbox" id="dedupOn" class="w-4 h-4"><label class="text-xs text-gray-500">启用图片去重</label></div>
+            </div>
+          </div>
+          <!-- Auto Publish -->
+          <div class="card">
+            <h3 class="font-medium text-sm mb-4" data-t="auto_publish">自动发布</h3>
+            <div class="space-y-4">
+              <div class="flex items-center gap-3"><input type="checkbox" id="apOn" class="w-4 h-4"><label class="text-xs text-gray-500" data-t="enable_auto">启用自动发布</label></div>
+              <div class="grid grid-cols-3 gap-4">
+                <div><label class="text-xs text-gray-500 mb-1.5 block" data-t="pub_time">发布时间</label><input type="time" id="apTime" class="input"></div>
+                <div><label class="text-xs text-gray-500 mb-1.5 block" data-t="ai_count">AI 文章数</label><input type="number" id="apCnt" class="input" min="0" max="10"></div>
+                <div><label class="text-xs text-gray-500 mb-1.5 block" data-t="word_count">字数</label><input type="number" id="apWc" class="input" min="300" max="5000"></div>
+              </div>
+              <!-- Search Rewrite -->
+              <div class="border-t border-gray-100 pt-4">
+                <div class="flex items-center gap-3 mb-3"><input type="checkbox" id="rwOn" class="w-4 h-4"><label class="text-xs text-gray-600 font-medium">启用搜索改写文章</label></div>
+                <p class="text-xs text-gray-400 mb-3">从网上搜索相关文章并深度改写，降低AI特征，提高原创度</p>
+                <div class="grid grid-cols-2 gap-4">
+                  <div><label class="text-xs text-gray-500 mb-1.5 block">改写文章数量</label><input type="number" id="rwCnt" class="input" min="0" max="10"></div>
+                  <div><label class="text-xs text-gray-500 mb-1.5 block">发布间隔 (小时)</label><input type="number" id="rwInt" class="input" min="1" max="168"></div>
+                </div>
+              </div>
+              <div><label class="text-xs text-gray-500 mb-1.5 block" data-t="seo_kw">SEO 关键字</label><textarea id="apKw" class="input !h-20" placeholder="逗号分隔"></textarea></div>
+              <button onclick="saveCfg()" class="btn-p text-xs" data-t="save">保存</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -199,36 +253,7 @@
     </div>
   </div>
 
-  <!-- ===== ARTICLE CONFIG ===== -->
-  <div id="pg-artconfig" class="page">
-    <div class="px-8 pt-8 pb-6 bg-white border-b border-gray-100"><h1 class="text-xl font-semibold" data-t="artcfg_title">文章配置</h1><p class="text-gray-400 text-sm mt-1" data-t="artcfg_desc">LLM、图片、自动发布与 SEO 关键字设置</p></div>
-    <div class="px-8 py-6 space-y-6 max-w-2xl">
-      <div class="card">
-        <h3 class="font-medium text-sm mb-4" data-t="llm_model">LLM 模型</h3>
-        <div class="space-y-4">
-          <div class="grid grid-cols-3 gap-4">
-            <div><label class="text-xs text-gray-500 mb-1.5 block">API Key</label><input type="password" id="llmKey" class="input font-mono"></div>
-            <div><label class="text-xs text-gray-500 mb-1.5 block">Endpoint</label><input id="llmUrl" class="input"></div>
-            <div><label class="text-xs text-gray-500 mb-1.5 block">Model</label><input id="llmMod" class="input"></div>
-          </div>
-          <div class="flex gap-3"><button onclick="saveCfg()" class="btn-p text-xs" data-t="save">保存</button><button onclick="testLLM()" class="btn-s text-xs" data-t="test_conn">测试连接</button><span id="llmMsg" class="text-xs"></span></div>
-        </div>
-      </div>
-      <div class="card">
-        <h3 class="font-medium text-sm mb-4" data-t="auto_publish">自动发布</h3>
-        <div class="space-y-4">
-          <div class="flex items-center gap-3"><label class="text-xs text-gray-500" data-t="enable_auto">启用自动发布</label><input type="checkbox" id="apOn" class="w-4 h-4"></div>
-          <div class="grid grid-cols-3 gap-4">
-            <div><label class="text-xs text-gray-500 mb-1.5 block" data-t="pub_time">发布时间</label><input type="time" id="apTime" class="input"></div>
-            <div><label class="text-xs text-gray-500 mb-1.5 block" data-t="ai_count">AI 文章数</label><input type="number" id="apCnt" class="input" min="0" max="10"></div>
-            <div><label class="text-xs text-gray-500 mb-1.5 block" data-t="word_count">字数</label><input type="number" id="apWc" class="input" min="300" max="5000"></div>
-          </div>
-          <div><label class="text-xs text-gray-500 mb-1.5 block" data-t="seo_kw">SEO 关键字</label><textarea id="apKw" class="input !h-20" placeholder="逗号分隔"></textarea></div>
-          <button onclick="saveCfg()" class="btn-p text-xs" data-t="save">保存</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- artconfig removed, merged into articles page -->
 
   <!-- ===== ADMINS ===== -->
   <div id="pg-admins" class="page">
@@ -329,8 +354,8 @@ function toast(t,ok=true){const el=$('toast');el.textContent=t;el.className=`toa
 function go(p){document.querySelectorAll('.page').forEach(e=>e.classList.remove('active'));$('pg-'+p).classList.add('active');
   document.querySelectorAll('[data-p]').forEach(b=>{b.classList.remove('nav-active');b.classList.add('text-gray-400')});
   const b=document.querySelector(`[data-p="${p}"]`);if(b){b.classList.add('nav-active');b.classList.remove('text-gray-400')}
-  if(p==='contacts')loadC();if(p==='articles')loadArt();if(p==='sites')renderSites();
-  if(p==='email')loadEmail();if(p==='integrations'||p==='artconfig')loadCfg();
+  if(p==='contacts')loadC();if(p==='articles'){loadArt();loadCfg()}if(p==='sites')renderSites();
+  if(p==='email')loadEmail();if(p==='integrations')loadCfg();
   if(p==='admins')loadAdmins();if(p==='ssl')loadSSL();
 }
 function logout(){localStorage.removeItem('adminToken');location.href='/admin/login.html'}
@@ -404,6 +429,9 @@ function showEM(t,ok){$('eMsg').textContent=t;$('eMsg').className=`text-xs ${ok?
 async function saveEmail(){try{const r=await(await af('/api/admin/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({resendApiKey:$('eKey').value,email:$('eAddr').value,emailFrom:$('eFrom').value})})).json();r.success?showEM('已保存',true):showEM(r.message||'失败',false)}catch(e){showEM(e.message,false)}}
 async function testEmail(){const a=$('eAddr').value;if(!a){showEM('填写接收邮箱',false);return}showEM('发送中...',true);try{await saveEmail();const r=await(await af('/api/admin/test-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({testEmail:a})})).json();showEM(r.success?'已发送':'失败: '+(r.message||''),r.success)}catch(e){showEM(e.message,false)}}
 
+// Toggle article config panel
+function toggleArtCfg(){const p=$('artCfgPanel'),i=$('artCfgIcon');p.classList.toggle('hidden');i.style.transform=p.classList.contains('hidden')?'':'rotate(180deg)'}
+
 // Integrations & Article Config
 async function loadCfg(){try{CFG=await(await af('/api/admin/config')).json();
   // Integrations
@@ -420,11 +448,20 @@ async function loadCfg(){try{CFG=await(await af('/api/admin/config')).json();
   if($('apCnt'))$('apCnt').value=CFG.aiArticleCount||1;
   if($('apWc'))$('apWc').value=CFG.articleWordCount||1000;
   if($('apKw'))$('apKw').value=CFG.seoKeywords||'';
+  // Unsplash & dedup
+  if($('unsplashKey'))$('unsplashKey').value=CFG.unsplashApiKey||CFG.imageConfig?.unsplashApiKey||'';
+  if($('dedupOn'))$('dedupOn').checked=CFG.enableDeduplication||CFG.imageConfig?.enableDeduplication||false;
+  if($('dedupWindow'))$('dedupWindow').value=CFG.deduplicationWindow||CFG.imageConfig?.deduplicationWindow||5;
+  // Search rewrite
+  if($('rwOn'))$('rwOn').checked=CFG.enableSearchRewrite||false;
+  if($('rwCnt'))$('rwCnt').value=CFG.rewriteArticleCount||1;
+  if($('rwInt'))$('rwInt').value=CFG.publishInterval||24;
   }catch(e){}}
 async function saveCfg(){try{const d={feishuWebhook:$('fsWh')?.value,feishuAppId:$('fsAid')?.value,feishuAppSecret:$('fsSec')?.value,feishuTableUrl:$('fsTbl')?.value,
   llmApiKey:$('llmKey')?.value,llmApiEndpoint:$('llmUrl')?.value,llmModel:$('llmMod')?.value,
-  autoPostEnabled:$('apOn')?.checked,autoPostTime:$('apTime')?.value,aiArticleCount:parseInt($('apCnt')?.value)||1,articleWordCount:parseInt($('apWc')?.value)||1000,seoKeywords:$('apKw')?.value};
-  // Remove undefined
+  autoPostEnabled:$('apOn')?.checked,autoPostTime:$('apTime')?.value,aiArticleCount:parseInt($('apCnt')?.value)||1,articleWordCount:parseInt($('apWc')?.value)||1000,seoKeywords:$('apKw')?.value,
+  unsplashApiKey:$('unsplashKey')?.value,enableDeduplication:$('dedupOn')?.checked,deduplicationWindow:parseInt($('dedupWindow')?.value)||5,
+  enableSearchRewrite:$('rwOn')?.checked,rewriteArticleCount:parseInt($('rwCnt')?.value)||1,publishInterval:parseInt($('rwInt')?.value)||24};
   Object.keys(d).forEach(k=>{if(d[k]===undefined)delete d[k]});
   const r=await(await af('/api/admin/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)})).json();toast(r.success?'已保存':'保存失败',r.success)}catch(e){toast(e.message,false)}}
 async function testFeishu(type){const msgEl=type==='bot'?$('fsMsg1'):$('fsMsg2');msgEl.textContent='测试中...';msgEl.className='text-xs text-gray-500';
