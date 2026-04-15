@@ -158,16 +158,34 @@ For batch checks across sites (ICP, company name, email, WeChat QR), use `browse
 | BL11 | noteflow | /blog | Open blog page | Article cards render (from admin API or fallback) |
 | BL12 | noteflow | /blog/{id} | Click article | Detail page renders |
 
-**Admin article generation:**
+**Admin article management (full E2E):**
 
 | # | Test | Method | Expected |
 |---|------|--------|----------|
-| AG1 | Login to admin | Open admin.jotoai.com → login with tomi@jototech.cn | Dashboard visible with Sites/Forms/Articles stats |
-| AG2 | Navigate to articles | Click 文章管理 in sidebar | Article list for selected site |
-| AG3 | Switch site | Select each site (audit/shanyue/sec/kb/fasium/noteflow) | Shows articles for that site |
-| AG4 | Generate article | Click 生成文章 → configure → generate | New article created, appears in list |
-| AG5 | Verify on frontend | After generating, open site's /blog page | New article visible on frontend |
-| AG6 | Delete test article | Select article → delete | Article removed from list and frontend |
+| AG1 | Login to admin | Open admin.jotoai.com → login with tomi@jototech.cn | Dashboard loads with Sites/Forms/Articles stats |
+| AG2 | Navigate to articles | Click 文章管理 in sidebar | Article list with site selector tabs (全部/唯客智审/闪阅/...), "文章配置" gear button + "+ 生成新文章" button in top-right |
+| AG3 | Switch site tab | Click each site tab (唯客智审/闪阅/sec/kb/fasium) | Article count in tab matches, list filters to that site |
+| AG4 | Open article config | Click gear "文章配置" button in top-right | Config panel expands below article list with scope tabs: 全局 + all 7 sites |
+| AG5 | Global config loads | Config scope = "全局" (default) | LLM model fields filled (API Key, Endpoint, Model), Unsplash, auto-publish, SEO keywords all visible |
+| AG6 | Switch to site config | Click a site tab (e.g. "唯客智审") | Hint "站点级配置会覆盖全局配置。留空则使用全局值。" appears; fields load that site's config (may differ from global) |
+| AG7 | Site has own LLM | Check "唯客智审" config | Endpoint/Model differ from global (e.g. `ark.cn-beijing.volces.com` + `doubao-seed`) |
+| AG8 | Save site config | Change SEO keywords for one site → click 保存 | Toast "站点配置已保存"; reload config → keywords persisted |
+| AG9 | Save global config | Switch to 全局 → change a value → click 保存 | Toast "全局配置已保存"; reload config → value persisted |
+| AG10 | Generate article | Click "+ 生成新文章" | Article generated, appears at top of list with site tag + date |
+| AG11 | Preview article | Click "预览" on an article | Modal opens with article title + rendered HTML content |
+| AG12 | Delete test article | Click "删除" on test article → confirm | Article removed from list; verify it no longer appears on frontend blog page |
+| AG13 | Verify on frontend | After generating, open that site's /blog page in browser | New article visible with title, date, image |
+| AG14 | Config panel toggle | Click gear button again | Config panel hides; click again → re-expands (remembers last scope tab) |
+
+**Config fields to verify per scope (global or site):**
+
+| Section | Fields | Notes |
+|---------|--------|-------|
+| LLM 模型 | API Key (password), Endpoint, Model | 保存 + 测试连接 buttons |
+| Unsplash 图片配置 | Access Key, 图片去重窗口, 启用图片去重 checkbox | |
+| 自动发布 | 启用开关, 发布时间, AI 文章数, 字数 | |
+| 搜索改写 | 启用开关, 改写文章数量, 发布间隔(小时) | Description: "从网上搜索相关文章并深度改写" |
+| SEO 关键字 | 多行文本框, 逗号分隔 | |
 
 ### 6. Admin Dashboard Tests (Browser)
 
@@ -177,7 +195,7 @@ For batch checks across sites (ICP, company name, email, WeChat QR), use `browse
 | AD2 | Dashboard stats | Check stats cards | Sites=7, Forms count, Articles count, Version visible |
 | AD3 | Site status | Check Site Status section | All 7 sites show "All OK" with response times |
 | AD4 | 留言管理 | Click 留言管理 in sidebar | Contact submissions list with sender info |
-| AD5 | 文章管理 | Click 文章管理 | Article list with site selector tabs; scroll to bottom → expand "文章配置" panel → verify LLM model, Unsplash, auto-publish, search rewrite, SEO keywords |
+| AD5 | 文章管理 | Click 文章管理 | Article list with site tabs + gear "文章配置" button in top-right. Click gear → config panel with scope tabs (全局 + 7 sites). See AG1-AG14 for full article management tests |
 | AD6 | 站点管理 | Click 站点管理 | All 7 sites listed with URLs |
 | AD7 | 邮件设置 | Click 邮件设置 | Resend API key configured, FROM address visible |
 | AD8 | 集成 | Click 集成 | Feishu webhook + table sync config |
@@ -187,7 +205,9 @@ For batch checks across sites (ICP, company name, email, WeChat QR), use `browse
 **Admin UI rules:**
 - No emojis anywhere in the admin dashboard (UI text, site icons, buttons)
 - All sidebar items must render their page correctly when clicked
-- "文章配置" is NOT a separate sidebar item — it's a collapsible section inside "文章管理"
+- "文章配置" is NOT a separate sidebar item — it's a gear icon button in the 文章管理 page header (top-right, next to "+ 生成新文章")
+- Article config supports global + per-site scope switching (7 sites + global tab)
+- Site-level config overrides global config; empty fields fall back to global values
 
 ### 7. Contact Info Consistency (Browser)
 
