@@ -156,7 +156,22 @@ For batch checks across sites (ICP, company name, email, WeChat QR), use `browse
 | BL9 | fasium | /blog | Open blog page | Article list renders |
 | BL10 | fasium | /blog/{id} | Click article | Detail page renders |
 | BL11 | noteflow | /blog | Open blog page | Article cards render (from admin API or fallback) |
-| BL12 | noteflow | /blog/{id} | Click article | Detail page renders |
+| BL12 | noteflow | /blog/{id} | Click article | Detail page renders with all elements (see BL-DETAIL below) |
+
+**Blog detail page quality checks (BL-DETAIL) — verify via browser on every site:**
+
+| # | Check | Method | Expected |
+|---|-------|--------|----------|
+| BLD1 | Cover image loads | Screenshot blog detail page | Image visible (not alt text / broken icon). For noteflow: relative paths like `/images/...` must resolve to `admin.jotoai.com` |
+| BLD2 | Title renders | Check h1 | Article title displayed, no `**` markdown artifacts or `\`\`\`json` pollution |
+| BLD3 | Typography / prose | Inspect h2/h3/p computed styles | h2 larger than p (e.g. h2 ~24px, p ~16-18px), h2 has margin-top, paragraphs have spacing (margin-bottom > 0) |
+| BLD4 | TOC renders | Check details/summary element | If article has TOC data, collapsible table of contents shows section links |
+| BLD5 | Tags visible | Check tag section below content | Article tags displayed as pills/badges |
+| BLD6 | Author + date + reading time | Check metadata bar | Author name, formatted date, reading time (e.g. "9 min") all visible |
+| BLD7 | Related articles | Scroll to bottom | Other articles from same site shown as clickable cards |
+| BLD8 | CTA section | Scroll to bottom | Call-to-action block with contact button |
+| BLD9 | AI flavor check | Read content text | No "此外", "值得注意的是", "综上所述", "赋能", "助力" — humanizer must be enabled |
+| BLD10 | Content not empty | Check article body | Content renders as HTML with paragraphs, not raw JSON or empty div |
 
 **Admin article management (full E2E):**
 

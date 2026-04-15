@@ -6,7 +6,7 @@
 
 2. **Browser-test everything after changes.** After any new feature or bug fix, you MUST open a browser (Playwright or Puppeteer MCP) and verify the result visually, simulating real user operations. If one browser MCP is unavailable (crashed, stuck PID, GPU error), automatically switch to the other MCP — do NOT stop and report the browser is broken. Never verify only via curl/API — that misses rendering bugs, JS errors, and UX issues.
 
-3. **All tests go into tomitest.** Any new test scenario discovered during development or testing must be added to the `/tomitest` skill (`/.claude/skills/tomitest/SKILL.md`). This keeps the test suite growing and ensures nothing is forgotten in future sessions.
+3. **All tests go into tomitest.** Any new test scenario discovered during development or testing must be added to the tomitest skill (project-level: `.claude/skills/tomitest/SKILL.md` in this repo). This keeps the test suite growing and ensures nothing is forgotten in future sessions.
 
 ## Browser MCP Fallback Order
 
