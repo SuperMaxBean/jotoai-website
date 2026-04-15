@@ -162,6 +162,17 @@ export default function Contact() {
                 </div>
               );
             })}
+
+            {/* WeChat QR */}
+            <div className="flex items-start gap-4 rounded-2xl bg-white border border-slate-100 p-5 shadow-sm">
+              <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-purple-50">
+                <MessageSquare className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-400 mb-1">{t('微信咨询', 'WeChat')}</p>
+                <img src="/wechat-qr.png" alt={t('微信二维码', 'WeChat QR Code')} className="w-28 h-28 rounded-lg border border-slate-100" referrerPolicy="no-referrer" />
+              </div>
+            </div>
           </div>
 
           {/* Contact Form */}

@@ -1,13 +1,12 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Calendar, User, Tag, ChevronLeft, Share2, MessageSquare, Loader2, AlertCircle } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
-const API_BASE = '/api';
+const API_BASE = typeof window !== 'undefined' ? '/api' : 'http://localhost:3004/api';
 
 interface Article {
   id: number | string;
@@ -187,9 +186,8 @@ const FALLBACK_RELATED: Article[] = [
 ];
 
 export default function BlogPostPage() {
-  const params = useParams();
   const { t } = useLanguage();
-  const id = params?.id as string;
+  const id = typeof window !== 'undefined' ? window.location.pathname.split('/blog/')[1] || '' : '';
   const [post, setPost] = useState<Article | null>(null);
   const [relatedPosts, setRelatedPosts] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -348,10 +346,10 @@ export default function BlogPostPage() {
                 <h3 className="text-xl font-bold mb-8">{t('相关阅读', 'Related Articles')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {relatedPosts.map(related => (
-                    <Link key={related.id} to={`/blog/${related.slug}`}
+                    <Link key={related.id} href={`/blog/${related.slug}`}
                       className="bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] p-4 flex gap-4 group hover:border-[#f97316]/30 transition-all">
                       <div className="w-24 h-24 rounded-lg overflow-hidden shrink-0">
-                        <img src={related.image ?? related.imageUrl} alt={related.title}
+                        <img src={related.image} alt={related.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           referrerPolicy="no-referrer" />
                       </div>
