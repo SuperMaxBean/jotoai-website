@@ -11,10 +11,48 @@ Comprehensive end-to-end test suite covering all JOTO.AI product websites.
 
 ## Mandatory Testing Rules
 
-1. **Must use Puppeteer MCP to open a browser** for every verification — do NOT rely on curl or direct API calls alone. Every test item must be confirmed visually in a real browser via `mcp__puppeteer__puppeteer_navigate`, `mcp__puppeteer__puppeteer_screenshot`, etc.
+1. **Must use Playwright MCP to open a browser** for every verification — do NOT rely on curl or direct API calls alone. Every test item must be confirmed visually in a real browser via `mcp__playwright__browser_navigate`, `mcp__playwright__browser_take_screenshot`, etc.
 2. **All operations must go through the frontend UI** — click buttons, fill forms, and observe results in the browser. Do NOT bypass the frontend to call APIs directly. The goal is to verify the real user experience, not just the backend.
 3. **Always test against the PRODUCTION URLs** (e.g. `https://audit.jotoai.com`), NEVER against `localhost`. Testing localhost hits different API routes, different configs, and misses real deployment issues (nginx routing, CORS, SSL, etc.). The whole point of E2E testing is to verify what real users see on the real server.
 4. **Clean up all test data after testing** — delete test users, notebooks, chat sessions, uploaded files, and any other artifacts created during the test run. The test suite must leave zero pollution in the user environment.
+5. **Be strict about PASS/FAIL** — if a page shows wrong data (e.g. "? 天", wrong company name, missing elements), mark it FAIL immediately. Do NOT rationalize partial results as passing.
+6. **Check nginx port routing** — many bugs are caused by nginx proxying to the wrong port. If a site shows another site's content, check `grep proxy_pass /etc/nginx/sites-enabled/{site}.jotoai.com`.
+
+## Testing Methodology
+
+Use a systematic page-by-page approach:
+1. **Navigate** to each URL in Playwright browser
+2. **Screenshot** the page for visual verification
+3. **Evaluate** specific checks via `browser_evaluate` (e.g. check footer text, form fields, link counts)
+4. **Interact** — click buttons, fill forms, submit, verify results
+5. **Record** results in a summary table per category
+6. **Fix bugs** found during testing, then re-verify
+
+For batch checks across sites (ICP, company name, email, WeChat QR), use `browser_evaluate` with JSON output to check multiple properties at once:
+```javascript
+() => {
+  const text = document.body.innerText;
+  const footer = document.querySelector('footer');
+  return JSON.stringify({
+    hasICP: text.includes('沪ICP备15056478号-5'),
+    hasCompany: text.includes('上海聚托信息科技有限公司'),
+    email: (text.match(/[\w.-]+@[\w.-]+/g) || []),
+    wechatQR: !!document.querySelector('img[src*="wechat"]')
+  });
+}
+```
+
+## Server Port Mapping (Reference)
+
+| Site | Port | Nginx Config |
+|------|------|-------------|
+| audit | 3001 | /etc/nginx/sites-enabled/audit.jotoai.com |
+| shanyue | 3002 | /etc/nginx/sites-enabled/shanyue.jotoai.com |
+| sec | 3003 | /etc/nginx/sites-enabled/sec.jotoai.com |
+| admin backend | 3004 | /etc/nginx/sites-enabled/admin.jotoai.com |
+| fasium | 3005 | /etc/nginx/sites-enabled/fasium.jotoai.com |
+| kb | 3006 | /etc/nginx/sites-enabled/kb.jotoai.com |
+| loop | 8000 | /etc/nginx/sites-enabled/loop.jotoai.com (uvicorn) |
 
 ## Sites Under Test
 
@@ -139,12 +177,17 @@ Comprehensive end-to-end test suite covering all JOTO.AI product websites.
 | AD2 | Dashboard stats | Check stats cards | Sites=7, Forms count, Articles count, Version visible |
 | AD3 | Site status | Check Site Status section | All 7 sites show "All OK" with response times |
 | AD4 | 留言管理 | Click 留言管理 in sidebar | Contact submissions list with sender info |
-| AD5 | 文章管理 | Click 文章管理 | Article list with site selector |
+| AD5 | 文章管理 | Click 文章管理 | Article list with site selector tabs; scroll to bottom → expand "文章配置" panel → verify LLM model, Unsplash, auto-publish, search rewrite, SEO keywords |
 | AD6 | 站点管理 | Click 站点管理 | All 7 sites listed with URLs |
 | AD7 | 邮件设置 | Click 邮件设置 | Resend API key configured, FROM address visible |
-| AD8 | 文章配置 | Click 文章配置 | LLM model, SEO keywords configuration |
+| AD8 | 集成 | Click 集成 | Feishu webhook + table sync config |
 | AD9 | 管理员 | Click 管理员 | Admin user list |
-| AD10 | SSL 证书 | Click SSL 证书 | Certificate status for each domain |
+| AD10 | SSL 证书 | Click SSL 证书 | Table showing ALL 8 domains (audit/shanyue/sec/kb/fasium/loop/noteflow/admin) with expiry dates, days left (green >30, yellow 7-30, red <7), and issued dates |
+
+**Admin UI rules:**
+- No emojis anywhere in the admin dashboard (UI text, site icons, buttons)
+- All sidebar items must render their page correctly when clicked
+- "文章配置" is NOT a separate sidebar item — it's a collapsible section inside "文章管理"
 
 ### 7. Contact Info Consistency (Browser)
 
