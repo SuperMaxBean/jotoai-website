@@ -828,6 +828,43 @@ app.get('/api/admin/contacts', verifyToken, async (req, res) => {
   res.json(contacts);
 });
 
+// 删除单条留言
+// 目标文件的判断顺序：
+//   1. 如果条目有 siteId（commit 904eead 之后的新提交），直接删对应 per-site 文件
+//   2. 否则扫根 + 所有 per-site 文件，按 id 匹配删除第一条命中的
+// 返回 { success, removedFrom } 方便前端 toast 展示。
+app.delete('/api/admin/contacts/:id', verifyToken, async (req, res) => {
+  try {
+    const targetId = req.params.id;
+    if (!targetId) return res.status(400).json({ success: false, error: 'missing id' });
+
+    // 尝试所有候选文件，按命中顺序删除第一条
+    const candidates = [CONTACTS_FILE, ...SITES.map(s => getSitePaths(s).contacts)];
+    for (const filePath of candidates) {
+      let list;
+      try {
+        list = JSON.parse(await fs.readFile(filePath, 'utf8'));
+      } catch { continue; } // 文件不存在跳过
+      if (!Array.isArray(list)) continue;
+
+      const idx = list.findIndex(c => String(c.id) === String(targetId));
+      if (idx === -1) continue;
+
+      const [removed] = list.splice(idx, 1);
+      await fs.writeFile(filePath, JSON.stringify(list, null, 2));
+      return res.json({
+        success: true,
+        removedFrom: path.relative(DATA_DIR, filePath),
+        removed: { id: removed.id, name: removed.name || removed.firstName, site: removed.site },
+      });
+    }
+
+    return res.status(404).json({ success: false, error: 'contact not found' });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 // 生成文章
 app.post('/api/admin/generate-article', verifyToken, async (req, res) => {
   try {
