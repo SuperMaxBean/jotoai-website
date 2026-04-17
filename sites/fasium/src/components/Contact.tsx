@@ -67,9 +67,9 @@ export default function Contact() {
     setErrorMsg('');
 
     // 前端基础校验
-    if (!form.name.trim() || !form.email.trim() || !form.phone.trim() || !form.message.trim() || !form.captchaText.trim()) {
+    if (!form.name.trim() || !form.company.trim() || !form.email.trim() || !form.phone.trim() || !form.message.trim() || !form.captchaText.trim()) {
       setSubmitStatus('error');
-      setErrorMsg(t('请填写所有必填项（姓名、邮箱、电话、需求描述、验证码）', 'Please fill in all required fields (name, email, phone, description, captcha)'));
+      setErrorMsg(t('请填写所有必填项（姓名、企业名称、邮箱、电话、需求描述、验证码）', 'Please fill in all required fields (name, company, email, phone, description, captcha)'));
       return;
     }
 
@@ -80,7 +80,8 @@ export default function Contact() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: form.company ? `${form.name}（${form.company}）` : form.name,
+          name: form.name,
+          company: form.company,
           email: form.email,
           phone: form.phone,
           message: form.message,
@@ -141,7 +142,7 @@ export default function Contact() {
                   </div>
                   <div className="w-[150px] h-[150px] rounded-xl overflow-hidden bg-white p-1">
                     <img
-                      src="/wechat-qr.png"
+                      src="https://admin.jotoai.com/brand/wechat-qr.png"
                       alt={t("企业微信二维码", "WeChat QR Code")}
                       className="w-full h-full object-contain"
                     />

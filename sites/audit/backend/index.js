@@ -24,12 +24,18 @@ const captchaStore = new Map();
 
 // 中间件
 app.use(cors());
-app.use(express.json());
+// 默认 100kb 对 WeChat QR 太小（base64 PNG 常在 50-200KB），提升到 5MB
+app.use(express.json({ limit: '5mb' }));
 
 // 静态文件服务 - 托管前端管理界面
 app.use('/admin', express.static(path.join(__dirname, 'frontend')));
 // 静态文件服务 - 托管下载的图片
 app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
+// 静态文件服务 - 托管品牌资源（WeChat QR 等，所有 jotoai 站点共用）
+app.use('/brand', express.static(path.join(__dirname, 'public', 'brand'), {
+  maxAge: '5m',  // 短缓存，后台上传新 QR 后 5 分钟内全网同步
+  setHeaders: (res) => res.setHeader('Access-Control-Allow-Origin', '*'),
+}));
 
 // 确保数据目录存在
 async function ensureDataDir() {
@@ -1664,6 +1670,59 @@ app.get('/api/admin/certificate-info', verifyToken, async (req, res) => {
     res.json(result);
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ========== 品牌资源：WeChat QR（全站共用） ==========
+// 设计：后台上传 PNG → 存到 public/brand/wechat-qr.png → 所有前端站点
+//   <img src="https://admin.jotoai.com/brand/wechat-qr.png"> 引用。
+//   后台上传完成即全网同步（5 分钟浏览器缓存，见 /brand 静态路由 maxAge）。
+const BRAND_DIR = path.join(__dirname, 'public', 'brand');
+const WECHAT_QR_FILE = path.join(BRAND_DIR, 'wechat-qr.png');
+
+// 当前 QR 信息（公开，CORS 开放给所有站点可拉）
+app.get('/api/brand/wechat-qr/info', async (req, res) => {
+  try {
+    const stat = await fs.stat(WECHAT_QR_FILE);
+    res.json({
+      exists: true,
+      url: 'https://admin.jotoai.com/brand/wechat-qr.png',
+      size: stat.size,
+      updatedAt: stat.mtime.toISOString(),
+      version: stat.mtimeMs,  // 前端可用作 ?v= cache-bust 参数
+    });
+  } catch {
+    res.json({ exists: false, url: null });
+  }
+});
+
+// 上传新的 QR（PNG/JPEG，管理员权限）
+// body: { dataUrl: "data:image/png;base64,..." }
+app.post('/api/admin/brand/wechat-qr', verifyToken, async (req, res) => {
+  try {
+    const { dataUrl } = req.body || {};
+    if (!dataUrl || typeof dataUrl !== 'string') {
+      return res.status(400).json({ success: false, error: 'dataUrl required' });
+    }
+    const m = dataUrl.match(/^data:(image\/(png|jpeg|jpg));base64,(.+)$/i);
+    if (!m) return res.status(400).json({ success: false, error: '仅支持 PNG 或 JPEG' });
+    const base64 = m[3];
+    const buf = Buffer.from(base64, 'base64');
+    if (buf.length > 3 * 1024 * 1024) {
+      return res.status(400).json({ success: false, error: '图片过大（>3MB）' });
+    }
+    await fs.mkdir(BRAND_DIR, { recursive: true });
+    await fs.writeFile(WECHAT_QR_FILE, buf);
+    const stat = await fs.stat(WECHAT_QR_FILE);
+    res.json({
+      success: true,
+      url: 'https://admin.jotoai.com/brand/wechat-qr.png',
+      size: stat.size,
+      updatedAt: stat.mtime.toISOString(),
+      version: stat.mtimeMs,
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
   }
 });
 

@@ -58,6 +58,8 @@
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg data-t="email_settings">邮件设置</button>
     <button onclick="go('integrations')" data-p="integrations" class="nav-item w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2.5">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg data-t="integrations">集成</button>
+    <button onclick="go('brand')" data-p="brand" class="nav-item w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2.5">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg data-t="brand_resources">品牌资源</button>
 
     <button onclick="go('monitor')" data-p="monitor" class="nav-item w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2.5">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg data-t="monitor_nav">健康巡检</button>
@@ -294,6 +296,33 @@
     </div>
   </div>
 
+  <!-- ===== BRAND RESOURCES ===== -->
+  <div id="pg-brand" class="page">
+    <div class="px-8 pt-8 pb-6 bg-white border-b border-gray-100">
+      <h1 class="text-xl font-semibold">品牌资源</h1>
+      <p class="text-gray-400 text-sm mt-1">全站共用的品牌资产。此处更新后，所有 jotoai 站点在 5 分钟内自动同步。</p>
+    </div>
+    <div class="px-8 py-6 space-y-6 max-w-2xl">
+      <div class="card">
+        <h3 class="font-medium text-sm mb-4">微信公众号二维码</h3>
+        <p class="text-xs text-gray-500 mb-4">上传你的微信公众号关注二维码（PNG 或 JPEG，建议 400×400 以上方形图）。上传后 audit / shanyue / sec / kb / fasium / loop / noteflow 等所有站点的联系页二维码都会同步更新。</p>
+        <div class="flex items-start gap-6">
+          <div class="shrink-0">
+            <div id="qrPreview" class="w-40 h-40 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden">
+              <span class="text-xs text-gray-400">加载中...</span>
+            </div>
+            <div id="qrMeta" class="text-xs text-gray-400 mt-2"></div>
+          </div>
+          <div class="flex-1 space-y-3">
+            <input id="qrFile" type="file" accept="image/png,image/jpeg" onchange="onQrFile(event)" class="block w-full text-xs text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:bg-gray-900 file:text-white file:cursor-pointer hover:file:bg-gray-800">
+            <button id="qrUploadBtn" onclick="uploadQr()" disabled class="btn-p text-xs disabled:opacity-40 disabled:cursor-not-allowed">上传并同步到所有站点</button>
+            <span id="qrMsg" class="text-xs block"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- artconfig removed, merged into articles page -->
 
   <!-- ===== ADMINS ===== -->
@@ -441,7 +470,7 @@ function go(p){document.querySelectorAll('.page').forEach(e=>e.classList.remove(
   if(p==='contacts')loadC();if(p==='articles')loadArt();if(p==='sites')renderSites();
   if(p==='email')loadEmail();if(p==='integrations')loadCfg();
   if(p==='admins')loadAdmins();if(p==='ssl')loadSSL();
-  if(p==='monitor')loadMonitor();
+  if(p==='monitor')loadMonitor();if(p==='brand')loadQr();
 }
 function logout(){localStorage.removeItem('adminToken');location.href='/admin/login.html'}
 
@@ -530,6 +559,26 @@ async function loadEmail(){try{CFG=await(await af('/api/admin/config')).json();$
 function showEM(t,ok){$('eMsg').textContent=t;$('eMsg').className=`text-xs ${ok?'text-green-600':'text-red-500'}`;setTimeout(()=>$('eMsg').textContent='',4000)}
 async function saveEmail(){try{const r=await(await af('/api/admin/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({resendApiKey:$('eKey').value,email:$('eAddr').value,emailFrom:$('eFrom').value})})).json();r.success?showEM('已保存',true):showEM(r.message||'失败',false)}catch(e){showEM(e.message,false)}}
 async function testEmail(){const a=$('eAddr').value;if(!a){showEM('填写接收邮箱',false);return}showEM('发送中...',true);try{await saveEmail();const r=await(await af('/api/admin/test-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({testEmail:a})})).json();showEM(r.success?'已发送':'失败: '+(r.message||''),r.success)}catch(e){showEM(e.message,false)}}
+
+// Brand Resources — WeChat QR
+let qrDataUrl='';
+async function loadQr(){try{const r=await(await fetch('/api/brand/wechat-qr/info')).json();
+  const pv=$('qrPreview'),meta=$('qrMeta');
+  if(r.exists){pv.innerHTML=`<img src="${r.url}?v=${r.version}" class="w-full h-full object-contain" alt="当前 QR">`;
+    meta.textContent=`当前: ${(r.size/1024).toFixed(1)}KB · ${new Date(r.updatedAt).toLocaleString('zh-CN')}`}
+  else{pv.innerHTML='<span class="text-xs text-gray-400 text-center px-3">尚未上传<br/>选择文件后上传</span>';meta.textContent=''}
+}catch(e){$('qrPreview').innerHTML=`<span class="text-xs text-red-500">${e.message}</span>`}}
+function onQrFile(ev){const f=ev.target.files[0];if(!f)return;
+  if(!/^image\/(png|jpeg|jpg)$/i.test(f.type)){$('qrMsg').textContent='仅支持 PNG / JPEG';$('qrMsg').className='text-xs block text-red-500';return}
+  if(f.size>3*1024*1024){$('qrMsg').textContent='图片过大（>3MB）';$('qrMsg').className='text-xs block text-red-500';return}
+  const reader=new FileReader();reader.onload=()=>{qrDataUrl=reader.result;$('qrPreview').innerHTML=`<img src="${qrDataUrl}" class="w-full h-full object-contain" alt="预览">`;$('qrUploadBtn').disabled=false;$('qrMsg').textContent='已选择，点击上传生效';$('qrMsg').className='text-xs block text-gray-500'};reader.readAsDataURL(f)}
+async function uploadQr(){if(!qrDataUrl)return;
+  $('qrUploadBtn').disabled=true;$('qrMsg').textContent='上传中...';$('qrMsg').className='text-xs block text-gray-500';
+  try{const r=await(await af('/api/admin/brand/wechat-qr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dataUrl:qrDataUrl})})).json();
+    if(r.success){$('qrMsg').textContent=`已上传并同步到所有站点 (${(r.size/1024).toFixed(1)}KB)`;$('qrMsg').className='text-xs block text-green-600';
+      qrDataUrl='';$('qrFile').value='';await loadQr()}
+    else{$('qrMsg').textContent=r.error||'上传失败';$('qrMsg').className='text-xs block text-red-500';$('qrUploadBtn').disabled=false}
+  }catch(e){$('qrMsg').textContent=e.message;$('qrMsg').className='text-xs block text-red-500';$('qrUploadBtn').disabled=false}}
 
 // Article Config Modal
 let globalCfgCache={};
