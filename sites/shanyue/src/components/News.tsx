@@ -27,6 +27,12 @@ function getExcerpt(html: string, max = 100) {
   return html.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim().slice(0, max) + "...";
 }
 
+function resolveImageUrl(url?: string): string | null {
+  if (!url) return null;
+  if (url.startsWith("http")) return url;
+  return "https://admin.jotoai.com" + url;
+}
+
 export default function News() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,16 +74,18 @@ export default function News() {
             <Newspaper size={16} /> {t('最新动态', 'Latest Updates')}
           </div>
           <h2 className="text-4xl font-extrabold text-[#0A1A2F] mb-4">{t('产品更新与行业洞察', 'Product Updates & Industry Insights')}</h2>
-          <p className="text-slate-500 max-w-2xl mx-auto">{t('深入了解闪阅 AI 在智能阅卷、教育数字化领域的最新进展。', 'Explore the latest developments of ShanYue AI in smart grading and digital education.')}</p>
+          <p className="text-slate-500 max-w-2xl mx-auto">{t('深入了解闪阅 AI 在智能阅卷、教育数字化领域的最新进展。', 'Explore the latest developments of iMark in smart grading and digital education.')}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {articles.map((article, i) => (
+          {articles.map((article, i) => {
+            const resolvedImg = resolveImageUrl(article.imageUrl);
+            return (
             <Link key={article.id} href={"/articles/" + article.id}
               className="group bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
               <div className="aspect-video relative overflow-hidden">
-                {article.imageUrl && article.imageUrl.startsWith("http") ? (
-                  <img src={article.imageUrl} alt={article.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                {resolvedImg ? (
+                  <img src={resolvedImg} alt={article.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 ) : (
                   <div className={"w-full h-full bg-gradient-to-br " + NEWS_GRADIENTS[i % NEWS_GRADIENTS.length] + " flex items-center justify-center"}>
                     <span className="text-white/20 text-8xl font-extrabold">{article.keyword?.charAt(0) || t("智", "A")}</span>
@@ -96,7 +104,8 @@ export default function News() {
                 </div>
               </div>
             </Link>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

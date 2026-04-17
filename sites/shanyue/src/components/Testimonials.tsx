@@ -41,7 +41,7 @@ export default function Testimonials() {
             {t('客户反馈', 'Testimonials')}
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-[#0A1A2F] sm:text-4xl">
-            {t('他们正在使用闪阅', 'They Are Using ShanYue')}
+            {t('他们正在使用闪阅', 'They Are Using iMark')}
           </h2>
         </div>
 

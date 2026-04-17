@@ -46,7 +46,7 @@ const Navbar = () => {
             </div>
             <div className="flex flex-col">
                 <span className="text-lg font-extrabold text-[#0A1A2F] tracking-tight leading-none group-hover:text-[#7c3aed] transition-colors">
-                  {t('闪阅', 'ShanYue')}
+                  {t('闪阅', 'iMark')}
                 </span>
                 <span className="text-[9px] font-bold text-slate-400 tracking-widest uppercase leading-none mt-1 group-hover:text-purple-400 transition-colors">
                   {t('JOTO 旗下产品', 'A JOTO Product')}
