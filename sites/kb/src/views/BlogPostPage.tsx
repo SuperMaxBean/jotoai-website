@@ -60,48 +60,15 @@ const BlogPostPage = () => {
     }
   };
 
-  // 将纯文本内容转为 HTML 段落
+  // 文章 content 在后端已统一转为 HTML（marked 解析 + 文档级标签剥离），
+  // 前端只负责剥掉 LLM 偶尔遗漏的 <html>/<body> 壳后渲染。
   const renderContent = (content: string) => {
-    let html = content;
-
-    // 剥离 <html>, <head>, <body> 等文档级标签
-    html = html.replace(/<\/?html[^>]*>/gi, '');
-    html = html.replace(/<head[\s\S]*?<\/head>/gi, '');
-    html = html.replace(/<\/?body[^>]*>/gi, '');
-    html = html.trim();
-
-    // 如果内容已经是 HTML
-    if (html.includes('<p') || html.includes('<h') || html.includes('<ul') || html.includes('<div')) {
-      return html;
-    }
-    // 纯文本：按段落分割，转为 HTML
+    if (!content) return '';
     return content
-      .split(/\n\n+/)
-      .filter(p => p.trim())
-      .map(p => {
-        const trimmed = p.trim();
-        // 处理标题 (## 或 ###)
-        if (trimmed.startsWith('### ')) {
-          return `<h3 class="text-xl font-bold text-slate-900 mb-4 mt-8">${trimmed.slice(4)}</h3>`;
-        }
-        if (trimmed.startsWith('## ')) {
-          return `<h2 class="text-2xl font-bold text-slate-900 mb-4 mt-8">${trimmed.slice(3)}</h2>`;
-        }
-        if (trimmed.startsWith('# ')) {
-          return `<h2 class="text-2xl font-bold text-slate-900 mb-4 mt-8">${trimmed.slice(2)}</h2>`;
-        }
-        // 处理列表项
-        if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
-          const items = trimmed.split('\n').map(item => {
-            const text = item.replace(/^[-*]\s+/, '');
-            return `<li>${text}</li>`;
-          }).join('');
-          return `<ul class="list-disc pl-6 mb-6 space-y-2">${items}</ul>`;
-        }
-        // 普通段落
-        return `<p class="mb-6">${trimmed}</p>`;
-      })
-      .join('\n');
+      .replace(/<\/?html[^>]*>/gi, '')
+      .replace(/<head[\s\S]*?<\/head>/gi, '')
+      .replace(/<\/?body[^>]*>/gi, '')
+      .trim();
   };
 
   if (loading) {

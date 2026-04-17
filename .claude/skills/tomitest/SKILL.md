@@ -172,6 +172,8 @@ For batch checks across sites (ICP, company name, email, WeChat QR), use `browse
 | BLD8 | CTA section | Scroll to bottom | Call-to-action block with contact button |
 | BLD9 | AI flavor check | Read content text | No "此外", "值得注意的是", "综上所述", "赋能", "助力" — humanizer must be enabled |
 | BLD10 | Content not empty | Check article body | Content renders as HTML with paragraphs, not raw JSON or empty div |
+| BLD11 | **No raw markdown in content** | Check article body innerText | Must NOT match `^(#{1,3}) ` (raw headings), `\*\*\w+?\*\*` (raw bold), `^\*   ` (raw bullets). Must have `<h2>`, `<p>`, `<strong>` rendered as HTML tags. Test rewriter output too: any URL with `_rewritten` suffix. Regression for the kb/1776355068223_rewritten bug where LLM returned mixed markdown+HTML and frontend's `includes('<p>')` detection returned raw markdown unchanged. |
+| BLD12 | **No LLM preamble leaked** | Check first h2/h3 of article body | First heading must NOT be "改写后的文本" / "以下是改写" / "Rewritten Text" / etc. These are LLM response wrappers that must be stripped by backend `cleanHtml`. |
 
 **Admin article management (full E2E):**
 

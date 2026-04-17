@@ -39,115 +39,16 @@ function normalizeArticle(raw: any): Article {
 }
 
 /**
- * 将纯文本 / Markdown 转换为结构化 HTML
- * 支持：# 一级标题  ## 二级标题  ### 三级标题  **bold**  \n\n 段落
- * 第一段作为"引言"单独处理
+ * 后端 /api/{site}/articles 已用 marked 把 content 转成 HTML。
+ * 前端只剥掉偶尔残留的 <html>/<body>/<head> 壳，然后直接渲染。
  */
-function markdownToHtml(raw: string, articleTitle: string): string {
-  if (!raw || !raw.trim()) return '';
-
-  // 如果已经是 HTML（含 <p> 或 <h 标签），直接补充样式后返回
-  if (/<(p|h[1-6]|ul|ol|blockquote)\b/i.test(raw)) {
-    return raw;
-  }
-
-  const lines = raw.split('\n');
-  const blocks: string[] = [];
-  let currentParagraph: string[] = [];
-
-  const flushParagraph = () => {
-    const text = currentParagraph.join(' ').trim();
-    if (text) {
-      blocks.push(`<p>${applyInline(text)}</p>`);
-    }
-    currentParagraph = [];
-  };
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-
-    if (!trimmed) {
-      flushParagraph();
-      continue;
-    }
-
-    // H1 标题（# 开头或 === 下划线）
-    if (/^#{1}\s+/.test(trimmed) && !/^#{2,}/.test(trimmed)) {
-      flushParagraph();
-      const text = trimmed.replace(/^#+\s*/, '');
-      // H1 通常就是文章标题，跳过避免重复
-      if (text !== articleTitle) {
-        blocks.push(`<h2 class="article-h2">${applyInline(text)}</h2>`);
-      }
-      continue;
-    }
-
-    // H2 标题
-    if (/^#{2}\s+/.test(trimmed) && !/^#{3,}/.test(trimmed)) {
-      flushParagraph();
-      const text = trimmed.replace(/^#+\s*/, '');
-      blocks.push(`<h2 class="article-h2">${applyInline(text)}</h2>`);
-      continue;
-    }
-
-    // H3 标题
-    if (/^#{3}\s+/.test(trimmed)) {
-      flushParagraph();
-      const text = trimmed.replace(/^#+\s*/, '');
-      blocks.push(`<h3 class="article-h3">${applyInline(text)}</h3>`);
-      continue;
-    }
-
-    // 列表项（- 或 * 或 数字.）
-    if (/^[-*]\s+/.test(trimmed)) {
-      flushParagraph();
-      const text = trimmed.replace(/^[-*]\s+/, '');
-      blocks.push(`<li class="article-li">${applyInline(text)}</li>`);
-      continue;
-    }
-
-    if (/^\d+\.\s+/.test(trimmed)) {
-      flushParagraph();
-      const text = trimmed.replace(/^\d+\.\s+/, '');
-      blocks.push(`<li class="article-li article-li-num">${applyInline(text)}</li>`);
-      continue;
-    }
-
-    // 引用（> 开头）
-    if (/^>\s+/.test(trimmed)) {
-      flushParagraph();
-      const text = trimmed.replace(/^>\s+/, '');
-      blocks.push(`<blockquote class="article-blockquote">${applyInline(text)}</blockquote>`);
-      continue;
-    }
-
-    // 普通文本行，收集到当前段落
-    currentParagraph.push(trimmed);
-  }
-  flushParagraph();
-
-  // 合并相邻 <li> 为 <ul>
-  const merged = blocks.join('\n')
-    .replace(/(<li class="article-li">[\s\S]*?<\/li>\n?)+/g, (match) => `<ul class="article-ul">${match}</ul>`)
-    .replace(/(<li class="article-li article-li-num">[\s\S]*?<\/li>\n?)+/g, (match) => `<ol class="article-ol">${match}</ol>`);
-
-  // 分离引言（第一个 <p>）和正文
-  const firstPMatch = merged.match(/^(<p>[\s\S]*?<\/p>)/);
-  if (firstPMatch) {
-    const intro = firstPMatch[1].replace('<p>', '<p class="article-intro">');
-    const rest = merged.slice(firstPMatch[0].length);
-    return intro + rest;
-  }
-
-  return merged;
-}
-
-/** 处理行内 Markdown：**bold**  *italic*  `code` */
-function applyInline(text: string): string {
-  return text
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`(.+?)`/g, '<code class="article-code">$1</code>');
+function renderArticleHtml(raw: string): string {
+  if (!raw) return '';
+  return raw
+    .replace(/<\/?html[^>]*>/gi, '')
+    .replace(/<head[\s\S]*?<\/head>/gi, '')
+    .replace(/<\/?body[^>]*>/gi, '')
+    .trim();
 }
 
 const FALLBACK_POST: Article = {
@@ -156,19 +57,7 @@ const FALLBACK_POST: Article = {
   title: '2026 春夏时尚趋势报告：AI 如何预测下一个爆款？',
   summary: '通过分析全球社交媒体数据与电商销售趋势，FasiumAI 的趋势引擎为品牌揭示了未来一季的核心色彩与廓形方向。',
   image: '/blog/1.jpg',
-  content: `在瞬息万变的时尚行业，预测趋势一直是一门结合了艺术与科学的复杂学科。传统上，趋势预测依赖于资深买手和分析师的直觉，以及对秀场和街拍的长期观察。然而，随着大数据和人工智能技术的成熟，这一过程正在经历一场革命。
-
-## 数据驱动的洞察
-
-FasiumAI 的趋势引擎不仅仅是抓取图片，它在深度学习的基础上，能够识别颜色比例、面料纹理、廓形变化以及细节元素。通过分析全球数百万条社交媒体动态、主流电商平台的实时销量以及各大时装周的数字信号，AI 可以比人类更早地发现正在萌芽的微趋势。
-
-## 从预测到设计
-
-预测只是第一步。FasiumAI 的核心优势在于将这些洞察直接转化为可编辑的设计资产。设计师不再需要花费数周时间整理参考图，AI 已经提前完成了这项工作。
-
-## 结论
-
-AI 并不是要取代设计师的审美，而是为创意提供一个坚实的数据底座。在 2026 年春夏，我们预计可持续面料与未来主义廓形的结合将成为主流。`,
+  content: `<p>在瞬息万变的时尚行业，预测趋势一直是一门结合了艺术与科学的复杂学科。传统上，趋势预测依赖于资深买手和分析师的直觉，以及对秀场和街拍的长期观察。然而，随着大数据和人工智能技术的成熟，这一过程正在经历一场革命。</p><h2>数据驱动的洞察</h2><p>FasiumAI 的趋势引擎不仅仅是抓取图片，它在深度学习的基础上，能够识别颜色比例、面料纹理、廓形变化以及细节元素。通过分析全球数百万条社交媒体动态、主流电商平台的实时销量以及各大时装周的数字信号，AI 可以比人类更早地发现正在萌芽的微趋势。</p><h2>从预测到设计</h2><p>预测只是第一步。FasiumAI 的核心优势在于将这些洞察直接转化为可编辑的设计资产。设计师不再需要花费数周时间整理参考图，AI 已经提前完成了这项工作。</p><h2>结论</h2><p>AI 并不是要取代设计师的审美，而是为创意提供一个坚实的数据底座。在 2026 年春夏，我们预计可持续面料与未来主义廓形的结合将成为主流。</p>`,
   tags: ['时尚科技', 'AI设计', '趋势预测'],
 };
 
@@ -251,7 +140,7 @@ export default function BlogPostPage() {
 
   if (!post) return null;
 
-  const htmlContent = markdownToHtml(post.content, post.title);
+  const htmlContent = renderArticleHtml(post.content);
 
   const jsonLd = {
     '@context': 'https://schema.org',
