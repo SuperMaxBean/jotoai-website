@@ -125,7 +125,7 @@ export default function Contact() {
               <div className="text-center">
                 <div className="bg-white p-2 rounded-xl shadow-md border border-slate-100 mb-3">
                   <img
-                    src="https://admin.jotoai.com/brand/wechat-qr.png"
+                    src="https://admin.jotoai.com/brand/wechat-qr.png?v=1"
                     alt={t('微信咨询', 'WeChat')}
                     className="w-32 h-32"
                     referrerPolicy="no-referrer"

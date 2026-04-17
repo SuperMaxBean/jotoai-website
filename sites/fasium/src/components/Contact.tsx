@@ -142,7 +142,7 @@ export default function Contact() {
                   </div>
                   <div className="w-[150px] h-[150px] rounded-xl overflow-hidden bg-white p-1">
                     <img
-                      src="https://admin.jotoai.com/brand/wechat-qr.png"
+                      src="https://admin.jotoai.com/brand/wechat-qr.png?v=1"
                       alt={t("企业微信二维码", "WeChat QR Code")}
                       className="w-full h-full object-contain"
                     />

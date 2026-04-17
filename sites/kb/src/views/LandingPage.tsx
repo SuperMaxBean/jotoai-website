@@ -879,7 +879,7 @@ const LandingPage = () => {
               className="lg:col-span-4 bg-slate-50 rounded-[2rem] p-8 border border-slate-100 flex flex-col items-center text-center"
             >
               <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 w-48 h-48 flex items-center justify-center">
-                <img src="https://admin.jotoai.com/brand/wechat-qr.png" alt={t('微信扫码咨询', 'Scan WeChat QR Code')} className="w-full h-full object-contain" />
+                <img src="https://admin.jotoai.com/brand/wechat-qr.png?v=1" alt={t('微信扫码咨询', 'Scan WeChat QR Code')} className="w-full h-full object-contain" />
               </div>
               <h3 className="text-lg font-bold text-slate-900 mb-8">{t('微信扫码咨询', 'Scan WeChat QR Code')}</h3>
 

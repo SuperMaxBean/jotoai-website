@@ -785,7 +785,7 @@ const ContactSection = () => {
                 <h3 className="text-[17px] font-bold text-text-primary mb-3">{t('contactSection.wechat')}</h3>
                 <div className="p-3 bg-white border border-border-base rounded-2xl w-fit shadow-sm">
                   <img
-                    src="https://admin.jotoai.com/brand/wechat-qr.png"
+                    src="https://admin.jotoai.com/brand/wechat-qr.png?v=1"
                     alt="WeChat QR Code"
                     className="w-[120px] h-[120px]"
                     referrerPolicy="no-referrer"
