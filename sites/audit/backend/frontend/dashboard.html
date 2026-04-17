@@ -116,8 +116,16 @@
       </div>
     </div>
     <div class="px-8 py-6">
+      <!-- 批量操作工具条 -->
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-sm text-gray-500">已选 <span id="cSelCount" class="font-semibold text-gray-900">0</span> 条</div>
+        <button id="cBulkDel" onclick="bulkDelC()" disabled class="btn-d !py-1.5 !px-3 text-xs disabled:opacity-40 disabled:cursor-not-allowed">删除所选</button>
+      </div>
       <div class="bg-white border border-gray-100 rounded-xl overflow-hidden">
-        <div class="grid grid-cols-[100px_1fr_180px_120px_70px_60px] px-5 py-2.5 bg-gray-50 text-xs text-gray-500 font-medium border-b border-gray-100"><div data-t="col_source">来源</div><div data-t="col_contact">联系人</div><div data-t="col_message">留言</div><div data-t="col_time">时间</div><div data-t="col_channel">渠道</div><div data-t="col_action" class="text-right">操作</div></div>
+        <div class="grid grid-cols-[36px_100px_1fr_180px_120px_70px] px-5 py-2.5 bg-gray-50 text-xs text-gray-500 font-medium border-b border-gray-100 items-center">
+          <div><input id="cChkAll" type="checkbox" onchange="toggleAllC(this.checked)" class="cursor-pointer"></div>
+          <div data-t="col_source">来源</div><div data-t="col_contact">联系人</div><div data-t="col_message">留言</div><div data-t="col_time">时间</div><div data-t="col_channel">渠道</div>
+        </div>
         <div id="cList" class="divide-y divide-gray-50 max-h-[600px] overflow-y-auto"><div class="px-5 py-4 text-gray-400 text-sm"><span class="spinner"></span></div></div>
       </div>
     </div>
@@ -467,12 +475,28 @@ async function loadC(){try{AC=await(await af('/api/admin/contacts')).json();cons
   f.innerHTML='<option value="all">'+(t("all_sites"))+'</option>'+[...sn].map(s=>`<option value="${s}"${s===cur?' selected':''}>${s}</option>`).join('');renderC()}catch(e){$('cList').innerHTML=`<div class="p-4 text-red-500 text-sm">${e.message}</div>`}}
 function renderC(){const fv=$('cFlt').value;const nm={},am={};S.forEach(s=>{try{nm[new URL(s.url).hostname]=s.name}catch{};am[s.name]=s.accent});
   let l=fv==='all'?AC:AC.filter(c=>(c.site||nm[c.siteHost])===fv);
-  if(!l.length){$('cList').innerHTML='<div class="px-5 py-8 text-gray-400 text-sm text-center">${t("no_contacts")}</div>';return}
+  if(!l.length){$('cList').innerHTML='<div class="px-5 py-8 text-gray-400 text-sm text-center">${t("no_contacts")}</div>';updateBulkBar();return}
   $('cList').innerHTML=l.map(c=>{const s=c.site||nm[c.siteHost]||'未知',cl=am[s]||'#94a3b8';
     const t=c.submittedAt?new Date(c.submittedAt).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
     const m=c.message&&c.message!=='（未填写需求描述）'?c.message:'<span class="text-gray-300">-</span>';
-    return `<div class="grid grid-cols-[100px_1fr_180px_120px_70px_60px] px-5 py-3 items-center hover:bg-gray-50/50 text-sm"><div><span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background:${cl}">${s}</span></div><div class="min-w-0"><div class="font-medium truncate">${c.name||c.firstName||'-'}</div><div class="text-gray-400 text-xs truncate">${c.email||''} ${c.phone||''}</div></div><div class="text-gray-500 text-xs truncate">${m}</div><div class="text-gray-400 text-xs">${t}</div><div class="text-gray-400 text-xs">${c.source||'直接'}</div><div class="text-right"><button onclick="delC('${String(c.id).replace(/'/g,'\\\'')}')" class="btn-d !py-1 !px-2 text-xs" data-t="delete">删除</button></div></div>`}).join('')}
-async function delC(id){if(!confirm('确认删除这条留言？此操作不可恢复。'))return;try{const r=await(await af(`/api/admin/contacts/${encodeURIComponent(id)}`,{method:'DELETE'})).json();if(r.success){toast('已删除');loadC();loadStats()}else{toast(r.error||'删除失败',false)}}catch(e){toast(e.message,false)}}
+    const id=String(c.id).replace(/'/g,'\\\'');
+    const checked=cSel.has(String(c.id))?'checked':'';
+    return `<div class="grid grid-cols-[36px_100px_1fr_180px_120px_70px] px-5 py-3 items-center hover:bg-gray-50/50 text-sm"><div><input type="checkbox" data-cid="${id}" ${checked} onchange="onChkC(this)" class="cursor-pointer"></div><div><span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background:${cl}">${s}</span></div><div class="min-w-0"><div class="font-medium truncate">${c.name||c.firstName||'-'}</div><div class="text-gray-400 text-xs truncate">${c.email||''} ${c.phone||''}</div></div><div class="text-gray-500 text-xs truncate">${m}</div><div class="text-gray-400 text-xs">${t}</div><div class="text-gray-400 text-xs">${c.source||'直接'}</div></div>`}).join('');
+  updateBulkBar()}
+// 批量选择状态（id 以字符串存）
+const cSel=new Set();
+// 返回当前 cFlt 过滤后的可见条目
+function visibleC(){const fv=$('cFlt').value,nm={};S.forEach(s=>{try{nm[new URL(s.url).hostname]=s.name}catch{}});return fv==='all'?AC:AC.filter(c=>(c.site||nm[c.siteHost])===fv)}
+function updateBulkBar(){const vis=visibleC(),visIds=new Set(vis.map(c=>String(c.id)));
+  // cSel 中只保留可见 id（过滤切换时自动丢弃不再可见的选择）
+  for(const id of [...cSel]){if(!visIds.has(id))cSel.delete(id)}
+  $('cSelCount').textContent=cSel.size;$('cBulkDel').disabled=cSel.size===0;
+  const all=$('cChkAll');if(vis.length&&vis.every(c=>cSel.has(String(c.id)))){all.checked=true;all.indeterminate=false}else if(cSel.size>0){all.checked=false;all.indeterminate=true}else{all.checked=false;all.indeterminate=false}}
+function onChkC(el){const id=el.getAttribute('data-cid');if(el.checked)cSel.add(id);else cSel.delete(id);updateBulkBar()}
+function toggleAllC(checked){const vis=visibleC();vis.forEach(c=>{const id=String(c.id);if(checked)cSel.add(id);else cSel.delete(id)});renderC()}
+async function bulkDelC(){if(cSel.size===0)return;if(!confirm(`确认删除选中的 ${cSel.size} 条留言？此操作不可恢复。`))return;
+  const ids=[...cSel];try{const r=await(await af('/api/admin/contacts/batch-delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids})})).json();
+  if(r.success){toast(`已删除 ${r.deletedCount} 条${r.notFoundCount?`（${r.notFoundCount} 条未找到）`:''}`);cSel.clear();loadC();loadStats()}else{toast(r.error||'删除失败',false)}}catch(e){toast(e.message,false)}}
 
 // Articles
 let artSite='all',allArts=[];
