@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<title>联系我们 - Loop AI 浏览器自动化即服务 | JOTO.AI</title>
+<meta name="description" content="联系 Loop 团队，了解 AI 浏览器自动化解决方案。预约演示、咨询定价、企业私有化部署。">
+<style>
+  *,*:before,*:after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: #111827;
+    background: #f9fafb;
+    -webkit-font-smoothing: antialiased;
+  }
+  .topbar {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(255,255,255,0.85); backdrop-filter: blur(12px);
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .topbar-inner { max-width: 1200px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { display: flex; flex-direction: column; line-height: 1; text-decoration: none; color: inherit; }
+  .logo b { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+  .logo small { font-size: 10px; color: #6b7280; margin-top: 2px; }
+  .back { color: #6b7280; text-decoration: none; font-size: 14px; }
+  .back:hover { color: #111827; }
+  main { max-width: 1100px; margin: 0 auto; padding: 56px 24px 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; gap: 32px; padding-top: 32px; } }
+  h1 { font-size: clamp(28px, 4vw, 44px); margin: 0 0 24px; letter-spacing: -0.02em; line-height: 1.15; }
+  h1 .accent { color: #2563eb; }
+  .lede { color: #4b5563; line-height: 1.75; font-size: 16px; max-width: 520px; }
+  .contact-list { margin-top: 32px; display: grid; gap: 18px; }
+  .contact-list dt { font-size: 12px; font-weight: 700; letter-spacing: 0.15em; color: #9ca3af; text-transform: uppercase; margin-bottom: 4px; }
+  .contact-list dd { margin: 0; font-size: 18px; font-weight: 700; color: #111827; }
+  .contact-list dd a { color: inherit; text-decoration: none; }
+  .card { background: white; border-radius: 24px; padding: 40px; box-shadow: 0 20px 50px -20px rgba(17, 24, 39, 0.15); border: 1px solid #e5e7eb; }
+  .card h2 { margin: 0 0 24px; font-size: 18px; font-weight: 700; }
+  label { display: block; font-size: 13px; font-weight: 700; color: #374151; margin: 0 0 8px; }
+  .req { color: #ef4444; }
+  input, textarea {
+    width: 100%; font: inherit; padding: 12px 16px;
+    background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px;
+    outline: none; transition: border .15s, box-shadow .15s;
+  }
+  input:focus, textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+  textarea { resize: vertical; min-height: 96px; }
+  .row { margin-bottom: 18px; }
+  .captcha-row { display: flex; align-items: flex-end; gap: 12px; }
+  .captcha-row > div:first-child { flex: 1; }
+  #captchaImg { height: 44px; width: 132px; border-radius: 10px; border: 1px solid #e5e7eb; cursor: pointer; background: white; }
+  .refresh-captcha { border: 1px solid #e5e7eb; background: white; padding: 10px 12px; border-radius: 10px; cursor: pointer; color: #6b7280; }
+  .refresh-captcha:hover { color: #2563eb; border-color: #2563eb; }
+  button.submit {
+    width: 100%; padding: 16px; margin-top: 6px;
+    background: #2563eb; color: white; font-weight: 700; font-size: 15px;
+    border: 0; border-radius: 14px; cursor: pointer;
+    box-shadow: 0 10px 25px -12px rgba(37, 99, 235, 0.7);
+    transition: transform .1s, opacity .2s;
+  }
+  button.submit:hover:not(:disabled) { transform: translateY(-1px); }
+  button.submit:disabled { opacity: 0.5; cursor: wait; }
+  .msg { margin-bottom: 16px; padding: 14px 16px; border-radius: 12px; font-size: 14px; display: none; }
+  .msg.ok { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+  .msg.err { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+  .msg.show { display: block; }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="logo"><b>Loop</b><small>JOTO.AI 旗下产品</small></a>
+      <a href="/" class="back">← 返回首页</a>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <h1>用 AI 浏览器<br><span class="accent">替代重复劳动</span></h1>
+      <p class="lede">Loop 云端 AI 浏览器，像真人一样看屏、思考、操作，全天候稳定运行。留下您的联系方式，我们将在一个工作日内与您联系，为您演示如何将浏览器变成企业的 AI 员工。</p>
+      <dl class="contact-list">
+        <div><dt>电话</dt><dd>+86 (021) 6566 1628</dd></div>
+        <div><dt>邮箱</dt><dd><a href="mailto:jotoai@jototech.cn">jotoai@jototech.cn</a></dd></div>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>留下您的联系方式，我们将在一个工作日内回复！</h2>
+      <div id="successMsg" class="msg ok">提交成功！我们会尽快与您联系。</div>
+      <div id="errorMsg" class="msg err"></div>
+      <form id="contactForm" novalidate>
+        <div class="row"><label>姓名 <span class="req">*</span></label><input type="text" name="name" required placeholder="请输入您的姓名"></div>
+        <div class="row"><label>公司 / 机构名称 <span class="req">*</span></label><input type="text" name="company" required placeholder="请输入您的公司或机构名称"></div>
+        <div class="row"><label>邮箱 <span class="req">*</span></label><input type="email" name="email" required placeholder="请输入您的电子邮箱"></div>
+        <div class="row"><label>电话号码 <span class="req">*</span></label><input type="tel" name="phone" required placeholder="请输入您的联系电话"></div>
+        <div class="row"><label>留言</label><textarea name="message" placeholder="请描述您的使用场景或需求..."></textarea></div>
+        <div class="row captcha-row">
+          <div>
+            <label>验证码 <span class="req">*</span></label>
+            <input type="text" name="captchaText" required placeholder="请输入验证码" autocomplete="off">
+          </div>
+          <img id="captchaImg" alt="captcha" title="点击刷新" />
+          <button type="button" class="refresh-captcha" id="refreshBtn" aria-label="刷新验证码">↻</button>
+        </div>
+        <button type="submit" class="submit" id="submitBtn">提交</button>
+      </form>
+    </section>
+  </main>
+
+<script>
+(function () {
+  var form = document.getElementById('contactForm');
+  var img = document.getElementById('captchaImg');
+  var refresh = document.getElementById('refreshBtn');
+  var submitBtn = document.getElementById('submitBtn');
+  var okMsg = document.getElementById('successMsg');
+  var errMsg = document.getElementById('errorMsg');
+  var currentCaptchaId = '';
+
+  function loadCaptcha() {
+    fetch('/api/captcha', { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (d) { currentCaptchaId = d.captchaId; img.src = d.svg; })
+      .catch(function () { img.alt = '验证码加载失败,请点击刷新'; });
+  }
+
+  img.addEventListener('click', loadCaptcha);
+  refresh.addEventListener('click', loadCaptcha);
+  loadCaptcha();
+
+  form.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    okMsg.classList.remove('show');
+    errMsg.classList.remove('show');
+
+    var fd = new FormData(form);
+    var payload = {
+      name: (fd.get('name') || '').trim(),
+      company: (fd.get('company') || '').trim(),
+      email: (fd.get('email') || '').trim(),
+      phone: (fd.get('phone') || '').trim(),
+      message: (fd.get('message') || '').trim(),
+      captchaId: currentCaptchaId,
+      captchaText: (fd.get('captchaText') || '').trim(),
+    };
+    if (!payload.name || !payload.company || !payload.email || !payload.phone || !payload.captchaText) {
+      errMsg.textContent = '请填写所有必填字段';
+      errMsg.classList.add('show');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = '提交中...';
+
+    fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+      .then(function (res) {
+        if (res.ok && res.data && res.data.success) {
+          okMsg.classList.add('show');
+          form.reset();
+          loadCaptcha();
+        } else {
+          errMsg.textContent = (res.data && res.data.error) || '提交失败，请稍后重试';
+          errMsg.classList.add('show');
+          loadCaptcha();
+        }
+      })
+      .catch(function () {
+        errMsg.textContent = '网络错误，请稍后重试';
+        errMsg.classList.add('show');
+        loadCaptcha();
+      })
+      .then(function () {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '提交';
+      });
+  });
+})();
+</script>
+</body>
+</html>

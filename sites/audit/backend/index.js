@@ -1123,12 +1123,14 @@ app.post('/api/contact', async (req, res) => {
     
     // 识别来源站点
     const SITE_MAP = {
-      'audit.jotoai.com':   '唯客智审',
-      'shanyue.jotoai.com': '闪阅',
-      'sec.jotoai.com':     '唯客 AI 护栏',
-      'kb.jotoai.com':      '唯客知识中台',
-      'fasium.jotoai.com':  'FasiumAI',
-      'loop.jotoai.com':    'Loop',
+      'audit.jotoai.com':     '唯客智审',
+      'shanyue.jotoai.com':   '闪阅',
+      'sec.jotoai.com':       '唯客 AI 护栏',
+      'kb.jotoai.com':        '唯客知识中台',
+      'fasium.jotoai.com':    'FasiumAI',
+      'fasium-ai.jotoai.com': 'FasiumAI',
+      'loop.jotoai.com':      'Loop',
+      'note.jotoai.com':      'NoteFlow',
     };
     const hostHeader = (req.headers['x-forwarded-host'] || req.headers.host || '').replace(/:\d+$/, '');
     const siteName = SITE_MAP[hostHeader] || hostHeader || '未知站点';
