@@ -42,6 +42,11 @@ const SITE_CONTEXTS = {
     imageQuery: 'knowledge management notebook AI study research document',
     topic: 'AI笔记知识管理',
   },
+  translator: {
+    systemPrompt: '你是一名专注于AI 文档翻译、多语言本地化和机器翻译质量领域的专业内容创作者，擅长撰写 AI 翻译工具、文档翻译工作流、术语库管理、翻译质量评估、跨境业务本地化等主题的专业 SEO 文章。内容面向外贸企业、出海品牌、翻译服务机构和多语言运营团队，语言专业务实，注重效率提升与翻译质量把控。',
+    imageQuery: 'document translation multilingual AI language localization',
+    topic: 'AI文档翻译多语言本地化',
+  },
 };
 
 const DEFAULT_SITE_CONTEXT = {
@@ -385,6 +390,7 @@ async function generateArticle(llmConfig = null, imageConfig = null, dedupConfig
       fasium:   { name: 'FasiumAI',            url: 'https://fasium.jotoai.com/contact',  action: '联系我们 / 立即注册' },
       loop:     { name: 'Loop',                url: 'https://loop.jotoai.com/#demo',      action: '联系我们 / 免费试用' },
       noteflow: { name: 'NoteFlow',            url: 'https://note.jotoai.com/contact',    action: '联系我们 / 免费注册' },
+      translator:{ name: 'JOTO Translator',    url: 'https://translator.jototech.cn/',    action: '立即体验 / 免费试用' },
     };
     const cta = SITE_CTA[siteId];
     if (cta) {

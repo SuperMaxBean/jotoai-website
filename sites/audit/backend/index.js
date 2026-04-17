@@ -1123,14 +1123,15 @@ app.post('/api/contact', async (req, res) => {
     
     // 识别来源站点
     const SITE_MAP = {
-      'audit.jotoai.com':     '唯客智审',
-      'shanyue.jotoai.com':   '闪阅',
-      'sec.jotoai.com':       '唯客 AI 护栏',
-      'kb.jotoai.com':        '唯客知识中台',
-      'fasium.jotoai.com':    'FasiumAI',
-      'fasium-ai.jotoai.com': 'FasiumAI',
-      'loop.jotoai.com':      'Loop',
-      'note.jotoai.com':      'NoteFlow',
+      'audit.jotoai.com':        '唯客智审',
+      'shanyue.jotoai.com':      '闪阅',
+      'sec.jotoai.com':          '唯客 AI 护栏',
+      'kb.jotoai.com':           '唯客知识中台',
+      'fasium.jotoai.com':       'FasiumAI',
+      'fasium-ai.jotoai.com':    'FasiumAI',
+      'loop.jotoai.com':         'Loop',
+      'note.jotoai.com':         'NoteFlow',
+      'translator.jototech.cn':  'JOTO Translator',
     };
     const hostHeader = (req.headers['x-forwarded-host'] || req.headers.host || '').replace(/:\d+$/, '');
     const siteName = SITE_MAP[hostHeader] || hostHeader || '未知站点';
@@ -2366,8 +2367,8 @@ app.post('/api/admin/accept-invite', async (req, res) => {
 
 
 // ==================== 多站点支持 ====================
-const SITES = ['audit', 'shanyue', 'sec', 'kb', 'fasium', 'loop', 'noteflow'];
-const SITE_NAMES = { audit: '唯客智审', shanyue: '闪阅', sec: '唯客AI护栏', kb: '唯客企业知识中台', fasium: 'FasiumAI', loop: 'Loop', noteflow: 'NoteFlow' };
+const SITES = ['audit', 'shanyue', 'sec', 'kb', 'fasium', 'loop', 'noteflow', 'translator'];
+const SITE_NAMES = { audit: '唯客智审', shanyue: '闪阅', sec: '唯客AI护栏', kb: '唯客企业知识中台', fasium: 'FasiumAI', loop: 'Loop', noteflow: 'NoteFlow', translator: 'JOTO Translator' };
 
 function getSitePaths(site) {
   const siteDir = path.join(DATA_DIR, 'sites', site);
