@@ -202,6 +202,67 @@ async function generateArticle() {
 
 
 // 发送邮件（Resend）
+/**
+ * 新联系表单提交的通用通知：发邮件 + 飞书机器人 + 飞书表格。
+ * 被 /api/contact 和 /api/:site/contact 共用，保证任一入口都会通知管理员。
+ *
+ * @param {object} opts
+ * @param {object} opts.config - getConfig() 返回值
+ * @param {object} opts.contact - 已归一化的提交数据（含 name/email/phone/company/message）
+ * @param {string} opts.siteName - 站点展示名（"唯客智审"）
+ * @param {string} opts.siteHost - 站点主机名（"audit.jotoai.com"）
+ * @param {string} [opts.sourceInfo] - 访问来源描述
+ * @param {string} [opts.deviceType] - 客户端类型
+ */
+async function notifyNewContact({ config, contact, siteName, siteHost, sourceInfo = '直接访问', deviceType = 'unknown' }) {
+  const recipient = config.email || config.emailConfig?.adminEmail;
+  if (recipient) {
+    const emailHtml = `
+      <h2>📩 新的联系表单 —— ${siteName}</h2>
+      <p><strong>来源站点：</strong>${siteName}（${siteHost}）</p>
+      <p><strong>姓名：</strong>${contact.name || '-'}</p>
+      <p><strong>公司/机构：</strong>${contact.school || contact.company || '-'}</p>
+      <p><strong>邮箱：</strong>${contact.email || '-'}</p>
+      <p><strong>电话：</strong>${contact.phone || '-'}</p>
+      <p><strong>留言：</strong>${contact.message || '无'}</p>
+      <hr>
+      <p><strong>访问来源：</strong>${sourceInfo}</p>
+      <p><strong>客户端类型：</strong>${deviceType}</p>
+      <p><strong>提交时间：</strong>${new Date().toLocaleString('zh-CN')}</p>
+    `;
+    try {
+      await sendEmail(recipient, `[${siteName}] 新的联系表单`, emailHtml);
+    } catch (e) {
+      console.error('[notifyNewContact] 邮件发送失败:', e.message);
+    }
+  }
+
+  if (config.feishuWebhook) {
+    try {
+      await sendToFeishuBot(config.feishuWebhook, {
+        ...contact,
+        school: contact.school || contact.company || '-',
+        source: sourceInfo,
+      });
+    } catch (e) {
+      console.error('[notifyNewContact] 飞书机器人失败:', e.message);
+    }
+  }
+
+  if (config.feishuAppId && config.feishuAppSecret && config.feishuTableUrl) {
+    try {
+      await syncToFeishuTable(config, {
+        ...contact,
+        school: contact.school || contact.company || '-',
+        source: sourceInfo,
+        deviceType,
+      });
+    } catch (e) {
+      console.error('[notifyNewContact] 飞书表格同步失败:', e.message);
+    }
+  }
+}
+
 async function sendEmail(to, subject, html) {
   try {
     const config = await getConfig();
@@ -1087,45 +1148,16 @@ app.post('/api/contact', async (req, res) => {
     });
     await saveContacts(contacts);
 
-    // 发送邮件
-    if (config.email) {
-      const emailHtml = `
-        <h2>📩 新的联系表单 —— ${siteName}</h2>
-        <p><strong>来源站点：</strong>${siteName}（${hostHeader}）</p>
-        <p><strong>姓名：</strong>${contactData.name}</p>
-        <p><strong>学校/机构：</strong>${contactData.school || contactData.company || '-'}</p>
-        <p><strong>邮箱：</strong>${contactData.email}</p>
-        <p><strong>电话：</strong>${contactData.phone}</p>
-        <p><strong>留言：</strong>${contactData.message || '无'}</p>
-        <hr>
-        <p><strong>访问来源：</strong>${sourceInfo}</p>
-        <p><strong>客户端类型：</strong>${deviceType}</p>
-        <p><strong>提交时间：</strong>${new Date().toLocaleString('zh-CN')}</p>
-      `;
+    // 通知（邮件 + 飞书），与 /api/:site/contact 共用逻辑避免漏发。
+    await notifyNewContact({
+      config,
+      contact: contactData,
+      siteName,
+      siteHost: hostHeader,
+      sourceInfo,
+      deviceType,
+    });
 
-      const emailSubject = `[${siteName}] 新的联系表单`;
-      await sendEmail(config.email, emailSubject, emailHtml);
-    }
-    
-    // 发送到飞书机器人
-    if (config.feishuWebhook) {
-      await sendToFeishuBot(config.feishuWebhook, {
-        ...contactData,
-        school: contactData.school || contactData.company || '-',
-        source: sourceInfo
-      });
-    }
-    
-    // 同步到飞书表格
-    if (config.feishuAppId && config.feishuAppSecret && config.feishuTableUrl) {
-      await syncToFeishuTable(config, {
-        ...contactData,
-        school: contactData.school || contactData.company || '-',
-        source: sourceInfo,
-        deviceType: deviceType
-      });
-    }
-    
     res.json({ success: true });
   } catch (error) {
     console.error('Error processing contact:', error);
@@ -2360,6 +2392,20 @@ app.post('/api/:site/contact', async (req, res) => {
     const contacts = await readSiteFile(p.contacts, []);
     contacts.unshift(contact);
     await fs.writeFile(p.contacts, JSON.stringify(contacts, null, 2));
+
+    // 通知（邮件 + 飞书）。保存成功后异步通知，失败不影响响应。
+    const config = await getConfig();
+    const siteHost = (req.headers['x-forwarded-host'] || req.headers.host || `${site}.jotoai.com`).replace(/:\d+$/, '');
+    const deviceType = detectDevice(req.headers['user-agent']);
+    notifyNewContact({
+      config,
+      contact: contactData,
+      siteName: SITE_NAMES[site] || site,
+      siteHost,
+      sourceInfo: contactData.source || '直接访问',
+      deviceType,
+    }).catch(e => console.error(`[/api/${site}/contact] 通知失败:`, e.message));
+
     res.json({ success: true, message: '提交成功，我们会尽快与您联系' });
   } catch (e) { res.status(500).json({ success: false, error: '提交失败' }); }
 });
