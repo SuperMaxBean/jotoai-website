@@ -852,7 +852,13 @@ app.post('/api/admin/generate-rewrite-article', verifyToken, async (req, res) =>
     console.log('[改写文章] 开始生成，改写轮数:', rewriteRounds, '字数:', wordCount);
     if (tavilyConfig) console.log('[改写文章] 使用 Tavily API 搜索');
 
-    const seoKeywords = config.seoConfig?.keywords || config.seoKeywords || null;
+    // 当请求中带 site 时，优先用站点的 SEO keywords，否则用全局
+    const requestedSiteForKeywords = req.body?.site || null;
+    let seoKeywords = config.seoConfig?.keywords || config.seoKeywords || null;
+    if (requestedSiteForKeywords && SITES.includes(requestedSiteForKeywords)) {
+      const siteCfg = await readSiteFile(getSitePaths(requestedSiteForKeywords).config, {});
+      if (siteCfg?.seoKeywords) seoKeywords = siteCfg.seoKeywords;
+    }
     const rewritePrompt = config.seoConfig?.rewritePrompt || null;
 
     // 获取已有文章用于图片去重
@@ -867,6 +873,8 @@ app.post('/api/admin/generate-rewrite-article', verifyToken, async (req, res) =>
 
     // 使用 generateRewrittenArticle（已包含搜索+改写+配图完整流程）
     const { generateRewrittenArticle } = require('./article-generator');
+    const humanizerConfig = config.humanizerConfig || null;
+    const requestedSite = req.body?.site || null;  // 可选：指定站点
     const article = await generateRewrittenArticle(
       llmConfig,
       imageConfig,
@@ -874,12 +882,28 @@ app.post('/api/admin/generate-rewrite-article', verifyToken, async (req, res) =>
       dedupConfig2,
       seoKeywords,
       wordCount,
-      rewritePrompt
+      rewritePrompt,
+      requestedSite,
+      humanizerConfig
     );
 
-    existingArticles.unshift(article);
-    await saveArticles(existingArticles);
-    
+    // 如指定 site，保存到该站点的 articles.json；否则全局
+    if (requestedSite && SITES.includes(requestedSite)) {
+      const siteArticlesPath = getSitePaths(requestedSite).articles;
+      const siteArticles = await readSiteFile(siteArticlesPath, []);
+      // 加入站点元数据
+      article.site = requestedSite;
+      article.status = 'published';
+      const { enrichLegacyArticle } = require('./article-enrichment');
+      const enriched = article.schemaVersion ? article : enrichLegacyArticle(article);
+      siteArticles.unshift(enriched);
+      await fs.writeFile(siteArticlesPath, JSON.stringify(siteArticles, null, 2));
+      console.log(`[改写文章] 已保存到站点 ${requestedSite} (${siteArticles.length} 篇)`);
+    } else {
+      existingArticles.unshift(article);
+      await saveArticles(existingArticles);
+    }
+
     res.json({ success: true, article });
   } catch (error) {
     console.error('[改写文章] 失败:', error.message);
@@ -925,15 +949,20 @@ function detectDevice(userAgent) {
 app.post('/api/contact', async (req, res) => {
   try {
     const { captchaId, captchaText, captcha, ...contactData } = req.body;
-    
+
     // 兼容两种字段名：captchaText（新）和 captcha（旧）
     const userCaptcha = captchaText || captcha;
-    
+
+    // 校验公司/机构名称为必填
+    if (!contactData.company || typeof contactData.company !== 'string' || !contactData.company.trim()) {
+      return res.status(400).json({ success: false, error: '请填写公司或机构名称' });
+    }
+
     // 验证验证码（强制要求）
     if (!captchaId || !userCaptcha) {
       return res.status(400).json({ success: false, error: '请输入验证码' });
     }
-    
+
     const stored = captchaStore.get(captchaId);
     if (!stored || stored.expires < Date.now()) {
       return res.status(400).json({ success: false, error: '验证码错误或已过期' });
@@ -1263,12 +1292,20 @@ async function runHealthCheck(customUrls) {
   return results;
 }
 
-function buildReportHtml(results, title) {
+function buildReportHtml(results, title, { articleCount, contactCount } = {}) {
   const now = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
   const problems = results.filter(r => !r.ok);
   const allOk = problems.length === 0;
   const color = allOk ? '#22c55e' : '#ef4444';
   const icon = allOk ? '✅' : '⚠️';
+  // Daily summary section (articles + contacts)
+  let summaryHtml = '';
+  if (articleCount !== undefined || contactCount !== undefined) {
+    summaryHtml = `<div style="margin-bottom:16px;padding:12px 16px;background:#f0f9ff;border-radius:8px;border-left:4px solid #3b82f6">
+      <p style="margin:0 0 4px;font-size:14px;font-weight:600;color:#1e40af">过去 24 小时数据</p>
+      <p style="margin:0;font-size:13px;color:#334155">新增文章: <strong>${articleCount ?? 0}</strong> 篇 &nbsp;|&nbsp; 新增留言: <strong>${contactCount ?? 0}</strong> 条</p>
+    </div>`;
+  }
   const rows = results.map(r => {
     const bg = r.ok ? '' : 'background:#fef2f2';
     const statusIcon = r.ok ? '✅' : '❌';
@@ -1278,10 +1315,55 @@ function buildReportHtml(results, title) {
   return `<div style="font-family:sans-serif;max-width:600px">
     <h2 style="color:${color}">${icon} ${title}</h2>
     <p style="color:#666">${now} — ${allOk ? '所有站点正常' : problems.length + ' 个站点异常'}</p>
+    ${summaryHtml}
     <table style="border-collapse:collapse;width:100%;font-size:13px">
       <tr style="background:#f9fafb"><th style="padding:8px;border:1px solid #e5e7eb;text-align:left">站点</th><th style="padding:8px;border:1px solid #e5e7eb">HTTP</th><th style="padding:8px;border:1px solid #e5e7eb">延迟</th><th style="padding:8px;border:1px solid #e5e7eb">详情</th></tr>
       ${rows}
     </table></div>`;
+}
+
+// 24h 窗口，而不是当天。邮件早上 10 点发送时，"今日"(startsWith yyyy-mm-dd)
+// 只覆盖 0-10 点，会漏掉昨晚 10:00-23:59 间生成的文章/留言。改为滚动 24h 窗口。
+const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+const SITE_DIRS = ['audit', 'shanyue', 'sec', 'kb', 'fasium', 'loop', 'noteflow'];
+
+function isWithinLast24h(isoStr) {
+  if (!isoStr) return false;
+  const t = new Date(isoStr).getTime();
+  if (!Number.isFinite(t)) return false;
+  return (Date.now() - t) <= TWENTY_FOUR_HOURS_MS;
+}
+
+// Count articles across all sites created in the last 24 hours.
+async function countLast24hArticles() {
+  let count = 0;
+  for (const site of SITE_DIRS) {
+    try {
+      const filePath = path.join(DATA_DIR, 'sites', site, 'articles.json');
+      const articles = JSON.parse(await fs.readFile(filePath, 'utf8'));
+      count += articles.filter(a => isWithinLast24h(a.createdAt)).length;
+    } catch { /* file may not exist */ }
+  }
+  return count;
+}
+
+// Count contacts across global + per-site files submitted in the last 24 hours.
+async function countLast24hContacts() {
+  let count = 0;
+  // Global contacts file
+  try {
+    const globalContacts = JSON.parse(await fs.readFile(path.join(DATA_DIR, 'contacts.json'), 'utf8'));
+    count += globalContacts.filter(c => isWithinLast24h(c.submittedAt)).length;
+  } catch { /* file may not exist */ }
+  // Per-site contacts files
+  for (const site of SITE_DIRS) {
+    try {
+      const filePath = path.join(DATA_DIR, 'sites', site, 'contacts.json');
+      const contacts = JSON.parse(await fs.readFile(filePath, 'utf8'));
+      count += contacts.filter(c => isWithinLast24h(c.submittedAt)).length;
+    } catch { /* file may not exist */ }
+  }
+  return count;
 }
 
 function getMonitorRecipients(config) {
@@ -1339,9 +1421,11 @@ cron.schedule('* * * * *', async function() {
     if (recipients.length) {
       const allOk = results.every(r => r.ok);
       const subject = allOk ? '✅ JOTO.AI 每日健康报告 — 全部正常' : '⚠️ JOTO.AI 每日健康报告 — 发现异常';
-      const html = buildReportHtml(results, 'JOTO.AI 每日健康报告');
+      const articleCount = await countLast24hArticles();
+      const contactCount = await countLast24hContacts();
+      const html = buildReportHtml(results, 'JOTO.AI 每日健康报告', { articleCount, contactCount });
       await sendEmail(recipients, subject, html);
-      console.log(`[每日报告] 已发送 → ${recipients.join(', ')}`);
+      console.log(`[每日报告] 过去24h 文章:${articleCount} 留言:${contactCount} 已发送 → ${recipients.join(', ')}`);
     }
   } catch (e) { console.error('[每日报告] 出错:', e.message); }
 });
@@ -1353,7 +1437,9 @@ app.post('/api/admin/monitor-test', verifyToken, async (req, res) => {
     const recipients = getMonitorRecipients(config);
     if (!recipients.length) return res.json({ success: false, message: '未配置收件人' });
     const results = await runHealthCheck(config.monitorConfig?.urls);
-    const html = buildReportHtml(results, 'JOTO.AI 健康巡检 — 测试报告');
+    const articleCount = await countLast24hArticles();
+    const contactCount = await countLast24hContacts();
+    const html = buildReportHtml(results, 'JOTO.AI 健康巡检 — 测试报告', { articleCount, contactCount });
     await sendEmail(recipients, '🧪 JOTO.AI 健康巡检 — 测试报告', html);
     res.json({ success: true });
   } catch (e) { res.json({ success: false, message: e.message }); }
@@ -2211,8 +2297,8 @@ app.post('/api/admin/accept-invite', async (req, res) => {
 
 
 // ==================== 多站点支持 ====================
-const SITES = ['audit', 'shanyue', 'sec', 'kb', 'fasium', 'loop'];
-const SITE_NAMES = { audit: '唯客智审', shanyue: '闪阅', sec: '唯客AI护栏', kb: '唯客企业知识中台', fasium: 'FasiumAI' };
+const SITES = ['audit', 'shanyue', 'sec', 'kb', 'fasium', 'loop', 'noteflow'];
+const SITE_NAMES = { audit: '唯客智审', shanyue: '闪阅', sec: '唯客AI护栏', kb: '唯客企业知识中台', fasium: 'FasiumAI', loop: 'Loop', noteflow: 'NoteFlow' };
 
 function getSitePaths(site) {
   const siteDir = path.join(DATA_DIR, 'sites', site);
@@ -2259,6 +2345,10 @@ app.post('/api/:site/contact', async (req, res) => {
   try {
     const { captchaId, captchaText, captcha, ...contactData } = req.body;
     const userCaptcha = captchaText || captcha;
+    // 校验公司/机构名称为必填
+    if (!contactData.company || typeof contactData.company !== 'string' || !contactData.company.trim()) {
+      return res.status(400).json({ success: false, error: '请填写公司或机构名称' });
+    }
     if (!captchaId || !userCaptcha) return res.status(400).json({ success: false, error: '请输入验证码' });
     const stored = captchaStore.get(captchaId);
     if (!stored || stored.expires < Date.now()) return res.status(400).json({ success: false, error: '验证码已过期' });
