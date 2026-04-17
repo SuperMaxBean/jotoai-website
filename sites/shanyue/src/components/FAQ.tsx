@@ -12,11 +12,11 @@ const FAQ: React.FC = () => {
     {
       question: t(
         "相比 ChatGPT 等通用大模型，闪阅有何独特优势？",
-        "What unique advantages does 闪阅 have over general LLMs like ChatGPT?"
+        "What unique advantages does iMark have over general LLMs like ChatGPT?"
       ),
       answer: t(
         `通用大模型在教育场景面临四大痛点：\n\n1. 理科识别软肋：在复杂数学公式、化学符号及受力图上易产生\u201C幻觉\u201D；\n2. 隐私合规风险：云端判卷涉及数据上传，面临监管风险；\n3. 成本高昂：软硬一体方案导致升级迭代成本剧增；\n4. 缺乏灵活性：无法针对雅思作文、理科垂类等特定场景进行微调。\n\n闪阅支持本地化部署与专项训练，精准解决上述问题。`,
-        "General LLMs face four major pain points in education:\n\n1. Weak in STEM recognition: prone to 'hallucinations' with complex math formulas, chemistry symbols, and force diagrams;\n2. Privacy compliance risks: cloud-based grading requires data upload, facing regulatory risks;\n3. High costs: integrated hardware-software solutions lead to soaring upgrade costs;\n4. Lack of flexibility: cannot fine-tune for specific scenarios like IELTS essays or STEM verticals.\n\n闪阅 supports local deployment and specialized training to precisely solve these issues."
+        "General LLMs face four major pain points in education:\n\n1. Weak in STEM recognition: prone to 'hallucinations' with complex math formulas, chemistry symbols, and force diagrams;\n2. Privacy compliance risks: cloud-based grading requires data upload, facing regulatory risks;\n3. High costs: integrated hardware-software solutions lead to soaring upgrade costs;\n4. Lack of flexibility: cannot fine-tune for specific scenarios like IELTS essays or STEM verticals.\n\niMark supports local deployment and specialized training to precisely solve these issues."
       ),
     },
     {
@@ -26,7 +26,7 @@ const FAQ: React.FC = () => {
       ),
       answer: t(
         "支持。闪阅搭载了专为教育场景优化的 OCR 引擎，对于潦草的手写中文、英文以及数字混合书写具有极高的识别准确率，特别针对学生试卷场景进行了大量数据训练。",
-        "Yes. 闪阅 features an OCR engine optimized specifically for educational scenarios, with extremely high accuracy for messy handwritten Chinese, English, and mixed numeric writing, with extensive data training specifically for student exam papers."
+        "Yes. iMark features an OCR engine optimized specifically for educational scenarios, with extremely high accuracy for messy handwritten Chinese, English, and mixed numeric writing, with extensive data training specifically for student exam papers."
       ),
     },
     {
@@ -36,7 +36,7 @@ const FAQ: React.FC = () => {
       ),
       answer: t(
         "完全可以。这是闪阅的核心优势之一。我们针对数学、物理、化学中的复杂公式、特殊符号（如积分、求和、化学分子式）以及几何图形进行了深度优化，识别准确率远超通用 OCR 模型。",
-        "Absolutely. This is one of 闪阅's core strengths. We have deeply optimized for complex formulas, special symbols (such as integrals, summations, chemical molecular formulas), and geometric figures in math, physics, and chemistry, with recognition accuracy far exceeding general OCR models."
+        "Absolutely. This is one of iMark's core strengths. We have deeply optimized for complex formulas, special symbols (such as integrals, summations, chemical molecular formulas), and geometric figures in math, physics, and chemistry, with recognition accuracy far exceeding general OCR models."
       ),
     },
     {

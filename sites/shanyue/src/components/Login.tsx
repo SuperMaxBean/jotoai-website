@@ -95,7 +95,7 @@ const Login: React.FC = () => {
         </div>
 
         <div className="mt-8 text-center">
-            <p className="text-xs text-slate-400">&copy; 2026 闪阅 AI. All rights reserved.</p>
+            <p className="text-xs text-slate-400">&copy; 2026 {t('闪阅 AI', 'iMark')}. All rights reserved.</p>
         </div>
       </div>
     </div>
