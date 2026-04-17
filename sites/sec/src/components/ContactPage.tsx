@@ -130,7 +130,7 @@ const ContactPage: React.FC = () => {
                 <div className="flex-1">
                   <p className="font-bold text-slate-900 text-sm lg:text-base mb-1">{t('微信咨询', 'WeChat Consultation')}</p>
                   <p className="text-slate-500 text-xs lg:text-sm mb-3">{t('扫描二维码', 'Scan the QR code')}<br/>{t('添加安全专家一对一沟通', 'to connect with a security expert')}</p>
-                  <img src="/wechat-qr.png" alt={t('微信二维码', 'WeChat QR Code')} className="w-32 h-32 object-contain rounded-lg border border-gray-100" />
+                  <img src="https://admin.jotoai.com/brand/wechat-qr.png" alt={t('微信二维码', 'WeChat QR Code')} className="w-32 h-32 object-contain rounded-lg border border-gray-100" />
                 </div>
               </div>
               <div className="flex items-start gap-4 p-4 lg:p-5 bg-white rounded-2xl border border-gray-100 shadow-sm">

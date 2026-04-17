@@ -155,7 +155,7 @@ export default function Contact() {
             <div className="flex items-center gap-5 rounded-2xl bg-white border border-slate-100 p-5 shadow-sm">
               <div className="shrink-0 rounded-xl bg-purple-50 p-2">
                 <img
-                  src="/wechat-qr.png"
+                  src="https://admin.jotoai.com/brand/wechat-qr.png"
                   alt={t('微信扫码咨询', 'Scan QR to chat on WeChat')}
                   className="h-28 w-28 rounded-lg"
                   referrerPolicy="no-referrer"
