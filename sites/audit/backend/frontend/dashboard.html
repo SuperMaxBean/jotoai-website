@@ -117,7 +117,7 @@
     </div>
     <div class="px-8 py-6">
       <div class="bg-white border border-gray-100 rounded-xl overflow-hidden">
-        <div class="grid grid-cols-[100px_1fr_180px_120px_80px] px-5 py-2.5 bg-gray-50 text-xs text-gray-500 font-medium border-b border-gray-100"><div data-t="col_source">来源</div><div data-t="col_contact">联系人</div><div data-t="col_message">留言</div><div data-t="col_time">时间</div><div data-t="col_channel">渠道</div></div>
+        <div class="grid grid-cols-[100px_1fr_180px_120px_70px_60px] px-5 py-2.5 bg-gray-50 text-xs text-gray-500 font-medium border-b border-gray-100"><div data-t="col_source">来源</div><div data-t="col_contact">联系人</div><div data-t="col_message">留言</div><div data-t="col_time">时间</div><div data-t="col_channel">渠道</div><div data-t="col_action" class="text-right">操作</div></div>
         <div id="cList" class="divide-y divide-gray-50 max-h-[600px] overflow-y-auto"><div class="px-5 py-4 text-gray-400 text-sm"><span class="spinner"></span></div></div>
       </div>
     </div>
@@ -471,7 +471,8 @@ function renderC(){const fv=$('cFlt').value;const nm={},am={};S.forEach(s=>{try{
   $('cList').innerHTML=l.map(c=>{const s=c.site||nm[c.siteHost]||'未知',cl=am[s]||'#94a3b8';
     const t=c.submittedAt?new Date(c.submittedAt).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
     const m=c.message&&c.message!=='（未填写需求描述）'?c.message:'<span class="text-gray-300">-</span>';
-    return `<div class="grid grid-cols-[100px_1fr_180px_120px_80px] px-5 py-3 items-center hover:bg-gray-50/50 text-sm"><div><span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background:${cl}">${s}</span></div><div class="min-w-0"><div class="font-medium truncate">${c.name||'-'}</div><div class="text-gray-400 text-xs truncate">${c.email||''} ${c.phone||''}</div></div><div class="text-gray-500 text-xs truncate">${m}</div><div class="text-gray-400 text-xs">${t}</div><div class="text-gray-400 text-xs">${c.source||'直接'}</div></div>`}).join('')}
+    return `<div class="grid grid-cols-[100px_1fr_180px_120px_70px_60px] px-5 py-3 items-center hover:bg-gray-50/50 text-sm"><div><span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background:${cl}">${s}</span></div><div class="min-w-0"><div class="font-medium truncate">${c.name||c.firstName||'-'}</div><div class="text-gray-400 text-xs truncate">${c.email||''} ${c.phone||''}</div></div><div class="text-gray-500 text-xs truncate">${m}</div><div class="text-gray-400 text-xs">${t}</div><div class="text-gray-400 text-xs">${c.source||'直接'}</div><div class="text-right"><button onclick="delC('${String(c.id).replace(/'/g,'\\\'')}')" class="btn-d !py-1 !px-2 text-xs" data-t="delete">删除</button></div></div>`}).join('')}
+async function delC(id){if(!confirm('确认删除这条留言？此操作不可恢复。'))return;try{const r=await(await af(`/api/admin/contacts/${encodeURIComponent(id)}`,{method:'DELETE'})).json();if(r.success){toast('已删除');loadC();loadStats()}else{toast(r.error||'删除失败',false)}}catch(e){toast(e.message,false)}}
 
 // Articles
 let artSite='all',allArts=[];
