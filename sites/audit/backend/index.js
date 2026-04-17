@@ -828,38 +828,78 @@ app.get('/api/admin/contacts', verifyToken, async (req, res) => {
   res.json(contacts);
 });
 
-// 删除单条留言
-// 目标文件的判断顺序：
-//   1. 如果条目有 siteId（commit 904eead 之后的新提交），直接删对应 per-site 文件
-//   2. 否则扫根 + 所有 per-site 文件，按 id 匹配删除第一条命中的
-// 返回 { success, removedFrom } 方便前端 toast 展示。
-app.delete('/api/admin/contacts/:id', verifyToken, async (req, res) => {
-  try {
-    const targetId = req.params.id;
-    if (!targetId) return res.status(400).json({ success: false, error: 'missing id' });
+// 批量删除留言的共用工具：给一组 id，扫根 + 所有 per-site 文件，命中即删。
+// 每个文件只读写一次（不是每个 id 一次），N=数十 时比逐个 DELETE 请求快 10x+。
+// 返回 { deleted: [...ids], notFound: [...ids], touchedFiles: [...relPaths] }
+async function deleteContactsByIds(rawIds) {
+  const wantIds = new Set((rawIds || []).map(String));
+  if (!wantIds.size) return { deleted: [], notFound: [], touchedFiles: [] };
 
-    // 尝试所有候选文件，按命中顺序删除第一条
-    const candidates = [CONTACTS_FILE, ...SITES.map(s => getSitePaths(s).contacts)];
-    for (const filePath of candidates) {
-      let list;
-      try {
-        list = JSON.parse(await fs.readFile(filePath, 'utf8'));
-      } catch { continue; } // 文件不存在跳过
-      if (!Array.isArray(list)) continue;
+  const candidates = [CONTACTS_FILE, ...SITES.map(s => getSitePaths(s).contacts)];
+  const deleted = new Set();
+  const touchedFiles = [];
 
-      const idx = list.findIndex(c => String(c.id) === String(targetId));
-      if (idx === -1) continue;
+  for (const filePath of candidates) {
+    let list;
+    try { list = JSON.parse(await fs.readFile(filePath, 'utf8')); } catch { continue; }
+    if (!Array.isArray(list)) continue;
 
-      const [removed] = list.splice(idx, 1);
-      await fs.writeFile(filePath, JSON.stringify(list, null, 2));
-      return res.json({
-        success: true,
-        removedFrom: path.relative(DATA_DIR, filePath),
-        removed: { id: removed.id, name: removed.name || removed.firstName, site: removed.site },
-      });
+    const kept = [];
+    let fileTouched = false;
+    for (const c of list) {
+      const idStr = String(c.id);
+      if (wantIds.has(idStr) && !deleted.has(idStr)) {
+        deleted.add(idStr);
+        fileTouched = true;
+        continue;
+      }
+      kept.push(c);
     }
 
-    return res.status(404).json({ success: false, error: 'contact not found' });
+    if (fileTouched) {
+      await fs.writeFile(filePath, JSON.stringify(kept, null, 2));
+      touchedFiles.push(path.relative(DATA_DIR, filePath));
+    }
+  }
+
+  const notFound = [...wantIds].filter(id => !deleted.has(id));
+  return { deleted: [...deleted], notFound, touchedFiles };
+}
+
+// 删除单条留言（上述工具的便捷包装，保持 URL 兼容）
+app.delete('/api/admin/contacts/:id', verifyToken, async (req, res) => {
+  try {
+    const result = await deleteContactsByIds([req.params.id]);
+    if (result.deleted.length === 0) {
+      return res.status(404).json({ success: false, error: 'contact not found' });
+    }
+    res.json({
+      success: true,
+      removedFrom: result.touchedFiles[0],
+      removed: { id: result.deleted[0] },
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// 批量删除留言
+// body: { ids: [id1, id2, ...] }
+app.post('/api/admin/contacts/batch-delete', verifyToken, async (req, res) => {
+  try {
+    const ids = Array.isArray(req.body?.ids) ? req.body.ids : null;
+    if (!ids || !ids.length) {
+      return res.status(400).json({ success: false, error: 'ids array required' });
+    }
+    const result = await deleteContactsByIds(ids);
+    res.json({
+      success: true,
+      deletedCount: result.deleted.length,
+      deleted: result.deleted,
+      notFoundCount: result.notFound.length,
+      notFound: result.notFound,
+      touchedFiles: result.touchedFiles,
+    });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }
