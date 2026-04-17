@@ -505,7 +505,7 @@ app.get('/api/admin/config', verifyToken, async (req, res) => {
       dailyReport: config.monitorConfig?.dailyReport !== false,
       reportTime: config.monitorConfig?.reportTime || '08:00',
       recipients: config.monitorConfig?.recipients || config.emailConfig?.adminEmail || '',
-      urls: config.monitorConfig?.urls || Object.values(MONITOR_SITES),
+      urls: config.monitorConfig?.urls || (config.sites || []).map(s => s.url).filter(Boolean),
     },
   });
 });
@@ -823,9 +823,25 @@ app.get('/api/admin/articles', verifyToken, async (req, res) => {
 });
 
 // 获取留言列表
+// 合并根目录 data/contacts.json（/api/contact 老路径）+ 各站 data/sites/<site>/contacts.json
+// （/api/:site/contact 新路径）。两个路径现在都会落盘，但只读根目录会漏掉所有 per-site 提交；
+// translator（2026-04-17 接入）第一次暴露这个问题 —— 邮件/飞书能收到但后台列表永远空。
 app.get('/api/admin/contacts', verifyToken, async (req, res) => {
-  const contacts = await getContacts();
-  res.json(contacts);
+  try {
+    const root = await getContacts();
+    const perSite = [];
+    for (const site of SITES) {
+      const filePath = getSitePaths(site).contacts;
+      const list = await readSiteFile(filePath, []);
+      perSite.push(...list);
+    }
+    const merged = [...root, ...perSite].sort(
+      (a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0)
+    );
+    res.json(merged);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // 生成文章
@@ -1290,12 +1306,8 @@ async function scheduleArticleGeneration() {
 }
 
 // ========== 站点健康巡检 ==========
-const MONITOR_SITES = {
-  audit:'https://audit.jotoai.com', shanyue:'https://shanyue.jotoai.com',
-  sec:'https://sec.jotoai.com', kb:'https://kb.jotoai.com',
-  fasium:'https://fasium.jotoai.com', loop:'https://loop.jotoai.com',
-  noteflow:'https://note.jotoai.com/login?redirect=%2Fdashboard',
-};
+// 默认巡检清单从 config.sites（管理员后台维护）动态读取，不再硬编码。
+// 2026-04-17 translator 接入后曾因没加入硬编码清单导致后台显示"未知/异常"。
 
 /**
  * 判断返回的 HTML 是否是"真白屏/坏掉" —— 用多条启发式规则而不是单一字节阈值。
@@ -1337,9 +1349,13 @@ function assessHtmlHealth(body) {
 }
 
 async function runHealthCheck(customUrls) {
-  const urlList = customUrls && customUrls.length
-    ? customUrls.map(url => { const u = new URL(url); return { site: u.hostname + (u.pathname !== '/' ? u.pathname.split('?')[0] : ''), url }; })
-    : Object.entries(MONITOR_SITES).map(([site, url]) => ({ site, url }));
+  let urlList;
+  if (customUrls && customUrls.length) {
+    urlList = customUrls.map(url => { const u = new URL(url); return { site: u.hostname + (u.pathname !== '/' ? u.pathname.split('?')[0] : ''), url }; });
+  } else {
+    const config = await getConfig();
+    urlList = (config.sites || []).map(s => ({ site: s.id, url: s.url })).filter(x => x.url);
+  }
   const results = await Promise.all(
     urlList.map(async ({ site, url }) => {
       const start = Date.now();
@@ -1395,7 +1411,8 @@ function buildReportHtml(results, title, { articleCount, contactCount } = {}) {
 // 24h 窗口，而不是当天。邮件早上 10 点发送时，"今日"(startsWith yyyy-mm-dd)
 // 只覆盖 0-10 点，会漏掉昨晚 10:00-23:59 间生成的文章/留言。改为滚动 24h 窗口。
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
-const SITE_DIRS = ['audit', 'shanyue', 'sec', 'kb', 'fasium', 'loop', 'noteflow'];
+// 站点目录清单复用顶部的 SITES 常量；以前单独维护一份会漏掉新站（translator 曾因此 24h
+// 报表不计数）。SITES 在文件下方声明，在这里作为闭包引用在运行时解析不会触发 TDZ。
 
 function isWithinLast24h(isoStr) {
   if (!isoStr) return false;
@@ -1407,7 +1424,7 @@ function isWithinLast24h(isoStr) {
 // Count articles across all sites created in the last 24 hours.
 async function countLast24hArticles() {
   let count = 0;
-  for (const site of SITE_DIRS) {
+  for (const site of SITES) {
     try {
       const filePath = path.join(DATA_DIR, 'sites', site, 'articles.json');
       const articles = JSON.parse(await fs.readFile(filePath, 'utf8'));
@@ -1426,7 +1443,7 @@ async function countLast24hContacts() {
     count += globalContacts.filter(c => isWithinLast24h(c.submittedAt)).length;
   } catch { /* file may not exist */ }
   // Per-site contacts files
-  for (const site of SITE_DIRS) {
+  for (const site of SITES) {
     try {
       const filePath = path.join(DATA_DIR, 'sites', site, 'contacts.json');
       const contacts = JSON.parse(await fs.readFile(filePath, 'utf8'));
@@ -2425,7 +2442,16 @@ app.post('/api/:site/contact', async (req, res) => {
     if (stored.text !== userCaptcha.toLowerCase()) return res.status(400).json({ success: false, error: '验证码错误' });
     captchaStore.delete(captchaId);
 
-    const contact = { id: Date.now(), site, ...contactData, submittedAt: new Date().toISOString() };
+    // site 字段统一存"展示名"（与 /api/contact 根路径一致）。此前存 id ('translator')，
+    // 导致 admin 后台留言徽章显示成 id 而不是"JOTO Translator"，且徽章配色查不到。
+    // siteId 保留原始 id 供前端精确筛选用。
+    const contact = {
+      id: Date.now(),
+      siteId: site,
+      site: SITE_NAMES[site] || site,
+      ...contactData,
+      submittedAt: new Date().toISOString(),
+    };
     const p = getSitePaths(site);
     const contacts = await readSiteFile(p.contacts, []);
     contacts.unshift(contact);
@@ -2469,19 +2495,16 @@ app.get('/api/admin/dashboard', verifyToken, async (req, res) => {
 
 
 // 管理员：站点状态检测（含 HTML 内容验证，防止"进程活着但页面白屏"误报绿色）
+// 巡检清单从 config.sites（管理员后台维护）动态读取，新增站点自动纳入。
+// 硬编码 SITE_URLS 的旧实现会让后台把不在清单里的站（如 translator）渲染成"未知/异常"。
 const HEALTH_ERROR_MARKERS = ['Application error', '__next_error__', 'Internal Server Error', 'a client-side exception has occurred', 'ChunkLoadError'];
 app.get('/api/admin/site-status', verifyToken, async (req, res) => {
-  const SITE_URLS = {
-    audit:    'https://audit.jotoai.com',
-    shanyue:  'https://shanyue.jotoai.com',
-    sec:      'https://sec.jotoai.com',
-    kb:       'https://kb.jotoai.com',
-    fasium:   'https://fasium.jotoai.com',
-    loop:     'https://loop.jotoai.com',
-    noteflow: 'https://note.jotoai.com/login?redirect=%2Fdashboard',
-  };
+  const config = await getConfig();
+  const sitesToCheck = (config.sites || [])
+    .filter(s => s.id && s.url)
+    .map(s => ({ site: s.id, url: s.url }));
   const results = await Promise.all(
-    Object.entries(SITE_URLS).map(async ([site, url]) => {
+    sitesToCheck.map(async ({ site, url }) => {
       const start = Date.now();
       try {
         const controller = new AbortController();
