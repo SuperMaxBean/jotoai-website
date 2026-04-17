@@ -20,7 +20,7 @@ const Footer = () => {
                   <Zap className="w-4 h-4 text-white fill-white" />
                 </div>
               </div>
-              <span className="text-lg font-extrabold tracking-tight">闪阅</span>
+              <span className="text-lg font-extrabold tracking-tight">{t('闪阅', 'iMark')}</span>
             </Link>
             <p className="text-sm text-slate-400 leading-relaxed">
               {t(
