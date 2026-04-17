@@ -209,15 +209,17 @@ For batch checks across sites (ICP, company name, email, WeChat QR), use `browse
 | # | Test | Method | Expected |
 |---|------|--------|----------|
 | AD1 | Login | Open admin.jotoai.com → fill email/password → login | Dashboard loads |
-| AD2 | Dashboard stats | Check stats cards | Sites=7, Forms count, Articles count, Version visible |
-| AD3 | Site status | Check Site Status section | All 7 sites show "All OK" with response times |
-| AD4 | 留言管理 | Click 留言管理 in sidebar | Contact submissions list with sender info |
+| AD2 | Dashboard stats | Check stats cards | Sites count matches `config.sites` length (currently 8 incl. translator), Forms count, Articles count, Version visible |
+| AD3 | Site status | Check Site Status section | **Every** site in `config.sites` shows a status dot (green/yellow/red) + latency — NOT "未知/异常". Regression guard: adding a new site via 站点管理 must auto-appear here without code change |
+| AD4 | 留言管理 | Click 留言管理 in sidebar | Contact submissions list shows entries from **both** old root `/api/contact` path and new per-site `/api/:site/contact` path, merged and sorted by `submittedAt` desc. Site filter dropdown covers every submitting site |
 | AD5 | 文章管理 | Click 文章管理 | Article list with site tabs + gear "文章配置" button in top-right. Click gear → config panel with scope tabs (全局 + 7 sites). See AG1-AG14 for full article management tests |
-| AD6 | 站点管理 | Click 站点管理 | All 7 sites listed with URLs |
+| AD6 | 站点管理 | Click 站点管理 | All configured sites listed with URLs; "添加站点" adds new site that is immediately picked up by AD3 and monitor cron |
 | AD7 | 邮件设置 | Click 邮件设置 | Resend API key configured, FROM address visible |
 | AD8 | 集成 | Click 集成 | Feishu webhook + table sync config |
 | AD9 | 管理员 | Click 管理员 | Admin user list |
 | AD10 | SSL 证书 | Click SSL 证书 | Table showing ALL 8 domains (audit/shanyue/sec/kb/fasium/loop/noteflow/admin) with expiry dates, days left (green >30, yellow 7-30, red <7), and issued dates |
+| AD11 | Translator 集成 | Submit contact via POST `/api/translator/contact` with captcha | Email + feishu sent; new entry appears in 留言管理 with 徽章="JOTO Translator" (展示名，不是 id `translator`); entry has `siteId=translator` for精确筛选 |
+| AD12 | Per-site 留言回归 | For each site in `config.sites`, submit via `/api/:site/contact` | Each submission shows up in 留言管理 — 曾经 only read root `data/contacts.json` 的 bug 的回归守卫 |
 
 **Admin UI rules:**
 - No emojis anywhere in the admin dashboard (UI text, site icons, buttons)
