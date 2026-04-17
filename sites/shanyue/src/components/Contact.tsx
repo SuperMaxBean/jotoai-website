@@ -163,14 +163,26 @@ export default function Contact() {
               );
             })}
 
-            {/* WeChat QR */}
-            <div className="flex items-start gap-4 rounded-2xl bg-white border border-slate-100 p-5 shadow-sm">
-              <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-purple-50">
-                <MessageSquare className="h-5 w-5 text-purple-600" />
+            {/* 微信扫码咨询 */}
+            <div className="flex items-center gap-5 rounded-2xl bg-white border border-slate-100 p-5 shadow-sm">
+              <div className="shrink-0 rounded-xl bg-purple-50 p-2">
+                <img
+                  src="/wechat-qr.png"
+                  alt={t('微信扫码咨询', 'Scan QR to chat on WeChat')}
+                  className="h-28 w-28 rounded-lg"
+                  referrerPolicy="no-referrer"
+                />
               </div>
               <div>
-                <p className="text-xs text-slate-400 mb-1">{t('微信咨询', 'WeChat')}</p>
-                <img src="/wechat-qr.png" alt={t('微信二维码', 'WeChat QR Code')} className="w-28 h-28 rounded-lg border border-slate-100" referrerPolicy="no-referrer" />
+                <p className="text-xs text-slate-400 mb-0.5">
+                  {t('微信咨询', 'WeChat')}
+                </p>
+                <p className="text-sm font-semibold text-[#0A1A2F]">
+                  {t('扫码添加教育顾问', 'Scan to add our advisor')}
+                </p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {t('获取产品资料与报价', 'Get product info & pricing')}
+                </p>
               </div>
             </div>
           </div>
