@@ -1,6 +1,6 @@
 const axios = require('axios');
 const { OpenAI } = require('openai');
-const { markdownToHtml, cleanHtml } = require('./article-rewriter');
+const { markdownToHtml, cleanHtml, cleanTitle } = require('./article-rewriter');
 const { searchAndFetchArticles, selectBestArticle } = require('./article-search');
 const { rewriteArticle } = require('./article-rewriter');
 const { UnsplashFetcher } = require('./unsplash-fetcher-simple');
@@ -32,6 +32,16 @@ const SITE_CONTEXTS = {
     imageQuery: 'fashion design AI clothing style creative technology',
     topic: 'AI服装时尚设计',
   },
+  loop: {
+    systemPrompt: '你是一名专注于AI自动化、智能RPA和浏览器自动化领域的专业内容创作者，擅长撰写AI浏览器自动化、网页数据采集、智能RPA替代方案、企业自动化等主题的专业SEO文章。内容面向运营负责人、数据分析师和企业IT管理者，语言务实专业，注重业务场景和效率提升。',
+    imageQuery: 'browser automation RPA AI robot workflow technology',
+    topic: 'AI浏览器自动化RPA',
+  },
+  noteflow: {
+    systemPrompt: '你是一名专注于AI知识管理、个人效率工具和智能笔记领域的专业内容创作者，擅长撰写AI笔记知识库、文档智能问答、NotebookLM替代方案、知识协作等主题的专业SEO文章。内容面向研究人员、学生、咨询顾问和企业知识工作者，语言清晰易懂，注重学习效率和知识沉淀。',
+    imageQuery: 'knowledge management notebook AI study research document',
+    topic: 'AI笔记知识管理',
+  },
 };
 
 const DEFAULT_SITE_CONTEXT = {
@@ -40,8 +50,14 @@ const DEFAULT_SITE_CONTEXT = {
   topic: 'AI科技',
 };
 
-function getSiteContext(siteId) {
-  return SITE_CONTEXTS[siteId] || DEFAULT_SITE_CONTEXT;
+function getSiteContext(siteId, configOverrides) {
+  const base = SITE_CONTEXTS[siteId] || DEFAULT_SITE_CONTEXT;
+  // configOverrides: { systemPrompt, globalPrompt } from config
+  if (configOverrides) {
+    const prompt = configOverrides.systemPrompt || configOverrides.globalPrompt;
+    if (prompt) return { ...base, systemPrompt: prompt };
+  }
+  return base;
 }
 // ========================================
 
@@ -80,43 +96,57 @@ function pickRandomKeyword(keywords) {
 // 备用图片库（按站点分类，使用可靠的Unsplash CDN URL）
 const FALLBACK_IMAGES = {
   audit: [
-    "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1521791055366-0d553872952f?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop",
+    "/images/fallback/photo-1589829545856-d10d557cf95f.jpg",  // scales of justice
+    "/images/fallback/photo-1450101499163-c8848c66ca85.jpg",  // signing document
+    "/images/fallback/photo-1507679799987-c73779587ccf.jpg",  // business suit
+    "/images/fallback/photo-1554224155-8d04cb21cd6c.jpg",  // data chart
+    "/images/fallback/photo-1486312338219-ce68d2c6f44d.jpg",  // laptop work
+    "/images/fallback/photo-1560472355-536de3962603.jpg",  // handshake deal
+    "/images/fallback/photo-1551288049-bebda4e38f71.jpg",  // data analytics dashboard
+    "/images/fallback/photo-1677442136019-21780ecad995.jpg",  // AI technology
+    "/images/fallback/photo-1454165804606-c3d57bc86b40.jpg",  // business planning
+    "/images/fallback/photo-1542744173-8e7e53415bb0.jpg",  // team collaboration
+    "/images/fallback/photo-1497366216548-37526070297c.jpg",  // modern office
+    "/images/fallback/photo-1460925895917-afdab827c52f.jpg",  // digital screens
   ],
   shanyue: [
-    "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1606761568499-6d2451b23c66?w=800&auto=format&fit=crop",
+    "/images/fallback/photo-1580582932707-520aed937b7b.jpg",  // classroom
+    "/images/fallback/photo-1503676260728-1c00da094a0b.jpg",  // school building
+    "/images/fallback/photo-1509062522246-3755977927d7.jpg",  // teacher whiteboard
+    "/images/fallback/photo-1427504494785-3a9ca7044f45.jpg",  // students studying
+    "/images/fallback/photo-1546410531-bb4caa6b424d.jpg",  // writing exam
+    "/images/fallback/photo-1606761568499-6d2451b23c66.jpg",  // notebook study
+    "/images/fallback/photo-1488190211105-8b0e65b80b4e.jpg",  // student with tablet
+    "/images/fallback/photo-1524995997946-a1c2e315a42f.jpg",  // library books
+    "/images/fallback/photo-1532094349884-543bc11b234d.jpg",  // science lab
+    "/images/fallback/photo-1434030216411-0b793f4b4173.jpg",  // exam papers desk
+    "/images/fallback/photo-1501504905252-473c47e087f8.jpg",  // laptop learning
+    "/images/fallback/photo-1610484826967-09c5720778c7.jpg",  // child iPad learning
+    "/images/fallback/photo-1577896851231-70ef18881754.jpg",  // student raising hand
+    "/images/fallback/photo-1571260899304-425eee4c7efc.jpg",  // online learning
+    "/images/fallback/photo-1497633762265-9d179a990aa6.jpg",  // stacked textbooks
   ],
   sec: [
-    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1563986768494-4dee2763ff3f?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1510511459019-5dda7724fd87?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&auto=format&fit=crop",
+    "/images/fallback/photo-1550751827-4bd374c3f58b.jpg",
+    "/images/fallback/photo-1563986768494-4dee2763ff3f.jpg",
+    "/images/fallback/photo-1614064641938-3bbee52942c7.jpg",
+    "/images/fallback/photo-1555949963-ff9fe0c870eb.jpg",
+    "/images/fallback/photo-1510511459019-5dda7724fd87.jpg",
+    "/images/fallback/photo-1504384308090-c894fdcc538d.jpg",
   ],
   kb: [
-    "https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1568667256549-094345857637?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=800&auto=format&fit=crop",
+    "/images/fallback/photo-1507842217343-583bb7270b66.jpg",
+    "/images/fallback/photo-1456513080510-7bf3a84b82f8.jpg",
+    "/images/fallback/photo-1532012197267-da84d127e765.jpg",
+    "/images/fallback/photo-1568667256549-094345857637.jpg",
+    "/images/fallback/photo-1521587760476-6c12a4b040da.jpg",
   ],
   fasium: [
-    "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1445205170230-053b83016050?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&auto=format&fit=crop",
+    "/images/fallback/photo-1558769132-cb1aea458c5e.jpg",
+    "/images/fallback/photo-1509631179647-0177331693ae.jpg",
+    "/images/fallback/photo-1483985988355-763728e1935b.jpg",
+    "/images/fallback/photo-1490481651871-ab68de25d43d.jpg",
+    "/images/fallback/photo-1434389677669-e08b4cac3105.jpg",
   ],
 };
 
@@ -201,7 +231,7 @@ async function getUniqueArticleImage(keyword, imageConfig = null, recentImageUrl
 }
 
 // 使用LLM生成文章
-async function generateArticleWithLLM(llmConfig, keyword, wordCount = 1000, siteId = null) {
+async function generateArticleWithLLM(llmConfig, keyword, wordCount = 1000, siteId = null, promptOverrides = null) {
   try {
     let endpoint = llmConfig.apiEndpoint;
     if (!endpoint.includes('/chat/completions')) {
@@ -215,29 +245,29 @@ async function generateArticleWithLLM(llmConfig, keyword, wordCount = 1000, site
         messages: [
           {
             role: 'system',
-            content: (() => { const ctx = getSiteContext(siteId); return ctx.systemPrompt + '请严格按照要求的字数生成文章，不得少于要求字数的90%，内容要充实详细。'; })()
+            content: (() => { const ctx = getSiteContext(siteId, promptOverrides); return ctx.systemPrompt + '请严格按照要求的字数生成文章，不得少于要求字数的90%，内容要充实详细。'; })()
           },
           {
             role: 'user',
             content: (() => {
-            const ctx = getSiteContext(siteId);
-            return `请写一篇关于"${keyword}"的专业SEO文章，要求：
+            const ctx = getSiteContext(siteId, promptOverrides);
+            return `请写一篇关于"${keyword}"的专业SEO博客文章，要求：
 1. 字数必须达到${wordCount}字以上（不少于${Math.floor(wordCount * 0.9)}字），内容充实，多举实际案例
 2. 标题吸引人，体现专业性和实用价值
 3. 内容专业、深度，面向${ctx.topic}领域的专业读者
 4. 自然融入关键词"${keyword}"（标题和正文中各出现2-3次）
 5. 包含真实应用场景、数据引用和具体案例
-6. 文章结构：引言（点出痛点）→ 4-5个主章节（每章节含2-3个子章节）→ 实践建议 → 总结
-7. 直接输出规范 HTML 格式，使用以下标签：
-   - <h2> 主章节标题（含编号，如：一、）
-   - <h3> 子章节标题
-   - <p> 段落正文（每段150字以上）
-   - <strong> 关键术语加粗（每段1-2处）
-   - <ul><li> 无序列表（功能特点、步骤等）
-   - <ol><li> 有序列表（流程、步骤）
-   - <blockquote> 引用数据或专家观点
-8. 禁止使用 Markdown 语法（###、**、- 等），禁止输出 <html>/<head>/<body> 标签
-9. 用 JSON 格式返回，包含 title 和 content 字段，content 为 HTML 字符串`;
+6. 文章结构：引言（直接切入痛点）→ 4-5个主章节（每章节含2-3个子章节）→ 实践建议 → 总结
+7. 使用标准 Markdown 格式：
+   - ## 主章节标题（含编号，如：一、）
+   - ### 子章节标题
+   - 普通段落（每段150字以上）
+   - **关键术语加粗**（每段1-2处）
+   - - 无序列表（功能特点、步骤等）
+   - 1. 有序列表（流程、步骤）
+   - > 引用数据或专家观点
+8. 不要输出 HTML 标签，只使用纯 Markdown 语法
+9. 用 JSON 格式返回，包含 title 和 content 字段，content 为 Markdown 字符串`;
           })()
           }
         ],
@@ -253,23 +283,58 @@ async function generateArticleWithLLM(llmConfig, keyword, wordCount = 1000, site
       }
     );
     
-    const content = response.data.choices[0].message.content;
-    
+    let content = response.data.choices[0].message.content;
+
+    // 清理LLM返回的```json包装
+    content = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
+
     // 尝试解析JSON，并后处理 content 为规范 HTML
     let parsed;
     try {
       parsed = JSON.parse(content);
     } catch (e) {
-      // 如果不是JSON格式，尝试提取标题和内容
-      const contentLines = content.split('\n').filter(line => line.trim());
-      parsed = {
-        title: contentLines[0].replace(/^#+\s*/, '').replace(/^["']|["']$/g, ''),
-        content: contentLines.slice(1).join('\n\n')
-      };
+      // JSON.parse失败时，检查是否为JSON结构（以{开头），尝试修复控制字符
+      if (content.trimStart().startsWith('{')) {
+        try {
+          // 修复JSON字符串值中的未转义换行符
+          const fixed = content.replace(/(?<=:\s*")([\s\S]*?)(?="(?:\s*[,}]))/g, (m) =>
+            m.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')
+          );
+          parsed = JSON.parse(fixed);
+        } catch (e2) {
+          // 最终回退：从JSON结构中提取title和content字段
+          const titleMatch = content.match(/"title"\s*:\s*"([^"]+)"/);
+          const contentMatch = content.match(/"content"\s*:\s*"([\s\S]+)$/);
+          if (titleMatch) {
+            parsed = {
+              title: titleMatch[1],
+              content: contentMatch ? contentMatch[1].replace(/"\s*}?\s*$/, '') : content
+            };
+          } else {
+            // 按markdown解析
+            const contentLines = content.split('\n').filter(line => line.trim());
+            parsed = {
+              title: contentLines[0].replace(/^[{"\s]+/, '').replace(/[}"'\s]+$/, ''),
+              content: contentLines.slice(1).join('\n\n')
+            };
+          }
+        }
+      } else {
+        // 纯Markdown格式
+        const contentLines = content.split('\n').filter(line => line.trim());
+        parsed = {
+          title: contentLines[0].replace(/^#+\s*/, '').replace(/^["']|["']$/g, ''),
+          content: contentLines.slice(1).join('\n\n')
+        };
+      }
     }
-    // 后处理：把 Markdown 或混合内容转为规范 HTML
+    // 保存 Markdown 原文，后续由 generateArticle() 做 enrichment
     if (parsed && parsed.content) {
-      parsed.content = cleanHtml(markdownToHtml(parsed.content));
+      parsed.markdown = parsed.content;
+    }
+    // 标题统一清洗：剥离 **bold**、# heading、行内 HTML，避免 markdown 残留到 DOM <h1>
+    if (parsed && parsed.title) {
+      parsed.title = cleanTitle(parsed.title);
     }
     return parsed;
   } catch (error) {
@@ -280,9 +345,11 @@ async function generateArticleWithLLM(llmConfig, keyword, wordCount = 1000, site
 
 // 生成AI原创文章
 // existingArticles: 现有文章数组，用于图片去重
-async function generateArticle(llmConfig = null, imageConfig = null, dedupConfig = null, wordCount = 1000, seoKeywords = null, existingArticles = [], siteId = null) {
-  console.log('[generateArticle] 收到的imageConfig:', JSON.stringify(imageConfig));
-  console.log('[generateArticle] dedupConfig:', JSON.stringify(dedupConfig));
+async function generateArticle(llmConfig = null, imageConfig = null, dedupConfig = null, wordCount = 1000, seoKeywords = null, existingArticles = [], siteId = null, promptOverrides = null, humanizerConfig = null) {
+  const { enrichArticle } = require('./article-enrichment');
+  const { humanizeArticle } = require('./article-humanizer');
+
+  console.log('[generateArticle] siteId:', siteId, 'humanizer:', humanizerConfig?.enabled ? 'ON' : 'OFF');
   const keyword = pickRandomKeyword(seoKeywords);
 
   let articleData;
@@ -290,46 +357,48 @@ async function generateArticle(llmConfig = null, imageConfig = null, dedupConfig
   // 生成文章内容
   if (llmConfig && llmConfig.apiKey && llmConfig.apiEndpoint) {
     try {
-      articleData = await generateArticleWithLLM(llmConfig, keyword, wordCount, siteId);
+      articleData = await generateArticleWithLLM(llmConfig, keyword, wordCount, siteId, promptOverrides);
     } catch (error) {
       console.error('使用配置的LLM失败，使用默认内容:', error.message);
       articleData = generateDefaultArticle(keyword, siteId);
     }
   } else {
-    // 使用环境变量中的OpenAI配置
+    articleData = generateDefaultArticle(keyword, siteId);
+  }
+
+  // AI 拟人化处理（如果开启）
+  if (humanizerConfig?.enabled && articleData.markdown && llmConfig) {
     try {
-      const { OpenAI } = require('openai');
-      const openai = new OpenAI();
-
-      const articleResponse = await openai.chat.completions.create({
-        model: 'gpt-4.1-mini',
-        messages: [
-          {
-            role: 'system',
-            content: '你是一名专注于AI合同审查和法律科技领域的专业内容创作者，请勿撰写与教育相关的内容。'
-          },
-          {
-            role: 'user',
-            content: `请写一篇关于"${keyword}"的SEO文章，要求：
-1. 字数约${wordCount}字（误差±10%）
-2. 包含吸引人的标题
-3. 内容专业、实用，适合目标读者阅读
-4. 自然融入关键词"${keyword}"
-5. 包含实际应用场景和案例
-6. **重要**：文章必须分段，每段3-5句话，段落之间用空行分隔
-7. **重要**：使用\n\n来分隔段落，确保文章有清晰的段落结构
-8. 以JSON格式返回，包含title和content字段，content中使用\n\n分隔段落`
-          }
-        ],
-        temperature: 0.8,
-      });
-
-      articleData = JSON.parse(articleResponse.choices[0].message.content);
-    } catch (error) {
-      console.error('使用默认OpenAI失败:', error.message);
-      articleData = generateDefaultArticle(keyword, siteId);
+      articleData.markdown = await humanizeArticle(articleData.markdown, llmConfig, humanizerConfig.prompt);
+    } catch (e) {
+      console.error('[Humanizer] 失败，使用原始内容:', e.message);
     }
   }
+
+  // 兜底：如果文章未包含 CTA，根据站点配置自动追加
+  if (articleData.markdown && siteId) {
+    const SITE_CTA = {
+      audit:    { name: '唯客智审',           url: 'https://audit.jotoai.com/contact',   action: '联系我们 / 预约演示' },
+      shanyue:  { name: '闪阅',                url: 'https://shanyue.jotoai.com/contact', action: '联系我们 / 免费试用' },
+      sec:      { name: '唯客 AI 护栏',       url: 'https://sec.jotoai.com/contact',     action: '申请部署评估' },
+      kb:       { name: '唯客企业知识中台',   url: 'https://kb.jotoai.com/#contact',     action: '预约 15 分钟演示' },
+      fasium:   { name: 'FasiumAI',            url: 'https://fasium.jotoai.com/contact',  action: '联系我们 / 立即注册' },
+      loop:     { name: 'Loop',                url: 'https://loop.jotoai.com/#demo',      action: '联系我们 / 免费试用' },
+      noteflow: { name: 'NoteFlow',            url: 'https://note.jotoai.com/contact',    action: '联系我们 / 免费注册' },
+    };
+    const cta = SITE_CTA[siteId];
+    if (cta) {
+      const md = articleData.markdown;
+      const hasCTA = md.includes(cta.url) && (md.includes('立即体验') || md.includes('了解更多'));
+      if (!hasCTA) {
+        console.log(`[CTA] 文章缺少 CTA，自动追加 (${siteId})`);
+        articleData.markdown += `\n\n## 立即体验 ${cta.name}\n\n如果你想进一步了解 ${cta.name}，欢迎前往官网体验。\n\n[${cta.action}](${cta.url})\n`;
+      }
+    }
+  }
+
+  // 充实文章：Markdown → HTML + TOC + 元数据
+  const enriched = enrichArticle(articleData, siteId);
 
   // 构建最近已用图片列表（用于去重）
   const window = dedupConfig?.deduplicationWindow || 5;
@@ -338,14 +407,23 @@ async function generateArticle(llmConfig = null, imageConfig = null, dedupConfig
     ? existingArticles.slice(0, window).map(a => a.imageUrl).filter(Boolean)
     : [];
 
-  // 生成图片（优先Unsplash，备用AI生成，最后本地图片）
-  const siteCtx = getSiteContext(siteId); const imageSearchQuery = siteCtx.imageQuery + " " + keyword; const imageData = await getUniqueArticleImage(imageSearchQuery, imageConfig, recentImageUrls, siteId);
-  
+  // 生成图片
+  const siteCtx = getSiteContext(siteId);
+  const imageSearchQuery = siteCtx.imageQuery + " " + keyword;
+  const imageData = await getUniqueArticleImage(imageSearchQuery, imageConfig, recentImageUrls, siteId);
+
   return {
     id: Date.now().toString(),
-    title: articleData.title,
-    content: articleData.content,
-    imageUrl: imageData.url || imageData,  // 兼容旧格式
+    title: enriched.title,
+    content: enriched.content,
+    markdown: enriched.markdown,
+    excerpt: enriched.excerpt,
+    readingTime: enriched.readingTime,
+    wordCount: enriched.wordCount,
+    tags: enriched.tags,
+    toc: enriched.toc,
+    schemaVersion: 2,
+    imageUrl: imageData.url || imageData,
     imageSource: imageData.source,
     imageAuthor: imageData.author,
     imageAuthorUrl: imageData.authorUrl,
@@ -353,12 +431,12 @@ async function generateArticle(llmConfig = null, imageConfig = null, dedupConfig
     keyword: keyword,
     createdAt: new Date().toISOString(),
     published: true,
-    type: 'ai_generated'  // 标记文章类型
+    type: 'ai_generated',
   };
 }
 
 // 生成搜索改写文章
-async function generateRewrittenArticle(llmConfig = null, imageConfig = null, rewriteRounds = 3, dedupConfig = null, seoKeywords = null, wordCount = 1000, rewritePrompt = null) {
+async function generateRewrittenArticle(llmConfig = null, imageConfig = null, rewriteRounds = 3, dedupConfig = null, seoKeywords = null, wordCount = 1000, rewritePrompt = null, siteId = null, humanizerConfig = null) {
   const keyword = pickRandomKeyword(seoKeywords);
   
   console.log(`\n========== 开始生成搜索改写文章 ==========`);
@@ -401,17 +479,43 @@ async function generateRewrittenArticle(llmConfig = null, imageConfig = null, re
     console.log(`\n改写完成！`);
     console.log(`新标题: ${rewrittenData.title}`);
     console.log(`新内容长度: ${rewrittenData.content.length} 字`);
-    
+
+    // 3.5 humanizer + CTA 兜底（与 generateArticle 保持一致）
+    let articleMarkdown = rewrittenData.content;
+    if (humanizerConfig?.enabled && articleMarkdown && llmConfig) {
+      try {
+        const { humanizeArticle } = require('./article-humanizer');
+        articleMarkdown = await humanizeArticle(articleMarkdown, llmConfig, humanizerConfig.prompt);
+      } catch (e) { console.error('[Humanizer] 失败:', e.message); }
+    }
+    if (articleMarkdown && siteId) {
+      const SITE_CTA = {
+        audit:    { name: '唯客智审',           url: 'https://audit.jotoai.com/contact',   action: '联系我们 / 预约演示' },
+        shanyue:  { name: '闪阅',                url: 'https://shanyue.jotoai.com/contact', action: '联系我们 / 免费试用' },
+        sec:      { name: '唯客 AI 护栏',       url: 'https://sec.jotoai.com/contact',     action: '申请部署评估' },
+        kb:       { name: '唯客企业知识中台',   url: 'https://kb.jotoai.com/#contact',     action: '预约 15 分钟演示' },
+        fasium:   { name: 'FasiumAI',            url: 'https://fasium.jotoai.com/contact',  action: '联系我们 / 立即注册' },
+        loop:     { name: 'Loop',                url: 'https://loop.jotoai.com/#demo',      action: '联系我们 / 免费试用' },
+        noteflow: { name: 'NoteFlow',            url: 'https://note.jotoai.com/contact',    action: '联系我们 / 免费注册' },
+      };
+      const cta = SITE_CTA[siteId];
+      if (cta && !(articleMarkdown.includes(cta.url) && (articleMarkdown.includes('立即体验') || articleMarkdown.includes('了解更多')))) {
+        console.log(`[CTA] 改写文章缺少 CTA，自动追加 (${siteId})`);
+        articleMarkdown += `\n\n## 立即体验 ${cta.name}\n\n如果你想进一步了解 ${cta.name}，欢迎前往官网体验。\n\n[${cta.action}](${cta.url})\n`;
+      }
+    }
+
     // 4. 生成图片（优先Unsplash，备用AI生成，最后本地图片）
     console.log(`\n步骤4: 生成配图...`);
     const imageData = await getUniqueArticleImage(keyword, imageConfig, [], siteId || null);
-    
+
     console.log(`========== 搜索改写文章生成完成 ==========\n`);
-    
+
     return {
       id: Date.now().toString() + '_rewritten',
       title: rewrittenData.title,
-      content: rewrittenData.content,
+      content: articleMarkdown,
+      markdown: articleMarkdown,
       imageUrl: imageData.url || imageData,  // 兼容旧格式
       imageSource: imageData.source,
       imageAuthor: imageData.author,

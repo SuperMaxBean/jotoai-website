@@ -15,7 +15,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { markdownToHtml, cleanHtml } = require('./article-rewriter');
+const { markdownToHtml, cleanHtml, cleanTitle } = require('./article-rewriter');
 
 const DATA_DIR = path.join(__dirname, 'data');
 const MAIN_FILE = path.join(DATA_DIR, 'articles.json');
@@ -23,20 +23,21 @@ const SITES_DIR = path.join(DATA_DIR, 'sites');
 
 const APPLY = process.argv.includes('--apply');
 
-function hasRawMarkdown(content) {
+/** 标题里不应出现任何 markdown 或 HTML 标签 */
+function titleNeedsFix(title) {
+  if (!title) return false;
+  return /\*\*[^*\n]+?\*\*|__[^_\n]+?__|^#{1,6} |<\/?[a-z]/i.test(title);
+}
+
+/** 内容里任何一处 markdown 残留都算需修复（严格模式，不再用 bold>strong 启发式） */
+function contentNeedsFix(content) {
   if (!content) return false;
   // 行首标题 #/##/### (3 个或更少)
   if (/(^|\n)#{1,3} +\S/.test(content)) return true;
   // 行首列表
   if (/(^|\n)[*\-] {1,3}\S/.test(content)) return true;
-  // 成对的 **bold** 且不是已经在 <strong> 包装里（简单启发：出现裸 ** 且行首有 markdown 特征之一）
-  const hasBoldStars = /\*\*[^*\n<>]+\*\*/.test(content);
-  if (hasBoldStars) {
-    // 如果内容里 **...** 数量 > <strong> 对数，说明有 markdown 粗体残留
-    const boldPairs = (content.match(/\*\*[^*\n<>]+\*\*/g) || []).length;
-    const strongPairs = (content.match(/<strong[\s>]/gi) || []).length;
-    if (boldPairs > strongPairs) return true;
-  }
+  // 任何一处裸 **bold**（排除 HTML 属性、相邻 * 标记）
+  if (/\*\*[^*<>\n]{1,200}?\*\*/.test(content)) return true;
   // LLM 前言泄漏
   if (/^\s*(?:改写后的文本|改写后的文章|改写结果|以下是改写后的|Here(?:'|')?s?\s+the\s+rewritten|Rewritten)/i.test(content)) return true;
   return false;
@@ -58,20 +59,30 @@ function processFile(file) {
   if (!Array.isArray(arr)) return null;
   const fixes = [];
   for (const art of arr) {
-    if (!art || typeof art.content !== 'string') continue;
-    if (!hasRawMarkdown(art.content)) continue;
-    const before = art.content;
-    const cleaned = cleanHtml(before);
-    const converted = markdownToHtml(cleaned);
-    fixes.push({
-      id: art.id,
-      title: art.title,
-      beforeLen: before.length,
-      afterLen: converted.length,
-      beforeHead: before.slice(0, 120).replace(/\s+/g, ' '),
-      afterHead: converted.slice(0, 120).replace(/\s+/g, ' '),
-    });
-    if (APPLY) art.content = converted;
+    if (!art) continue;
+    const fixFields = [];
+
+    if (typeof art.title === 'string' && titleNeedsFix(art.title)) {
+      const newTitle = cleanTitle(art.title);
+      fixFields.push({ field: 'title', before: art.title, after: newTitle });
+      if (APPLY) art.title = newTitle;
+    }
+
+    if (typeof art.content === 'string' && contentNeedsFix(art.content)) {
+      const before = art.content;
+      const cleaned = cleanHtml(before);
+      const converted = markdownToHtml(cleaned);
+      fixFields.push({
+        field: 'content',
+        before: before.slice(0, 120).replace(/\s+/g, ' '),
+        after: converted.slice(0, 120).replace(/\s+/g, ' '),
+        beforeLen: before.length,
+        afterLen: converted.length,
+      });
+      if (APPLY) art.content = converted;
+    }
+
+    if (fixFields.length) fixes.push({ id: art.id, fields: fixFields });
   }
   if (APPLY && fixes.length > 0) {
     const bak = backupFile(file);
@@ -102,9 +113,17 @@ function main() {
     console.log(`\n[${APPLY ? 'FIXED' : 'TODO '}] ${path.relative(DATA_DIR, t)} — ${res.fixes.length} article(s)`);
     if (res.backup) console.log(`         backup: ${path.basename(res.backup)}`);
     for (const f of res.fixes) {
-      console.log(`  - id=${f.id} (${f.beforeLen} → ${f.afterLen} chars)`);
-      console.log(`    BEFORE: ${f.beforeHead}`);
-      console.log(`    AFTER:  ${f.afterHead}`);
+      console.log(`  - id=${f.id}`);
+      for (const ff of f.fields) {
+        if (ff.field === 'title') {
+          console.log(`    [title]   ${ff.before}`);
+          console.log(`           →  ${ff.after}`);
+        } else {
+          console.log(`    [content] ${ff.beforeLen} → ${ff.afterLen} chars`);
+          console.log(`      BEFORE: ${ff.before}`);
+          console.log(`      AFTER:  ${ff.after}`);
+        }
+      }
     }
   }
 

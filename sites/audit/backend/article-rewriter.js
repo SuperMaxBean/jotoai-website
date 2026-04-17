@@ -60,7 +60,30 @@ function markdownToHtml(text) {
   let html = marked.parse(stripped).trim();
   // 文章正文不应包含 h1（页面顶部已有标题 h1）—— 降级为 h2 保持层次一致
   html = html.replace(/<h1([^>]*)>/gi, '<h2$1>').replace(/<\/h1>/gi, '</h2>');
+  // 后处理：marked 对"HTML 块"内部不解析 markdown（<h2>xx**bold**yy</h2> 会残留 **）。
+  // 对所有剩余 `**xxx**` 做文本级替换。排除 `<>*` 避免命中 HTML 属性或相邻 * 标记。
+  html = html.replace(/\*\*([^*<>\n]{1,200}?)\*\*/g, '<strong>$1</strong>');
   return html;
+}
+
+/**
+ * 清洗标题字段：剥离 markdown 语法（**bold**、# heading、行内 HTML 标签）。
+ * 标题在 <h1> 里以纯文本渲染，不能残留任何 markdown 或 HTML。
+ */
+function cleanTitle(title) {
+  if (!title) return '';
+  let t = String(title).trim();
+  // 去掉 markdown 强调/标题语法，保留文本内容
+  t = t.replace(/\*\*([^*\n]+?)\*\*/g, '$1');
+  t = t.replace(/__([^_\n]+?)__/g, '$1');
+  t = t.replace(/\*([^*\n]+?)\*/g, '$1');
+  t = t.replace(/`([^`\n]+?)`/g, '$1');
+  t = t.replace(/^#{1,6}\s+/g, '');
+  // 去掉行内 HTML 标签（rewriter 有时会把 <strong> 带进标题）
+  t = t.replace(/<\/?[a-z][^>]*>/gi, '');
+  // 去掉首尾引号
+  t = t.replace(/^["'「『]|["'」』]$/g, '');
+  return t.trim();
 }
 
 /**
@@ -163,7 +186,7 @@ async function rewriteArticle(originalArticle, keyword, llmConfig, rewriteRounds
         temperature: 0.7,
         max_tokens: 50
       });
-      title = titleResponse.choices[0].message.content.trim().replace(/^["'「『]|["'」』]$/g, '');
+      title = cleanTitle(titleResponse.choices[0].message.content);
     } catch (e) {
       console.warn('[改写] 标题生成失败，使用兜底:', e.message);
     }
@@ -171,7 +194,7 @@ async function rewriteArticle(originalArticle, keyword, llmConfig, rewriteRounds
     // 兜底1：从 content 第一个 h1/h2 提取标题
     if (!title) {
       const h = rewrittenContent.match(/<h[12][^>]*>([^<]+)<\/h[12]>/);
-      if (h) title = h[1].replace(/[「『"'].*[」』"']/g, '').trim();
+      if (h) title = cleanTitle(h[1].replace(/[「『"'].*[」』"']/g, ''));
     }
     // 兜底2：用关键词
     if (!title) title = `${keyword}：实战指南与应用解析`;
@@ -193,5 +216,6 @@ module.exports = {
   rewriteArticle,
   markdownToHtml,
   cleanHtml,
+  cleanTitle,
   DEFAULT_REWRITE_PROMPT
 };
