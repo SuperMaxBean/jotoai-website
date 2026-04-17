@@ -1296,6 +1296,45 @@ const MONITOR_SITES = {
   noteflow:'https://note.jotoai.com/login?redirect=%2Fdashboard',
 };
 
+/**
+ * 判断返回的 HTML 是否是"真白屏/坏掉" —— 用多条启发式规则而不是单一字节阈值。
+ * 返回 issue 字符串表示坏掉，返回 null 表示正常。
+ *
+ * 正常场景能通过：
+ *   - SSR 页面，体积 > ~1KB（audit/kb 等 Next.js 站）
+ *   - SPA 外壳有 JS bundle 链接（哪怕 shell 只有 400B —— 如 translator）
+ *   - 有 <meta name="description"> 或 <title> 等真内容信号
+ * 拦下来的是：
+ *   - 完全空 HTML
+ *   - <div id="root"></div> 但没任何 script 引用（SPA build 出错）
+ *   - 含已知错误标记（ChunkLoadError / Application error 等）
+ */
+function assessHtmlHealth(body) {
+  const size = body.length;
+
+  // 已知错误标记最优先
+  const marker = HEALTH_ERROR_MARKERS.find(m => body.includes(m));
+  if (marker) return `错误: "${marker}"`;
+
+  // 几乎空白：极低体积且无 HTML 结构
+  if (size < 200) return `HTML 过小(${size}B)，疑似白屏`;
+
+  // 有 JS bundle 脚本 → 是正常 SPA 外壳，无论多小
+  const hasJsBundle = /<script[^>]+src=/i.test(body);
+  if (hasJsBundle) return null;
+
+  // 有实质内容（真正的 SSR/静态页）
+  const hasRealContent = /<(?:h1|h2|p|article|main|section|header)[\s>]/i.test(body);
+  if (hasRealContent && size >= 500) return null;
+
+  // 有 meta description（SEO 页）
+  const hasMeta = /<meta[^>]+name=["']description["']/i.test(body);
+  if (hasMeta && size >= 400) return null;
+
+  // 都不符合 → 可疑
+  return `HTML 过小(${size}B)，疑似白屏`;
+}
+
 async function runHealthCheck(customUrls) {
   const urlList = customUrls && customUrls.length
     ? customUrls.map(url => { const u = new URL(url); return { site: u.hostname + (u.pathname !== '/' ? u.pathname.split('?')[0] : ''), url }; })
@@ -1311,12 +1350,8 @@ async function runHealthCheck(customUrls) {
         const latency = Date.now() - start;
         if (r.status >= 400) return { site, url, ok: false, status: r.status, latency, issue: `HTTP ${r.status}` };
         const body = await r.text();
-        // SPA sites (note.jotoai.com) have small HTML shells; detect by checking for <div id="root">
-        const isSPA = body.includes('<div id="root"></div>') || body.includes('<div id="app"></div>');
-        const minSize = isSPA ? 500 : 1000;
-        if (body.length < minSize) return { site, url, ok: false, status: r.status, latency, issue: `HTML 过小(${body.length}B)，疑似白屏` };
-        const marker = HEALTH_ERROR_MARKERS.find(m => body.includes(m));
-        if (marker) return { site, url, ok: false, status: r.status, latency, issue: `错误: "${marker}"` };
+        const issue = assessHtmlHealth(body);
+        if (issue) return { site, url, ok: false, status: r.status, latency, issue };
         return { site, url, ok: true, status: r.status, size: body.length, latency };
       } catch (e) {
         return { site, url, ok: false, status: 0, latency: Date.now() - start, issue: e.name === 'AbortError' ? '超时(8s)' : e.message };
@@ -2455,19 +2490,15 @@ app.get('/api/admin/site-status', verifyToken, async (req, res) => {
         const latency = Date.now() - start;
         const httpOk = r.status >= 200 && r.status < 400;
 
-        // Read body and check for error markers
+        // Read body and run the same heuristic as daily health check
         const body = await r.text();
-        const isSPA = body.includes('<div id="root"></div>') || body.includes('<div id="app"></div>');
-        const minSize = isSPA ? 500 : 1000;
-        const tooSmall = body.length < minSize;
-        const errorMarker = HEALTH_ERROR_MARKERS.find(m => body.includes(m));
-        const contentOk = !tooSmall && !errorMarker;
+        const healthIssue = assessHtmlHealth(body);
+        const contentOk = !healthIssue;
 
         const ok = httpOk && contentOk;
         const issues = [];
         if (!httpOk) issues.push(`HTTP ${r.status}`);
-        if (tooSmall) issues.push(`HTML 过小(${body.length}B)，疑似白屏`);
-        if (errorMarker) issues.push(`检测到错误标记: "${errorMarker}"`);
+        if (healthIssue) issues.push(healthIssue);
 
         return { site, url, status: r.status, ok, latency, ...(issues.length ? { issues } : {}) };
       } catch (e) {
