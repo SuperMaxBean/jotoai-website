@@ -1290,12 +1290,13 @@ async function scheduleArticleGeneration() {
 }
 
 // ========== 站点健康巡检 ==========
-// Note: posterize and command are monitored only (no contact/article backend integration yet).
+// Note: translator/posterize/command are monitored only (no contact/article backend integration yet).
 const MONITOR_SITES = {
   audit:'https://audit.jotoai.com', shanyue:'https://shanyue.jotoai.com',
   sec:'https://sec.jotoai.com', kb:'https://kb.jotoai.com',
   fasium:'https://fasium.jotoai.com', loop:'https://loop.jotoai.com',
   noteflow:'https://note.jotoai.com/login?redirect=%2Fdashboard',
+  translator:'https://translator.jototech.cn',
   posterize:'https://posterize.jototech.cn',
   command:'https://command.jotoai.com',
 };
@@ -2475,15 +2476,16 @@ app.get('/api/admin/dashboard', verifyToken, async (req, res) => {
 const HEALTH_ERROR_MARKERS = ['Application error', '__next_error__', 'Internal Server Error', 'a client-side exception has occurred', 'ChunkLoadError'];
 app.get('/api/admin/site-status', verifyToken, async (req, res) => {
   const SITE_URLS = {
-    audit:    'https://audit.jotoai.com',
-    shanyue:  'https://shanyue.jotoai.com',
-    sec:      'https://sec.jotoai.com',
-    kb:       'https://kb.jotoai.com',
-    fasium:   'https://fasium.jotoai.com',
-    loop:     'https://loop.jotoai.com',
-    noteflow: 'https://note.jotoai.com/login?redirect=%2Fdashboard',
-    posterize:'https://posterize.jototech.cn',
-    command:  'https://command.jotoai.com',
+    audit:      'https://audit.jotoai.com',
+    shanyue:    'https://shanyue.jotoai.com',
+    sec:        'https://sec.jotoai.com',
+    kb:         'https://kb.jotoai.com',
+    fasium:     'https://fasium.jotoai.com',
+    loop:       'https://loop.jotoai.com',
+    noteflow:   'https://note.jotoai.com/login?redirect=%2Fdashboard',
+    translator: 'https://translator.jototech.cn',
+    posterize:  'https://posterize.jototech.cn',
+    command:    'https://command.jotoai.com',
   };
   const results = await Promise.all(
     Object.entries(SITE_URLS).map(async ([site, url]) => {

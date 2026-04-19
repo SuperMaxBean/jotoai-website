@@ -12,6 +12,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 4. **Test against production URLs, not localhost.** E2E verification uses `https://<site>.jotoai.com`, never `localhost`. Localhost hits different API routes, skips nginx/CORS/SSL, and misses real deployment bugs. See tomitest rule 3.
 
+5. **No emoji on any JOTO site or admin UI.** Do NOT add emoji (🖼️, ⌘, 🎉, ✅, etc.) to site cards, dashboards, nav bars, buttons, or any user-facing surface. This applies to all 10 sites and the admin backend. Use text labels or SVG icons only. This is a permanent brand rule — if you see emoji in existing code or config, remove them.
+
 ## Browser MCP Fallback Order
 
 1. Try `mcp__playwright__browser_navigate` first
