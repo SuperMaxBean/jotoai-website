@@ -1290,11 +1290,13 @@ async function scheduleArticleGeneration() {
 }
 
 // ========== 站点健康巡检 ==========
+// Note: posterize is monitored only (no contact/article backend integration yet).
 const MONITOR_SITES = {
   audit:'https://audit.jotoai.com', shanyue:'https://shanyue.jotoai.com',
   sec:'https://sec.jotoai.com', kb:'https://kb.jotoai.com',
   fasium:'https://fasium.jotoai.com', loop:'https://loop.jotoai.com',
   noteflow:'https://note.jotoai.com/login?redirect=%2Fdashboard',
+  posterize:'https://posterize.jototech.cn',
 };
 
 /**
@@ -2479,6 +2481,7 @@ app.get('/api/admin/site-status', verifyToken, async (req, res) => {
     fasium:   'https://fasium.jotoai.com',
     loop:     'https://loop.jotoai.com',
     noteflow: 'https://note.jotoai.com/login?redirect=%2Fdashboard',
+    posterize:'https://posterize.jototech.cn',
   };
   const results = await Promise.all(
     Object.entries(SITE_URLS).map(async ([site, url]) => {
