@@ -18,6 +18,7 @@ export const metadata: Metadata = {
     'Dify', '企业内部知识库', '员工培训知识库', '客服智能知识库',
   ],
   authors: [{ name: 'JOTO AI', url: 'https://jotoai.com' }],
+  metadataBase: new URL('https://kb.jotoai.com'),
   openGraph: {
     title: '唯客企业知识中台',
     description: 'JOTO 旗下 AI 企业知识管理平台，中国首家 Dify 官方服务商。',
@@ -25,6 +26,18 @@ export const metadata: Metadata = {
     siteName: '唯客企业知识中台',
     locale: 'zh_CN',
     type: 'website',
+    images: [{
+      url: '/og-image.png',
+      width: 1200,
+      height: 630,
+      alt: '唯客企业知识中台 - AI 企业知识管理',
+    }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '唯客企业知识中台',
+    description: 'JOTO 旗下 AI 企业知识管理平台，中国首家 Dify 官方服务商。',
+    images: ['/og-image.png'],
   },
   robots: {
     index: true,

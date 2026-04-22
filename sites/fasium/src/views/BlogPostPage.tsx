@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Calendar, User, Tag, ChevronLeft, Share2, MessageSquare, Loader2, AlertCircle } from 'lucide-react';
@@ -39,6 +40,21 @@ function normalizeArticle(raw: any): Article {
 }
 
 /**
+ * Unsplash/admin backend 图片都加查询参数：fm=webp&q=75&w=N 省 30-60% 体积
+ * 非 Unsplash 域名不动（fallback 图片、本地图片都已经是正确尺寸）
+ */
+function optimizeImageUrl(url: string | undefined, maxWidth: number): string {
+  if (!url) return '';
+  // Unsplash 图片：加 webp + quality + width
+  if (url.includes('images.unsplash.com')) {
+    const sep = url.includes('?') ? '&' : '?';
+    if (url.includes('fm=webp') || url.includes('auto=format')) return url;
+    return `${url}${sep}auto=format&fit=crop&w=${maxWidth}&q=75`;
+  }
+  return url;
+}
+
+/**
  * 后端 /api/{site}/articles 已用 marked 把 content 转成 HTML。
  * 前端只剥掉偶尔残留的 <html>/<body>/<head> 壳，然后直接渲染。
  */
@@ -74,12 +90,24 @@ const FALLBACK_RELATED: Article[] = [
   },
 ];
 
-export default function BlogPostPage() {
+interface BlogPostPageProps {
+  /** 服务端预加载的 raw article —— /blog/[id]/page.tsx 传入。
+   * 类型用 unknown 因为 server 端的 Article 接口和本组件的 Article 接口字段不完全一致，
+   * normalizeArticle 会统一转成本组件的形状。 */
+  article?: unknown;
+}
+
+export default function BlogPostPage({ article: articleFromServer }: BlogPostPageProps = {}) {
   const { t } = useLanguage();
-  const id = typeof window !== 'undefined' ? window.location.pathname.split('/blog/')[1] || '' : '';
-  const [post, setPost] = useState<Article | null>(null);
+  // 用 useParams() 而非 window.location.pathname —— 前者是 React 响应式，SPA
+  // 导航（Link 点击）时会自动重新 render + 触发 useEffect；后者是非响应式，
+  // 在 Next.js app router 的 client navigation 场景下导致组件读不到新的 id，
+  // useEffect 也不会 re-fire → 详情页永远停在 loading spinner。
+  const params = useParams<{ id?: string }>();
+  const id = (typeof params?.id === 'string' ? params.id : Array.isArray(params?.id) ? params.id[0] : '') || '';
+  const [post, setPost] = useState<Article | null>(articleFromServer ? normalizeArticle(articleFromServer) : null);
   const [relatedPosts, setRelatedPosts] = useState<Article[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!articleFromServer);
   const [isError, setIsError] = useState(false);
 
   useEffect(() => { window.scrollTo(0, 0); }, [id]);
@@ -87,39 +115,42 @@ export default function BlogPostPage() {
   useEffect(() => {
     if (!id) return;
     const fetchPost = async () => {
-      setIsLoading(true);
-      setIsError(false);
-      try {
-        const res = await fetch(`${API_BASE}/fasium/articles/${id}`);
-        if (!res.ok) throw new Error('文章不存在');
-        const data = await res.json();
-        const article = normalizeArticle(data.article ?? data);
-        setPost(article);
-
+      // Step 1: 主 article —— 服务端已传就跳过 fetch
+      if (!articleFromServer) {
+        setIsLoading(true);
+        setIsError(false);
         try {
-          const allRes = await fetch(`${API_BASE}/fasium/articles`);
-          if (allRes.ok) {
-            const allData = await allRes.json();
-            const allList: Article[] = (Array.isArray(allData) ? allData : allData.articles ?? [])
-              .map(normalizeArticle)
-              .filter((a: Article) => String(a.slug) !== String(id));
-            setRelatedPosts(allList.slice(0, 2));
-          } else {
-            setRelatedPosts(FALLBACK_RELATED.filter(r => String(r.slug) !== String(id)));
-          }
+          const res = await fetch(`${API_BASE}/fasium/articles/${id}`);
+          if (!res.ok) throw new Error('文章不存在');
+          const data = await res.json();
+          setPost(normalizeArticle(data.article ?? data));
         } catch {
+          setIsError(true);
+          setPost(FALLBACK_POST);
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // Step 2: related posts（客户端异步拉，不影响主 article 渲染）
+      try {
+        const allRes = await fetch(`${API_BASE}/fasium/articles`);
+        if (allRes.ok) {
+          const allData = await allRes.json();
+          const allList: Article[] = (Array.isArray(allData) ? allData : allData.articles ?? [])
+            .map(normalizeArticle)
+            .filter((a: Article) => String(a.slug) !== String(id));
+          setRelatedPosts(allList.slice(0, 2));
+        } else {
           setRelatedPosts(FALLBACK_RELATED.filter(r => String(r.slug) !== String(id)));
         }
       } catch {
-        setIsError(true);
-        setPost(FALLBACK_POST);
-        setRelatedPosts(FALLBACK_RELATED);
-      } finally {
-        setIsLoading(false);
+        setRelatedPosts(FALLBACK_RELATED.filter(r => String(r.slug) !== String(id)));
       }
+      setIsLoading(false);
     };
     fetchPost();
-  }, [id]);
+  }, [id, articleFromServer]);
 
   const handleShare = () => {
     if (navigator.share && post) {
@@ -167,8 +198,10 @@ export default function BlogPostPage() {
         {/* Article Header Hero */}
         <section className="relative h-[50vh] min-h-[400px] flex items-end">
           <div className="absolute inset-0 z-0">
-            <img src={post.image} alt={post.title}
-              className="w-full h-full object-cover opacity-60" referrerPolicy="no-referrer" />
+            {/* Unsplash 图片加 w=1200&fm=webp&q=75 省 ~150KB + 优先 LCP 加载 */}
+            <img src={optimizeImageUrl(post.image, 1200)} alt={post.title}
+              className="w-full h-full object-cover opacity-60" referrerPolicy="no-referrer"
+              loading="eager" fetchPriority="high" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f0f] via-[#0f0f0f]/50 to-transparent" />
           </div>
           <div className="relative z-10 max-w-4xl mx-auto px-6 pb-12 w-full">
@@ -201,9 +234,20 @@ export default function BlogPostPage() {
         <section className="py-16 px-6">
           <div className="max-w-4xl mx-auto">
 
-            {/* Article Body */}
+            {/* Article Body —— 用 prose-invert 适配深色底 #0f0f0f，orange-500 作为链接/标题的强调色 */}
             <div
-              className="article-body"
+              className="prose prose-invert prose-lg max-w-none
+                prose-headings:text-white
+                prose-h2:border-l-4 prose-h2:border-[#f97316] prose-h2:pl-4 prose-h2:mt-12 prose-h2:text-2xl
+                prose-h3:text-[#f97316] prose-h3:mt-8 prose-h3:text-xl
+                prose-p:text-gray-300 prose-p:leading-relaxed
+                prose-strong:text-white
+                prose-a:text-[#f97316] prose-a:no-underline hover:prose-a:underline
+                prose-blockquote:border-[#f97316] prose-blockquote:text-gray-400 prose-blockquote:italic
+                prose-ul:text-gray-300 prose-ol:text-gray-300
+                prose-li:marker:text-[#f97316]
+                prose-code:text-[#f97316] prose-code:bg-[#1a1a1a] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-[''] prose-code:after:content-['']
+                prose-img:rounded-lg prose-img:my-8"
               dangerouslySetInnerHTML={{ __html: htmlContent }}
             />
 
@@ -238,7 +282,7 @@ export default function BlogPostPage() {
                     <Link key={related.id} href={`/blog/${related.slug}`}
                       className="bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] p-4 flex gap-4 group hover:border-[#f97316]/30 transition-all">
                       <div className="w-24 h-24 rounded-lg overflow-hidden shrink-0">
-                        <img src={related.image} alt={related.title}
+                        <img src={optimizeImageUrl(related.image, 600)} alt={related.title} loading="lazy"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           referrerPolicy="no-referrer" />
                       </div>

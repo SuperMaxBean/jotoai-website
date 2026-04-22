@@ -354,6 +354,7 @@ const LandingPage = () => {
     <div className="min-h-screen bg-[#fbfbfd] text-slate-900 font-sans selection:bg-indigo-100 selection:text-indigo-900 scroll-smooth overflow-x-hidden pt-16">
       <Navbar />
 
+      <main>
       {/* Section 1: Hero */}
       <section className="relative px-6 pt-8 pb-16 mx-auto max-w-7xl overflow-hidden">
         <div className="lg:grid lg:grid-cols-2 lg:gap-12 lg:pt-12 items-center mb-12">
@@ -966,6 +967,7 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
+      </main>
 
       {/* Footer */}
       <footer className="bg-[#0a0f1c] text-slate-300 py-20 px-6 border-t border-white/10">

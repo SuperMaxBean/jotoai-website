@@ -112,7 +112,7 @@
       <div class="flex items-center justify-between">
         <h1 class="text-xl font-semibold" data-t="contacts" data-t="contacts_title">留言管理</h1>
         <div class="flex items-center gap-3">
-          <select id="cFlt" onchange="renderC()" class="input !w-auto !py-1.5 text-xs"><option value="all">'+(t("all_sites"))+'</option></select>
+          <select id="cFlt" onchange="cPage=1;renderC()" class="input !w-auto !py-1.5 text-xs"><option value="all">'+(t("all_sites"))+'</option></select>
           <button onclick="loadC()" class="btn-s text-xs !py-1.5"></button>
         </div>
       </div>
@@ -124,11 +124,27 @@
         <button id="cBulkDel" onclick="bulkDelC()" disabled class="btn-d !py-1.5 !px-3 text-xs disabled:opacity-40 disabled:cursor-not-allowed">删除所选</button>
       </div>
       <div class="bg-white border border-gray-100 rounded-xl overflow-hidden">
-        <div class="grid grid-cols-[36px_100px_1fr_180px_120px_70px] px-5 py-2.5 bg-gray-50 text-xs text-gray-500 font-medium border-b border-gray-100 items-center">
+        <div class="grid grid-cols-[36px_100px_220px_1fr_120px_70px] px-5 py-2.5 bg-gray-50 text-xs text-gray-500 font-medium border-b border-gray-100 items-center">
           <div><input id="cChkAll" type="checkbox" onchange="toggleAllC(this.checked)" class="cursor-pointer"></div>
           <div data-t="col_source">来源</div><div data-t="col_contact">联系人</div><div data-t="col_message">留言</div><div data-t="col_time">时间</div><div data-t="col_channel">渠道</div>
         </div>
-        <div id="cList" class="divide-y divide-gray-50 max-h-[600px] overflow-y-auto"><div class="px-5 py-4 text-gray-400 text-sm"><span class="spinner"></span></div></div>
+        <div id="cList" class="divide-y divide-gray-50"><div class="px-5 py-4 text-gray-400 text-sm"><span class="spinner"></span></div></div>
+      </div>
+      <!-- 分页条 -->
+      <div id="cPager" class="flex items-center justify-between mt-3 text-xs text-gray-500 hidden">
+        <div>
+          <span id="cPagerInfo">-</span>
+          <span class="mx-2 text-gray-300">·</span>
+          每页
+          <select id="cPageSize" onchange="cOnPageSize()" class="input !w-auto !py-1 !px-2 text-xs ml-1 mr-1">
+            <option value="10">10</option>
+            <option value="20" selected>20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+          条
+        </div>
+        <div id="cPagerBtns" class="flex items-center gap-1"></div>
       </div>
     </div>
   </div>
@@ -501,20 +517,51 @@ async function loadStats(){try{const r=await af('/api/admin/dashboard');if(!r.ok
 async function loadC(){try{AC=await(await af('/api/admin/contacts')).json();const f=$('cFlt'),cur=f.value;
   const nm={};S.forEach(s=>{try{nm[new URL(s.url).hostname]=s.name}catch{}});
   const sn=new Set();AC.forEach(c=>{const n=c.site||nm[c.siteHost]||'';if(n)sn.add(n)});
-  f.innerHTML='<option value="all">'+(t("all_sites"))+'</option>'+[...sn].map(s=>`<option value="${s}"${s===cur?' selected':''}>${s}</option>`).join('');renderC()}catch(e){$('cList').innerHTML=`<div class="p-4 text-red-500 text-sm">${e.message}</div>`}}
+  f.innerHTML='<option value="all">'+(t("all_sites"))+'</option>'+[...sn].map(s=>`<option value="${s}"${s===cur?' selected':''}>${s}</option>`).join('');cPage=1;renderC()}catch(e){$('cList').innerHTML=`<div class="p-4 text-red-500 text-sm">${e.message}</div>`}}
+// 分页状态（filter 或 pageSize 改变时 reset 到 page 1）
+let cPage=1;function cGetPageSize(){return parseInt($('cPageSize')?.value||'20',10)||20}
+function cOnPageSize(){cPage=1;renderC()}
+function cGotoPage(p){const total=visibleC().length,pages=Math.max(1,Math.ceil(total/cGetPageSize()));cPage=Math.min(Math.max(1,p),pages);renderC()}
 function renderC(){const fv=$('cFlt').value;const nm={},am={};S.forEach(s=>{try{nm[new URL(s.url).hostname]=s.name}catch{};am[s.name]=s.accent});
   let l=fv==='all'?AC:AC.filter(c=>(c.site||nm[c.siteHost])===fv);
-  if(!l.length){$('cList').innerHTML='<div class="px-5 py-8 text-gray-400 text-sm text-center">${t("no_contacts")}</div>';updateBulkBar();return}
-  $('cList').innerHTML=l.map(c=>{const s=c.site||nm[c.siteHost]||'未知',cl=am[s]||'#94a3b8';
-    const t=c.submittedAt?new Date(c.submittedAt).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
-    const m=c.message&&c.message!=='（未填写需求描述）'?c.message:'<span class="text-gray-300">-</span>';
+  const pager=$('cPager');
+  if(!l.length){$('cList').innerHTML=`<div class="px-5 py-8 text-gray-400 text-sm text-center">${t("no_contacts")}</div>`;if(pager)pager.classList.add('hidden');updateBulkBar();return}
+  const ps=cGetPageSize(),pages=Math.max(1,Math.ceil(l.length/ps));
+  if(cPage>pages)cPage=pages;
+  const start=(cPage-1)*ps,end=start+ps,pageItems=l.slice(start,end);
+  $('cList').innerHTML=pageItems.map(c=>{const s=c.site||nm[c.siteHost]||'未知',cl=am[s]||'#94a3b8';
+    const ts=c.submittedAt?new Date(c.submittedAt).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+    const rawMsg=(c.message&&c.message!=='（未填写需求描述）')?c.message:'';
+    const m=rawMsg||'<span class="text-gray-300">-</span>';
     const id=String(c.id).replace(/'/g,'\\\'');
     const checked=cSel.has(String(c.id))?'checked':'';
-    return `<div class="grid grid-cols-[36px_100px_1fr_180px_120px_70px] px-5 py-3 items-center hover:bg-gray-50/50 text-sm"><div><input type="checkbox" data-cid="${id}" ${checked} onchange="onChkC(this)" class="cursor-pointer"></div><div><span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background:${cl}">${s}</span></div><div class="min-w-0"><div class="font-medium truncate">${c.name||c.firstName||'-'}</div><div class="text-gray-400 text-xs truncate">${c.email||''} ${c.phone||''}</div></div><div class="text-gray-500 text-xs truncate">${m}</div><div class="text-gray-400 text-xs">${t}</div><div class="text-gray-400 text-xs">${c.source||'直接'}</div></div>`}).join('');
+    // HTML-escape for title attr（防止引号/<>破坏属性值）
+    const esc=s=>String(s||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]);
+    const nameStr=c.name||c.firstName||'-';
+    const contactSub=`${c.email||''} ${c.phone||''}`.trim();
+    return `<div class="grid grid-cols-[36px_100px_220px_1fr_120px_70px] px-5 py-3 items-center hover:bg-gray-50/50 text-sm"><div><input type="checkbox" data-cid="${id}" ${checked} onchange="onChkC(this)" class="cursor-pointer"></div><div><span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background:${cl}">${s}</span></div><div class="min-w-0"><div class="font-medium truncate" title="${esc(nameStr)}">${nameStr}</div><div class="text-gray-400 text-xs truncate" title="${esc(contactSub)}">${contactSub||'-'}</div></div><div class="text-gray-500 text-xs truncate cursor-help" title="${esc(rawMsg)}">${m}</div><div class="text-gray-400 text-xs">${ts}</div><div class="text-gray-400 text-xs">${c.source||'直接'}</div></div>`}).join('');
+  // 渲染分页条
+  if(pager){
+    $('cPagerInfo').textContent=`共 ${l.length} 条 · 第 ${cPage} / ${pages} 页 · 显示 ${start+1} – ${Math.min(end,l.length)}`;
+    $('cPagerBtns').innerHTML=cRenderPagerButtons(cPage,pages);
+    // 只要有数据就显示分页条（即使只有 1 页，用户也可以改每页条数）
+    pager.classList.remove('hidden');
+  }
   updateBulkBar()}
+function cRenderPagerButtons(cur,pages){
+  const btn=(label,p,active,disabled)=>`<button onclick="cGotoPage(${p})" ${disabled?'disabled':''} class="px-2.5 py-1 rounded border text-xs ${active?'bg-gray-900 text-white border-gray-900':'bg-white border-gray-200 hover:bg-gray-50'} ${disabled?'opacity-40 cursor-not-allowed':''}">${label}</button>`;
+  const ell='<span class="px-1.5 text-gray-400">…</span>';
+  // 生成显示的页码集合：首页、末页、当前页前后各 1
+  const shown=[...new Set([1,pages,cur-1,cur,cur+1])].filter(n=>n>=1&&n<=pages).sort((a,b)=>a-b);
+  let out=btn('上一页',cur-1,false,cur<=1);
+  let prev=0;
+  for(const p of shown){if(p-prev>1)out+=ell;out+=btn(p,p,p===cur,false);prev=p}
+  out+=btn('下一页',cur+1,false,cur>=pages);
+  return out;
+}
 // 批量选择状态（id 以字符串存）
 const cSel=new Set();
-// 返回当前 cFlt 过滤后的可见条目
+// 返回当前 cFlt 过滤后的可见条目（整个过滤结果，不含分页切片）
 function visibleC(){const fv=$('cFlt').value,nm={};S.forEach(s=>{try{nm[new URL(s.url).hostname]=s.name}catch{}});return fv==='all'?AC:AC.filter(c=>(c.site||nm[c.siteHost])===fv)}
 function updateBulkBar(){const vis=visibleC(),visIds=new Set(vis.map(c=>String(c.id)));
   // cSel 中只保留可见 id（过滤切换时自动丢弃不再可见的选择）
@@ -540,11 +587,28 @@ function renderArt(){
   const list=artSite==='all'?allArts:allArts.filter(a=>a._site===artSite);
   if(!list.length){$('artList').innerHTML='<div class="text-gray-400 text-sm text-center py-8">${t("no_articles")}</div>';return}
   $('artList').innerHTML=list.map(a=>{const d=a.publishedAt||a.createdAt?new Date(a.publishedAt||a.createdAt).toLocaleDateString('zh-CN'):'';
-    return `<div class="card flex items-start gap-4"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-1"><span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background:${a._siteAccent||'#94a3b8'}">${a._siteName}</span><span class="text-gray-400 text-xs">${d}</span>${a.type?`<span class="badge bg-gray-100 text-gray-500">${a.type}</span>`:''}</div><h3 class="font-medium text-sm">${a.title||'无标题'}</h3><p class="text-gray-500 text-xs mt-1 line-clamp-2">${a.summary||a.excerpt||''}</p></div><div class="flex gap-2 shrink-0"><button onclick="previewArt(${JSON.stringify(a.title||'').replace(/"/g,'&quot;')},${JSON.stringify((a.content||a.summary||'').substring(0,500)).replace(/"/g,'&quot;')})" class="btn-s text-xs !py-1 !px-2">${t("preview")}</button><button onclick="delArt('${a._site}','${a.id}')" class="btn-d" data-t="delete">删除</button></div></div>`}).join('')}
+    return `<div class="card flex items-start gap-4"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-1"><span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background:${a._siteAccent||'#94a3b8'}">${a._siteName}</span><span class="text-gray-400 text-xs">${d}</span>${a.type?`<span class="badge bg-gray-100 text-gray-500">${a.type}</span>`:''}</div><h3 class="font-medium text-sm">${a.title||'无标题'}</h3><p class="text-gray-500 text-xs mt-1 line-clamp-2">${a.summary||a.excerpt||''}</p></div><div class="flex gap-2 shrink-0"><button onclick="previewArt('${a._site}','${a.id}')" class="btn-s text-xs !py-1 !px-2">${t("preview")}</button><button onclick="delArt('${a._site}','${a.id}')" class="btn-d" data-t="delete">删除</button></div></div>`}).join('')}
 async function delArt(site,id){if(!confirm(t("confirm_delete")))return;try{await af(`/api/admin/${site}/articles/${id}`,{method:'DELETE'});toast(t("deleted"));loadArt()}catch(e){toast(e.message,false)}}
 async function genArticle(){const site=artSite==='all'?S[0]?.id:artSite;if(!site){toast(t("add_site_first"),false);return}
   toast('正在生成...');try{await af(`/api/admin/${site}/generate-article`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});toast(t("gen_done"));loadArt()}catch(e){toast('生成失败: '+e.message,false)}}
-function previewArt(title,content){$('artModalBody').innerHTML=`<h2 class="text-lg font-bold mb-4">${title}</h2><div class="prose prose-sm max-w-none text-gray-700">${content}</div>`;$('artModal').style.display='flex';$('artModal').classList.remove('hidden')}
+// 点击"预览"：新标签页打开文章原文页面。各站 blog 路径不一致：
+//   audit/kb/fasium/loop/noteflow → /blog/{id}
+//   shanyue/sec                   → /articles/{id}
+// 如需调整，改这个表即可。
+const ARTICLE_PATHS = {
+  audit: '/blog', kb: '/blog', fasium: '/blog', loop: '/blog', noteflow: '/blog',
+  shanyue: '/articles', sec: '/articles',
+};
+function previewArt(siteId, articleId){
+  const site = S.find(s => s.id === siteId);
+  if (!site || !site.url) { toast('未找到该站点的 URL 配置', false); return; }
+  let origin;
+  try { origin = new URL(site.url).origin; }
+  catch { origin = site.url.replace(/\/+$/, ''); }
+  const prefix = ARTICLE_PATHS[siteId] || '/blog';
+  const articleUrl = `${origin}${prefix}/${articleId}`;
+  window.open(articleUrl, '_blank', 'noopener');
+}
 
 // Sites
 function renderSites(){$('siteList').innerHTML=S.map(s=>`<div class="px-5 py-4 flex items-center gap-4 hover:bg-gray-50/50"><div class="w-9 h-9 rounded-lg flex items-center justify-center text-lg" style="background:${s.accent||'#94a3b8'}12">${s.icon||''}</div><div class="flex-1"><div class="text-sm font-medium">${s.name} <span class="text-gray-400 font-normal text-xs">${s.id}</span></div><div class="text-xs text-gray-400 mt-0.5">${s.url} ${s.desc?'— '+s.desc:''}</div></div><a href="${s.url}" target="_blank" class="btn-s !py-1 !px-2.5 text-xs">↗</a><button onclick="delSite('${s.id}','${s.name}')" class="btn-d" data-t="delete">删除</button></div>`).join('')}

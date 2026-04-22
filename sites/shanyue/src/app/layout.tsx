@@ -127,8 +127,12 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" className="scroll-smooth" suppressHydrationWarning>
       <head>
+        {/* preconnect 给字体 CDN 提前握手，LCP 降 200-400ms */}
+        <link rel="preconnect" href="https://fonts.loli.net" crossOrigin="" />
+        <link rel="preconnect" href="https://gstatic.loli.net" crossOrigin="" />
+        {/* 只加载实际用到的 3 种字重，省 29KiB CSS/字体 —— LH 建议 */}
         <link
-          href="https://fonts.loli.net/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;700;900&display=swap"
+          href="https://fonts.loli.net/css2?family=Inter:wght@400;600;700&family=Noto+Sans+SC:wght@400;700&display=swap"
           rel="stylesheet"
         />
         <script

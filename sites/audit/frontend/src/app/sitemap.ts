@@ -9,8 +9,8 @@ interface Article {
   publishedAt?: string;
 }
 
-const SITE_ID = 'kb';
-const BASE_URL = 'https://kb.jotoai.com';
+const SITE_ID = 'audit';
+const BASE_URL = 'https://audit.jotoai.com';
 const ARTICLE_PATH = '/blog'; // '/blog' 或 '/articles'
 const STATIC_ROUTES: Array<{ path: string; priority: number; freq: 'weekly' | 'daily' | 'monthly' | 'yearly' }> = [{ path: '', priority: 1.0, freq: 'weekly' }, { path: '/blog', priority: 0.9, freq: 'daily' }, { path: '/contact', priority: 0.6, freq: 'monthly' }];
 

@@ -12,6 +12,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 4. **Test against production URLs, not localhost.** E2E verification uses `https://<site>.jotoai.com`, never `localhost`. Localhost hits different API routes, skips nginx/CORS/SSL, and misses real deployment bugs. See tomitest rule 3.
 
+5. **No emoji on any JOTO site or admin UI.** Do NOT add emoji (🖼️, ⌘, 🎉, ✅, etc.) to site cards, dashboards, nav bars, buttons, or any user-facing surface. This applies to all 10 sites and the admin backend. Use text labels or SVG icons only. This is a permanent brand rule — if you see emoji in existing code or config, remove them.
+
+6. **Before deploying files from a worktree, check other branches for unmerged commits touching the same file.** Multiple Claude sessions run in parallel worktrees on their own branches; if another session added a feature (e.g. `feat(brand)`) to the same file on a different branch, your `scp` deploy will overwrite and erase that feature on production. Before any `scp sites/audit/backend/index.js` (or similar), run `git log --all --oneline -- <file> | head -20` and compare to `git log HEAD --oneline -- <file>`. Cherry-pick any missing feature commits into the current branch first, then deploy. A deploy that reverts a live production feature is a P0 regression, not a neutral "I only changed one line" edit.
+
 ## Browser MCP Fallback Order
 
 1. Try `mcp__playwright__browser_navigate` first

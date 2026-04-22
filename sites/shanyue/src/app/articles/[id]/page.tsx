@@ -39,10 +39,20 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const article = await getArticle(id);
   if (!article) return { title: "文章不存在 - 闪阅 AI" };
+  const excerpt = article.content.replace(/<[^>]+>/g, "").trim().slice(0, 160);
   return {
     title: article.title + " - 闪阅 AI",
-    description: article.content.replace(/<[^>]+>/g, "").trim().slice(0, 160),
+    description: excerpt,
     keywords: article.keyword ? [article.keyword, "智能阅卷", "AI教育"] : ["智能阅卷", "AI教育"],
+    alternates: { canonical: `https://shanyue.jotoai.com/articles/${article.id}` },
+    openGraph: {
+      title: article.title,
+      description: excerpt,
+      url: `https://shanyue.jotoai.com/articles/${article.id}`,
+      type: "article",
+      publishedTime: article.createdAt,
+      images: article.imageUrl ? [{ url: article.imageUrl.startsWith("http") ? article.imageUrl : `https://shanyue.jotoai.com${article.imageUrl}` }] : undefined,
+    },
   };
 }
 
