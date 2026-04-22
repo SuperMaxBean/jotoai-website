@@ -79,5 +79,31 @@ export default async function BlogPostPage({
   const articles = await getArticles();
   const article = articles.find((a) => a.id === id);
   if (!article) notFound();
-  return <BlogPostClient article={article} />;
+
+  // Article Schema.org JSON-LD —— server-rendered，百度/Google 爬虫能直接读到
+  const excerpt = article.content.replace(/<[^>]+>/g, '').replace(/[#*_\n]/g, ' ').trim().slice(0, 200);
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: article.title,
+    description: excerpt,
+    image: article.imageUrl ? (article.imageUrl.startsWith('http') ? article.imageUrl : `https://kb.jotoai.com${article.imageUrl}`) : undefined,
+    datePublished: article.createdAt,
+    dateModified: article.createdAt,
+    author: { '@type': 'Organization', name: 'JOTO AI', url: 'https://jotoai.com' },
+    publisher: {
+      '@type': 'Organization',
+      name: '唯客企业知识中台',
+      logo: { '@type': 'ImageObject', url: 'https://kb.jotoai.com/favicon.svg' },
+    },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': `https://kb.jotoai.com/blog/${article.id}` },
+    keywords: article.keyword,
+  };
+
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <BlogPostClient article={article} />
+    </>
+  );
 }

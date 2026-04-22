@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Calendar, User, Tag, ChevronLeft, Share2, MessageSquare, Loader2, AlertCircle } from 'lucide-react';
@@ -76,7 +77,12 @@ const FALLBACK_RELATED: Article[] = [
 
 export default function BlogPostPage() {
   const { t } = useLanguage();
-  const id = typeof window !== 'undefined' ? window.location.pathname.split('/blog/')[1] || '' : '';
+  // 用 useParams() 而非 window.location.pathname —— 前者是 React 响应式，SPA
+  // 导航（Link 点击）时会自动重新 render + 触发 useEffect；后者是非响应式，
+  // 在 Next.js app router 的 client navigation 场景下导致组件读不到新的 id，
+  // useEffect 也不会 re-fire → 详情页永远停在 loading spinner。
+  const params = useParams<{ id?: string }>();
+  const id = (typeof params?.id === 'string' ? params.id : Array.isArray(params?.id) ? params.id[0] : '') || '';
   const [post, setPost] = useState<Article | null>(null);
   const [relatedPosts, setRelatedPosts] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(true);
