@@ -201,9 +201,20 @@ export default function BlogPostPage() {
         <section className="py-16 px-6">
           <div className="max-w-4xl mx-auto">
 
-            {/* Article Body */}
+            {/* Article Body —— 用 prose-invert 适配深色底 #0f0f0f，orange-500 作为链接/标题的强调色 */}
             <div
-              className="article-body"
+              className="prose prose-invert prose-lg max-w-none
+                prose-headings:text-white
+                prose-h2:border-l-4 prose-h2:border-[#f97316] prose-h2:pl-4 prose-h2:mt-12 prose-h2:text-2xl
+                prose-h3:text-[#f97316] prose-h3:mt-8 prose-h3:text-xl
+                prose-p:text-gray-300 prose-p:leading-relaxed
+                prose-strong:text-white
+                prose-a:text-[#f97316] prose-a:no-underline hover:prose-a:underline
+                prose-blockquote:border-[#f97316] prose-blockquote:text-gray-400 prose-blockquote:italic
+                prose-ul:text-gray-300 prose-ol:text-gray-300
+                prose-li:marker:text-[#f97316]
+                prose-code:text-[#f97316] prose-code:bg-[#1a1a1a] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-[''] prose-code:after:content-['']
+                prose-img:rounded-lg prose-img:my-8"
               dangerouslySetInnerHTML={{ __html: htmlContent }}
             />
 
