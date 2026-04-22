@@ -9,10 +9,10 @@ interface Article {
   publishedAt?: string;
 }
 
-const SITE_ID = 'kb';
-const BASE_URL = 'https://kb.jotoai.com';
+const SITE_ID = 'fasium';
+const BASE_URL = 'https://fasium.jotoai.com';
 const ARTICLE_PATH = '/blog'; // '/blog' 或 '/articles'
-const STATIC_ROUTES: Array<{ path: string; priority: number; freq: 'weekly' | 'daily' | 'monthly' | 'yearly' }> = [{ path: '', priority: 1.0, freq: 'weekly' }, { path: '/blog', priority: 0.9, freq: 'daily' }, { path: '/contact', priority: 0.6, freq: 'monthly' }];
+const STATIC_ROUTES: Array<{ path: string; priority: number; freq: 'weekly' | 'daily' | 'monthly' | 'yearly' }> = [{ path: '', priority: 1.0, freq: 'weekly' }, { path: '/blog', priority: 0.9, freq: 'daily' }, { path: '/contact', priority: 0.6, freq: 'monthly' }, { path: '/privacy', priority: 0.3, freq: 'yearly' }];
 
 async function getArticles(): Promise<Article[]> {
   // 生产跑在 139.224.51.172，admin backend 在同机 :3004
