@@ -1358,6 +1358,13 @@ async function scheduleArticleGeneration() {
       const siteConfig = await readSiteFile(getSitePaths(site).config, {});
       const siteSeoKeywords = siteConfig.seoKeywords || _globalSeoKeywords;
       const siteRewritePrompt = siteConfig.rewritePrompt || _globalRewritePrompt;
+      // 关键：把 siteId + systemPrompt/globalPrompt 传进去，否则 generateArticle 内部
+      // 会 fallback 到 DEFAULT_SITE_CONTEXT，标题模板 fallback 到 'audit'（"合同风控"句式）
+      // 导致所有站的文章主题都变成"合同审查/法务合规"。参考 commit（修 per-site 污染）。
+      const sitePromptOverrides = {
+        systemPrompt: siteConfig.systemPrompt || '',
+        globalPrompt: config.globalPrompt || ''
+      };
 
       const newArticles = await generateArticles({
         llmConfig,
@@ -1369,7 +1376,10 @@ async function scheduleArticleGeneration() {
         wordCount: _wordCount,
         seoKeywords: siteSeoKeywords,
         rewritePrompt: siteRewritePrompt,
-        tavilyConfig: _tavilyApiKey ? { apiKey: _tavilyApiKey, maxResults: _tavilyMaxResults } : null
+        tavilyConfig: _tavilyApiKey ? { apiKey: _tavilyApiKey, maxResults: _tavilyMaxResults } : null,
+        siteId: site,
+        promptOverrides: sitePromptOverrides,
+        humanizerConfig: config.humanizerConfig || null
       });
 
       // 打 site/status 标签 + enrich + 写 per-site 文件

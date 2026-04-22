@@ -456,7 +456,8 @@ async function generateRewrittenArticle(llmConfig = null, imageConfig = null, re
     
     if (!articles || articles.length === 0) {
       console.log('未找到相关文章，回退到AI原创生成');
-      return await generateArticle(llmConfig, imageConfig, null, wordCount, seoKeywords);
+      // 传 siteId 避免 fallback 丢站点上下文（否则噪音 fallback 也会成合同审查主题）
+      return await generateArticle(llmConfig, imageConfig, null, wordCount, seoKeywords, [], siteId, null, humanizerConfig);
     }
     
     // 2. 选择最佳文章
@@ -554,48 +555,59 @@ async function generateArticles(config = {}) {
     deduplicationWindow = 5,
     wordCount = 1000,
     seoKeywords = null,
-    rewritePrompt = null
+    rewritePrompt = null,
+    // Per-site context — NEEDED so LLM knows which site's domain to write for.
+    // Without these, generateArticle() falls back to DEFAULT_SITE_CONTEXT + the
+    // "合同审查" title template in generateDefaultArticle(), regardless of whether
+    // the keywords are fashion/education/automation/etc.
+    siteId = null,
+    promptOverrides = null,
+    humanizerConfig = null
   } = config;
-  
+
   // 构建去重配置对象
   const dedupConfig = {
     enableImageDeduplication,
     deduplicationWindow
   };
-  
+
   const articles = [];
   const totalCount = aiArticleCount + rewriteArticleCount;
-  
-  console.log(`\n========== 开始批量生成文章 ==========`);
+
+  console.log(`\n========== 开始批量生成文章${siteId ? ` [${siteId}]` : ''} ==========`);
   console.log(`AI原创: ${aiArticleCount} 篇`);
   console.log(`搜索改写: ${rewriteArticleCount} 篇`);
   console.log(`总数量: ${totalCount} 篇`);
-  
+  if (siteId) {
+    const ctx = SITE_CONTEXTS[siteId];
+    console.log(`站点上下文: ${ctx ? ctx.topic : '(未知 siteId，使用默认)'}`);
+  }
+
   let currentIndex = 0;
-  
+
   // 生成AI原创文章
   for (let i = 0; i < aiArticleCount; i++) {
     currentIndex++;
     console.log(`\n[${currentIndex}/${totalCount}] 生成AI原创文章...`);
-    const aiArticle = await generateArticle(llmConfig, imageConfig, dedupConfig, wordCount, seoKeywords);
+    const aiArticle = await generateArticle(llmConfig, imageConfig, dedupConfig, wordCount, seoKeywords, [], siteId, promptOverrides, humanizerConfig);
     articles.push(aiArticle);
     console.log(`✓ AI原创文章生成完成: ${aiArticle.title}`);
-    
+
     // 等待1秒，避免ID冲突
     if (currentIndex < totalCount) {
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
-  
+
   // 生成搜索改写文章
   if (enableSearchRewrite && rewriteArticleCount > 0) {
     for (let i = 0; i < rewriteArticleCount; i++) {
       currentIndex++;
       console.log(`\n[${currentIndex}/${totalCount}] 生成搜索改写文章...`);
-      const rewrittenArticle = await generateRewrittenArticle(llmConfig, imageConfig, rewriteRounds, dedupConfig, seoKeywords, wordCount, rewritePrompt);
+      const rewrittenArticle = await generateRewrittenArticle(llmConfig, imageConfig, rewriteRounds, dedupConfig, seoKeywords, wordCount, rewritePrompt, siteId, humanizerConfig);
       articles.push(rewrittenArticle);
       console.log(`✓ 搜索改写文章生成完成: ${rewrittenArticle.title}`);
-      
+
       // 等待1秒，避免ID冲突
       if (currentIndex < totalCount) {
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -604,9 +616,9 @@ async function generateArticles(config = {}) {
   } else if (rewriteArticleCount > 0) {
     console.log(`\n警告: 未启用搜索改写功能，但配置了改写文章数量，将被忽略`);
   }
-  
-  console.log(`\n========== 批量生成完成，共 ${articles.length} 篇 ==========\n`);
-  
+
+  console.log(`\n========== 批量生成完成${siteId ? ` [${siteId}]` : ''}，共 ${articles.length} 篇 ==========\n`);
+
   return articles;
 }
 
