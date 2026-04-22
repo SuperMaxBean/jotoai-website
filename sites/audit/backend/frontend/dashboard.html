@@ -112,7 +112,7 @@
       <div class="flex items-center justify-between">
         <h1 class="text-xl font-semibold" data-t="contacts" data-t="contacts_title">留言管理</h1>
         <div class="flex items-center gap-3">
-          <select id="cFlt" onchange="renderC()" class="input !w-auto !py-1.5 text-xs"><option value="all">'+(t("all_sites"))+'</option></select>
+          <select id="cFlt" onchange="cPage=1;renderC()" class="input !w-auto !py-1.5 text-xs"><option value="all">'+(t("all_sites"))+'</option></select>
           <button onclick="loadC()" class="btn-s text-xs !py-1.5"></button>
         </div>
       </div>
@@ -128,7 +128,23 @@
           <div><input id="cChkAll" type="checkbox" onchange="toggleAllC(this.checked)" class="cursor-pointer"></div>
           <div data-t="col_source">来源</div><div data-t="col_contact">联系人</div><div data-t="col_message">留言</div><div data-t="col_time">时间</div><div data-t="col_channel">渠道</div>
         </div>
-        <div id="cList" class="divide-y divide-gray-50 max-h-[600px] overflow-y-auto"><div class="px-5 py-4 text-gray-400 text-sm"><span class="spinner"></span></div></div>
+        <div id="cList" class="divide-y divide-gray-50"><div class="px-5 py-4 text-gray-400 text-sm"><span class="spinner"></span></div></div>
+      </div>
+      <!-- 分页条 -->
+      <div id="cPager" class="flex items-center justify-between mt-3 text-xs text-gray-500 hidden">
+        <div>
+          <span id="cPagerInfo">-</span>
+          <span class="mx-2 text-gray-300">·</span>
+          每页
+          <select id="cPageSize" onchange="cOnPageSize()" class="input !w-auto !py-1 !px-2 text-xs ml-1 mr-1">
+            <option value="10">10</option>
+            <option value="20" selected>20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+          条
+        </div>
+        <div id="cPagerBtns" class="flex items-center gap-1"></div>
       </div>
     </div>
   </div>
@@ -501,20 +517,46 @@ async function loadStats(){try{const r=await af('/api/admin/dashboard');if(!r.ok
 async function loadC(){try{AC=await(await af('/api/admin/contacts')).json();const f=$('cFlt'),cur=f.value;
   const nm={};S.forEach(s=>{try{nm[new URL(s.url).hostname]=s.name}catch{}});
   const sn=new Set();AC.forEach(c=>{const n=c.site||nm[c.siteHost]||'';if(n)sn.add(n)});
-  f.innerHTML='<option value="all">'+(t("all_sites"))+'</option>'+[...sn].map(s=>`<option value="${s}"${s===cur?' selected':''}>${s}</option>`).join('');renderC()}catch(e){$('cList').innerHTML=`<div class="p-4 text-red-500 text-sm">${e.message}</div>`}}
+  f.innerHTML='<option value="all">'+(t("all_sites"))+'</option>'+[...sn].map(s=>`<option value="${s}"${s===cur?' selected':''}>${s}</option>`).join('');cPage=1;renderC()}catch(e){$('cList').innerHTML=`<div class="p-4 text-red-500 text-sm">${e.message}</div>`}}
+// 分页状态（filter 或 pageSize 改变时 reset 到 page 1）
+let cPage=1;function cGetPageSize(){return parseInt($('cPageSize')?.value||'20',10)||20}
+function cOnPageSize(){cPage=1;renderC()}
+function cGotoPage(p){const total=visibleC().length,pages=Math.max(1,Math.ceil(total/cGetPageSize()));cPage=Math.min(Math.max(1,p),pages);renderC()}
 function renderC(){const fv=$('cFlt').value;const nm={},am={};S.forEach(s=>{try{nm[new URL(s.url).hostname]=s.name}catch{};am[s.name]=s.accent});
   let l=fv==='all'?AC:AC.filter(c=>(c.site||nm[c.siteHost])===fv);
-  if(!l.length){$('cList').innerHTML='<div class="px-5 py-8 text-gray-400 text-sm text-center">${t("no_contacts")}</div>';updateBulkBar();return}
-  $('cList').innerHTML=l.map(c=>{const s=c.site||nm[c.siteHost]||'未知',cl=am[s]||'#94a3b8';
-    const t=c.submittedAt?new Date(c.submittedAt).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+  const pager=$('cPager');
+  if(!l.length){$('cList').innerHTML=`<div class="px-5 py-8 text-gray-400 text-sm text-center">${t("no_contacts")}</div>`;if(pager)pager.classList.add('hidden');updateBulkBar();return}
+  const ps=cGetPageSize(),pages=Math.max(1,Math.ceil(l.length/ps));
+  if(cPage>pages)cPage=pages;
+  const start=(cPage-1)*ps,end=start+ps,pageItems=l.slice(start,end);
+  $('cList').innerHTML=pageItems.map(c=>{const s=c.site||nm[c.siteHost]||'未知',cl=am[s]||'#94a3b8';
+    const ts=c.submittedAt?new Date(c.submittedAt).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
     const m=c.message&&c.message!=='（未填写需求描述）'?c.message:'<span class="text-gray-300">-</span>';
     const id=String(c.id).replace(/'/g,'\\\'');
     const checked=cSel.has(String(c.id))?'checked':'';
-    return `<div class="grid grid-cols-[36px_100px_1fr_180px_120px_70px] px-5 py-3 items-center hover:bg-gray-50/50 text-sm"><div><input type="checkbox" data-cid="${id}" ${checked} onchange="onChkC(this)" class="cursor-pointer"></div><div><span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background:${cl}">${s}</span></div><div class="min-w-0"><div class="font-medium truncate">${c.name||c.firstName||'-'}</div><div class="text-gray-400 text-xs truncate">${c.email||''} ${c.phone||''}</div></div><div class="text-gray-500 text-xs truncate">${m}</div><div class="text-gray-400 text-xs">${t}</div><div class="text-gray-400 text-xs">${c.source||'直接'}</div></div>`}).join('');
+    return `<div class="grid grid-cols-[36px_100px_1fr_180px_120px_70px] px-5 py-3 items-center hover:bg-gray-50/50 text-sm"><div><input type="checkbox" data-cid="${id}" ${checked} onchange="onChkC(this)" class="cursor-pointer"></div><div><span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-white" style="background:${cl}">${s}</span></div><div class="min-w-0"><div class="font-medium truncate">${c.name||c.firstName||'-'}</div><div class="text-gray-400 text-xs truncate">${c.email||''} ${c.phone||''}</div></div><div class="text-gray-500 text-xs truncate">${m}</div><div class="text-gray-400 text-xs">${ts}</div><div class="text-gray-400 text-xs">${c.source||'直接'}</div></div>`}).join('');
+  // 渲染分页条
+  if(pager){
+    $('cPagerInfo').textContent=`共 ${l.length} 条 · 第 ${cPage} / ${pages} 页 · 显示 ${start+1} – ${Math.min(end,l.length)}`;
+    $('cPagerBtns').innerHTML=cRenderPagerButtons(cPage,pages);
+    // 只要有数据就显示分页条（即使只有 1 页，用户也可以改每页条数）
+    pager.classList.remove('hidden');
+  }
   updateBulkBar()}
+function cRenderPagerButtons(cur,pages){
+  const btn=(label,p,active,disabled)=>`<button onclick="cGotoPage(${p})" ${disabled?'disabled':''} class="px-2.5 py-1 rounded border text-xs ${active?'bg-gray-900 text-white border-gray-900':'bg-white border-gray-200 hover:bg-gray-50'} ${disabled?'opacity-40 cursor-not-allowed':''}">${label}</button>`;
+  const ell='<span class="px-1.5 text-gray-400">…</span>';
+  // 生成显示的页码集合：首页、末页、当前页前后各 1
+  const shown=[...new Set([1,pages,cur-1,cur,cur+1])].filter(n=>n>=1&&n<=pages).sort((a,b)=>a-b);
+  let out=btn('上一页',cur-1,false,cur<=1);
+  let prev=0;
+  for(const p of shown){if(p-prev>1)out+=ell;out+=btn(p,p,p===cur,false);prev=p}
+  out+=btn('下一页',cur+1,false,cur>=pages);
+  return out;
+}
 // 批量选择状态（id 以字符串存）
 const cSel=new Set();
-// 返回当前 cFlt 过滤后的可见条目
+// 返回当前 cFlt 过滤后的可见条目（整个过滤结果，不含分页切片）
 function visibleC(){const fv=$('cFlt').value,nm={};S.forEach(s=>{try{nm[new URL(s.url).hostname]=s.name}catch{}});return fv==='all'?AC:AC.filter(c=>(c.site||nm[c.siteHost])===fv)}
 function updateBulkBar(){const vis=visibleC(),visIds=new Set(vis.map(c=>String(c.id)));
   // cSel 中只保留可见 id（过滤切换时自动丢弃不再可见的选择）
