@@ -75,7 +75,14 @@ const FALLBACK_RELATED: Article[] = [
   },
 ];
 
-export default function BlogPostPage() {
+interface BlogPostPageProps {
+  /** 服务端预加载的 raw article —— /blog/[id]/page.tsx 传入。
+   * 类型用 unknown 因为 server 端的 Article 接口和本组件的 Article 接口字段不完全一致，
+   * normalizeArticle 会统一转成本组件的形状。 */
+  article?: unknown;
+}
+
+export default function BlogPostPage({ article: articleFromServer }: BlogPostPageProps = {}) {
   const { t } = useLanguage();
   // 用 useParams() 而非 window.location.pathname —— 前者是 React 响应式，SPA
   // 导航（Link 点击）时会自动重新 render + 触发 useEffect；后者是非响应式，
@@ -83,9 +90,9 @@ export default function BlogPostPage() {
   // useEffect 也不会 re-fire → 详情页永远停在 loading spinner。
   const params = useParams<{ id?: string }>();
   const id = (typeof params?.id === 'string' ? params.id : Array.isArray(params?.id) ? params.id[0] : '') || '';
-  const [post, setPost] = useState<Article | null>(null);
+  const [post, setPost] = useState<Article | null>(articleFromServer ? normalizeArticle(articleFromServer) : null);
   const [relatedPosts, setRelatedPosts] = useState<Article[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!articleFromServer);
   const [isError, setIsError] = useState(false);
 
   useEffect(() => { window.scrollTo(0, 0); }, [id]);
@@ -93,39 +100,42 @@ export default function BlogPostPage() {
   useEffect(() => {
     if (!id) return;
     const fetchPost = async () => {
-      setIsLoading(true);
-      setIsError(false);
-      try {
-        const res = await fetch(`${API_BASE}/fasium/articles/${id}`);
-        if (!res.ok) throw new Error('文章不存在');
-        const data = await res.json();
-        const article = normalizeArticle(data.article ?? data);
-        setPost(article);
-
+      // Step 1: 主 article —— 服务端已传就跳过 fetch
+      if (!articleFromServer) {
+        setIsLoading(true);
+        setIsError(false);
         try {
-          const allRes = await fetch(`${API_BASE}/fasium/articles`);
-          if (allRes.ok) {
-            const allData = await allRes.json();
-            const allList: Article[] = (Array.isArray(allData) ? allData : allData.articles ?? [])
-              .map(normalizeArticle)
-              .filter((a: Article) => String(a.slug) !== String(id));
-            setRelatedPosts(allList.slice(0, 2));
-          } else {
-            setRelatedPosts(FALLBACK_RELATED.filter(r => String(r.slug) !== String(id)));
-          }
+          const res = await fetch(`${API_BASE}/fasium/articles/${id}`);
+          if (!res.ok) throw new Error('文章不存在');
+          const data = await res.json();
+          setPost(normalizeArticle(data.article ?? data));
         } catch {
+          setIsError(true);
+          setPost(FALLBACK_POST);
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // Step 2: related posts（客户端异步拉，不影响主 article 渲染）
+      try {
+        const allRes = await fetch(`${API_BASE}/fasium/articles`);
+        if (allRes.ok) {
+          const allData = await allRes.json();
+          const allList: Article[] = (Array.isArray(allData) ? allData : allData.articles ?? [])
+            .map(normalizeArticle)
+            .filter((a: Article) => String(a.slug) !== String(id));
+          setRelatedPosts(allList.slice(0, 2));
+        } else {
           setRelatedPosts(FALLBACK_RELATED.filter(r => String(r.slug) !== String(id)));
         }
       } catch {
-        setIsError(true);
-        setPost(FALLBACK_POST);
-        setRelatedPosts(FALLBACK_RELATED);
-      } finally {
-        setIsLoading(false);
+        setRelatedPosts(FALLBACK_RELATED.filter(r => String(r.slug) !== String(id)));
       }
+      setIsLoading(false);
     };
     fetchPost();
-  }, [id]);
+  }, [id, articleFromServer]);
 
   const handleShare = () => {
     if (navigator.share && post) {

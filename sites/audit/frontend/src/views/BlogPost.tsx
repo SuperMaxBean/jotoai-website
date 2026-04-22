@@ -29,29 +29,38 @@ function estimateReadTime(html: string) {
   return Math.max(3, Math.round(words / 300));
 }
 
-export default function BlogPost() {
+interface BlogPostProps {
+  /** 预加载的 article —— 由 /blog/[id]/page.tsx 服务端 fetch 后传入，爬虫能直接看 SSR h1/正文 */
+  article?: Article | null;
+}
+
+export default function BlogPost({ article: articleFromServer }: BlogPostProps = {}) {
   const { id } = useParams();
   const { lang, t } = useLanguage();
-  const [article, setArticle] = useState<Article | null>(null);
+  const [article, setArticle] = useState<Article | null>(articleFromServer ?? null);
   const [related, setRelated] = useState<Article[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!articleFromServer);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     if (!id) return;
-    fetch(`/api/audit/articles/${id}`)
-      .then(r => r.ok ? r.json() : Promise.reject(r.status))
-      .then(d => {
-        setArticle(d.article);
-        setLoading(false);
-      })
-      .catch(() => { setNotFound(true); setLoading(false); });
+    // 如果服务端已经传了 article（SSR 成功），跳过 fetch，直接拉 related
+    if (!articleFromServer) {
+      fetch(`/api/audit/articles/${id}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(d => {
+          setArticle(d.article);
+          setLoading(false);
+        })
+        .catch(() => { setNotFound(true); setLoading(false); });
+    }
 
-    // Fetch related articles
+    // Fetch related articles（需要客户端异步加载）
     fetch('/api/audit/articles')
       .then(r => r.json())
-      .then(d => setRelated((d.articles || []).filter((a: Article) => String(a.id) !== String(id)).slice(0, 3)));
-  }, [id]);
+      .then(d => setRelated((d.articles || []).filter((a: Article) => String(a.id) !== String(id)).slice(0, 3)))
+      .catch(() => {});
+  }, [id, articleFromServer]);
 
   if (loading) return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">
