@@ -243,20 +243,17 @@ async function generateArticleWithLLM(llmConfig, keyword, wordCount = 1000, site
       endpoint = endpoint.replace(/\/$/, '') + '/chat/completions';
     }
     
-    const response = await axios.post(
-      endpoint,
-      {
-        model: llmConfig.model || 'gpt-4.1-mini',
-        messages: [
-          {
-            role: 'system',
-            content: (() => { const ctx = getSiteContext(siteId, promptOverrides); return ctx.systemPrompt + '请严格按照要求的字数生成文章，不得少于要求字数的90%，内容要充实详细。'; })()
-          },
-          {
-            role: 'user',
-            content: (() => {
-            const ctx = getSiteContext(siteId, promptOverrides);
-            return `请写一篇关于"${keyword}"的专业SEO博客文章，要求：
+    const ctx = getSiteContext(siteId, promptOverrides);
+    const payload = {
+      model: llmConfig.model || 'gpt-4.1-mini',
+      messages: [
+        {
+          role: 'system',
+          content: ctx.systemPrompt + '请严格按照要求的字数生成文章，不得少于要求字数的90%，内容要充实详细。'
+        },
+        {
+          role: 'user',
+          content: `请写一篇关于"${keyword}"的专业SEO博客文章，要求：
 1. 字数必须达到${wordCount}字以上（不少于${Math.floor(wordCount * 0.9)}字），内容充实，多举实际案例
 2. 标题吸引人，体现专业性和实用价值
 3. 内容专业、深度，面向${ctx.topic}领域的专业读者
@@ -272,21 +269,38 @@ async function generateArticleWithLLM(llmConfig, keyword, wordCount = 1000, site
    - 1. 有序列表（流程、步骤）
    - > 引用数据或专家观点
 8. 不要输出 HTML 标签，只使用纯 Markdown 语法
-9. 用 JSON 格式返回，包含 title 和 content 字段，content 为 Markdown 字符串`;
-          })()
-          }
-        ],
-        temperature: 0.8,
-        max_tokens: Math.max(4000, wordCount * 2),
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${llmConfig.apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        timeout: 180000
+9. 用 JSON 格式返回，包含 title 和 content 字段，content 为 Markdown 字符串`
+        }
+      ],
+      temperature: 0.8,
+      max_tokens: Math.max(4000, wordCount * 2),
+    };
+    const axiosOpts = {
+      headers: { 'Authorization': `Bearer ${llmConfig.apiKey}`, 'Content-Type': 'application/json' },
+      timeout: 180000
+    };
+
+    // Qwen / dashscope 对新账号的 QPS 限制较严，一个 rewrite 轮次里连发 3-4 次 LLM
+    // 很容易触发 429。加指数退避重试（最多 3 轮），避免落到 generateDefaultArticle
+    // 导致用 audit 模板的"企业法务合规"串车标题。
+    const backoffs = [1000, 3000, 10000];
+    let response;
+    for (let attempt = 0; ; attempt++) {
+      try {
+        response = await axios.post(endpoint, payload, axiosOpts);
+        break;
+      } catch (err) {
+        const status = err.response?.status;
+        const retriable = status === 429 || status === 503 || err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT';
+        if (retriable && attempt < backoffs.length) {
+          const wait = backoffs[attempt];
+          console.log(`[LLM retry] ${status || err.code} → 第 ${attempt + 1}/${backoffs.length} 次重试，等 ${wait}ms`);
+          await new Promise(r => setTimeout(r, wait));
+          continue;
+        }
+        throw err;
       }
-    );
+    }
     
     let content = response.data.choices[0].message.content;
 
@@ -622,19 +636,25 @@ async function generateArticles(config = {}) {
   return articles;
 }
 
-// 生成默认文章（当API失败时，合同审查主题）
+// 生成默认文章（当API失败时的兜底）。
+// 之前这里只为 audit/shanyue/sec/kb/fasium 写了模板，loop/noteflow/translator 缺失
+// → fallback 到 audit → 在 Qwen 429 时产出"XX：企业法务合规的智能化新路径"等串车标题。
 function generateDefaultArticle(keyword, siteId = null) {
   const ctx = getSiteContext(siteId);
 
   const titleTemplates = {
-    audit:   [`${keyword}：企业法务合规的智能化新路径`, `${keyword}在合同审查中的创新应用`, `如何用${keyword}提升企业合同风控效率`],
-    shanyue: [`${keyword}：教育评测效率提升的新引擎`, `${keyword}在智能阅卷中的实践探索`, `${keyword}：让考试批改更快更准`],
-    sec:     [`${keyword}：守护企业AI应用的安全防线`, `${keyword}在大模型治理中的关键作用`, `如何用${keyword}应对AI安全新挑战`],
-    kb:      [`${keyword}：企业知识沉淀与传承的智能方案`, `${keyword}助力企业构建高效知识中台`, `${keyword}：让组织知识活起来`],
-    fasium:  [`${keyword}：重塑时尚设计创作流程`, `${keyword}在服装设计领域的创意革命`, `${keyword}：AI赋能时尚新美学`],
+    audit:     [`${keyword}：企业法务合规的智能化新路径`, `${keyword}在合同审查中的创新应用`, `如何用${keyword}提升企业合同风控效率`],
+    shanyue:   [`${keyword}：教育评测效率提升的新引擎`, `${keyword}在智能阅卷中的实践探索`, `${keyword}：让考试批改更快更准`],
+    sec:       [`${keyword}：守护企业AI应用的安全防线`, `${keyword}在大模型治理中的关键作用`, `如何用${keyword}应对AI安全新挑战`],
+    kb:        [`${keyword}：企业知识沉淀与传承的智能方案`, `${keyword}助力企业构建高效知识中台`, `${keyword}：让组织知识活起来`],
+    fasium:    [`${keyword}：重塑时尚设计创作流程`, `${keyword}在服装设计领域的创意革命`, `${keyword}：AI赋能时尚新美学`],
+    loop:      [`${keyword}：让浏览器成为企业的 AI 员工`, `${keyword}在网页自动化中的实战应用`, `如何用${keyword}告别重复性网页操作`],
+    noteflow:  [`${keyword}：打造你的 AI 第二大脑`, `${keyword}在知识管理中的实战路径`, `如何用${keyword}提升个人与团队学习效率`],
+    translator:[`${keyword}：出海企业的多语言内容新解法`, `${keyword}在跨境业务中的实战应用`, `如何用${keyword}提升翻译质量与效率`],
   };
-  const siteKey = SITE_CONTEXTS[siteId] ? siteId : 'audit';
-  const titles = titleTemplates[siteKey] || titleTemplates.audit;
+  // 注意：必须用 hasOwnProperty 判断，否则 `||` 会在站点模板存在但值为 undefined/空时错误 fallback
+  const siteKey = Object.prototype.hasOwnProperty.call(titleTemplates, siteId) ? siteId : 'audit';
+  const titles = titleTemplates[siteKey];
   const title = titles[Math.floor(Math.random() * titles.length)];
 
   // Build site-specific default content

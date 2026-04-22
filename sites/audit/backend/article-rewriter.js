@@ -126,9 +126,13 @@ async function rewriteArticle(originalArticle, keyword, llmConfig, rewriteRounds
       throw new Error('LLM配置不完整');
     }
 
+    // Qwen/dashscope 对新账号 QPS 限制严，一篇改写=3 轮+1 次标题=4 次调用，
+    // 默认 maxRetries=2 不够。提到 5，配合 SDK 自带的指数退避消化 429 脉冲。
     const openai = new OpenAI({
       apiKey: llmConfig.apiKey,
-      baseURL: llmConfig.apiEndpoint || 'https://api.openai.com/v1'
+      baseURL: llmConfig.apiEndpoint || 'https://api.openai.com/v1',
+      maxRetries: 5,
+      timeout: 180000
     });
 
     // 使用自定义提示词或默认提示词，替换占位符
