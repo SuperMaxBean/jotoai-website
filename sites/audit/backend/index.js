@@ -1285,91 +1285,107 @@ app.post('/api/admin/test-tavily', verifyToken, async (req, res) => {
   }
 });
 
+// 7 个内容站 — translator 是合作方控制，不纳入自动发布
+const CONTENT_SITES = ['audit', 'shanyue', 'sec', 'kb', 'fasium', 'loop', 'noteflow'];
+
 async function scheduleArticleGeneration() {
   const config = await getConfig();
-  
+
   // 读取 seoConfig 中的自动发布开关（管理界面保存在此处）
   var autoPublishEnabled = (config.seoConfig && config.seoConfig.autoPublish) ? true : (config.autoPostEnabled || false);
   if (!autoPublishEnabled) {
     console.log("[定时发布] 自动发布未启用，跳过");
     return;
   }
-  
-  console.log('\n========== 开始自动发布文章 ==========');
-  console.log(`搜索改写: ${config.enableSearchRewrite ? '启用' : '禁用'}`);
-  
-  try {
-    // 优先读取 llmConfig 嵌套对象（管理界面保存在此处）
-    var _llmKey = (config.llmConfig && config.llmConfig.apiKey) ? config.llmConfig.apiKey : (config.llmApiKey || "");
-    var _llmUrl = (config.llmConfig && config.llmConfig.baseURL) ? config.llmConfig.baseURL : (config.llmApiEndpoint || "");
-    var _llmModel = (config.llmConfig && config.llmConfig.model) ? config.llmConfig.model : (config.llmModel || "");
-    const llmConfig = (_llmKey && _llmUrl) ? {
-      apiKey: _llmKey,
-      apiEndpoint: _llmUrl,
-      model: _llmModel
-    } : null;
-    
-    // 优先读取 imageConfig 嵌套对象
-    const imageConfig = {
-      useAI: (config.imageConfig && config.imageConfig.useAI) ? config.imageConfig.useAI : (config.imageUseAI || false),
-      apiKey: (config.imageConfig && config.imageConfig.aiApiKey) ? config.imageConfig.aiApiKey : (config.imageApiKey || ""),
-      unsplashApiKey: (config.imageConfig && config.imageConfig.unsplashApiKey) ? config.imageConfig.unsplashApiKey : (config.unsplashApiKey || "")
-    };
-    
-    // 读取 seoConfig 中的文章数量配置
-    var _aiCount = (config.seoConfig && config.seoConfig.aiArticleCount) ? config.seoConfig.aiArticleCount : (config.aiArticleCount || 1);
-    var _rewriteCount = (config.seoConfig && config.seoConfig.rewriteArticleCount) ? config.seoConfig.rewriteArticleCount : (config.rewriteArticleCount || 0);
-    var _enableRewrite = (config.seoConfig && config.seoConfig.enableSearchRewrite) ? config.seoConfig.enableSearchRewrite : (config.enableSearchRewrite || false);
-    var _rewriteRounds = (config.seoConfig && config.seoConfig.rewriteRounds) ? config.seoConfig.rewriteRounds : (config.rewriteRounds || 3);
-    
-    console.log("[定时发布] LLM配置:", _llmKey ? ("已配置(" + _llmModel + ")") : "未配置");
-    
-    // 读取 Tavily 配置
-    var _tavilyApiKey = (config.tavilyConfig && config.tavilyConfig.apiKey) ? config.tavilyConfig.apiKey : "";
-    var _tavilyMaxResults = (config.tavilyConfig && config.tavilyConfig.maxResults) ? config.tavilyConfig.maxResults : 5;
-    if (_tavilyApiKey) console.log("[定时发布] Tavily API: 已配置（优先使用）");
-    else console.log("[定时发布] Tavily API: 未配置，将使用 Bing 爬取");
-    console.log("[定时发布] 图片配置: Unsplash=" + (imageConfig.unsplashApiKey ? "已配置" : "未配置"));
-    console.log("[定时发布] 文章数量: AI原创=" + _aiCount + ", 改写=" + _rewriteCount);
-    
-    // 读取文章字数配置
-    var _wordCount = (config.seoConfig && config.seoConfig.articleWordCount) ? config.seoConfig.articleWordCount : (config.articleWordCount || 1000);
-    console.log("[定时发布] 目标字数:", _wordCount);
-    
-    // 读取 SEO 关键词配置
-    var _seoKeywords = config.seoConfig?.keywords || config.seoKeywords || null;
-    console.log("[定时发布] SEO关键词:", _seoKeywords ? "已配置" : "未配置（使用默认）");
 
-    // 读取改写提示词配置
-    var _rewritePrompt = config.seoConfig?.rewritePrompt || null;
-    console.log("[定时发布] 改写提示词:", _rewritePrompt ? "自定义" : "默认");
+  console.log('\n========== 开始自动发布文章（按站点分发） ==========');
 
-    // 使用新的批量生成功能
-    const newArticles = await generateArticles({
-      llmConfig,
-      imageConfig,
-      enableSearchRewrite: _enableRewrite,
-      rewriteRounds: _rewriteRounds,
-      aiArticleCount: _aiCount,
-      rewriteArticleCount: _rewriteCount,
-      wordCount: _wordCount,
-      seoKeywords: _seoKeywords,
-      rewritePrompt: _rewritePrompt,
-      tavilyConfig: _tavilyApiKey ? { apiKey: _tavilyApiKey, maxResults: _tavilyMaxResults } : null
-    });
-    
-    // 保存所有文章
-    const articles = await getArticles();
-    for (const article of newArticles) {
-      articles.unshift(article);
-      console.log(`✓ 文章已保存: ${article.title} [类型: ${article.type}]`);
+  // ---- 全局共用配置 ----
+  const _llmKey = config.llmConfig?.apiKey || config.llmApiKey || "";
+  const _llmUrl = config.llmConfig?.baseURL || config.llmApiEndpoint || "";
+  const _llmModel = config.llmConfig?.model || config.llmModel || "";
+  const llmConfig = (_llmKey && _llmUrl)
+    ? { apiKey: _llmKey, apiEndpoint: _llmUrl, model: _llmModel }
+    : null;
+
+  const imageConfig = {
+    useAI: config.imageConfig?.useAI ?? config.imageUseAI ?? false,
+    apiKey: config.imageConfig?.aiApiKey ?? config.imageApiKey ?? "",
+    unsplashApiKey: config.imageConfig?.unsplashApiKey ?? config.unsplashApiKey ?? ""
+  };
+
+  const _aiCount = config.seoConfig?.aiArticleCount ?? config.aiArticleCount ?? 1;
+  const _rewriteCount = config.seoConfig?.rewriteArticleCount ?? config.rewriteArticleCount ?? 0;
+  const _enableRewrite = config.seoConfig?.enableSearchRewrite ?? config.enableSearchRewrite ?? false;
+  const _rewriteRounds = config.seoConfig?.rewriteRounds ?? config.rewriteRounds ?? 3;
+  const _wordCount = config.seoConfig?.articleWordCount ?? config.articleWordCount ?? 1000;
+  const _tavilyApiKey = config.tavilyConfig?.apiKey || "";
+  const _tavilyMaxResults = config.tavilyConfig?.maxResults || 5;
+  const _globalSeoKeywords = config.seoConfig?.keywords || config.seoKeywords || null;
+  const _globalRewritePrompt = config.seoConfig?.rewritePrompt || null;
+
+  console.log("[定时发布] LLM:", _llmKey ? `已配置(${_llmModel})` : "未配置");
+  console.log("[定时发布] Tavily:", _tavilyApiKey ? "已配置" : "未配置（用 Bing 爬取）");
+  console.log("[定时发布] 图片:", imageConfig.unsplashApiKey ? "Unsplash 已配置" : "未配置");
+  console.log(`[定时发布] 每站点目标: AI 原创=${_aiCount} + 改写=${_rewriteCount} = ${_aiCount + _rewriteCount} 篇`);
+  console.log(`[定时发布] 内容站数量: ${CONTENT_SITES.length}，预计总产出: ${CONTENT_SITES.length * (_aiCount + _rewriteCount)} 篇`);
+
+  const { enrichLegacyArticle } = require('./article-enrichment');
+  const summary = { total: 0, perSite: {}, errors: {} };
+
+  // ---- 按站点循环生成 + 写入 per-site articles.json ----
+  for (const site of CONTENT_SITES) {
+    try {
+      console.log(`\n[定时发布] ── ${site} (${SITE_NAMES[site] || site}) ──`);
+
+      // 读站点独有的 prompt / keywords 覆盖（可选）
+      const siteConfig = await readSiteFile(getSitePaths(site).config, {});
+      const siteSeoKeywords = siteConfig.seoKeywords || _globalSeoKeywords;
+      const siteRewritePrompt = siteConfig.rewritePrompt || _globalRewritePrompt;
+
+      const newArticles = await generateArticles({
+        llmConfig,
+        imageConfig,
+        enableSearchRewrite: _enableRewrite,
+        rewriteRounds: _rewriteRounds,
+        aiArticleCount: _aiCount,
+        rewriteArticleCount: _rewriteCount,
+        wordCount: _wordCount,
+        seoKeywords: siteSeoKeywords,
+        rewritePrompt: siteRewritePrompt,
+        tavilyConfig: _tavilyApiKey ? { apiKey: _tavilyApiKey, maxResults: _tavilyMaxResults } : null
+      });
+
+      // 打 site/status 标签 + enrich + 写 per-site 文件
+      const siteArticlesPath = getSitePaths(site).articles;
+      const existing = await readSiteFile(siteArticlesPath, []);
+      for (const article of newArticles) {
+        article.site = site;
+        article.status = article.status || 'published';
+        if (!article.id) article.id = Date.now() + Math.floor(Math.random() * 1000);
+        const enriched = article.schemaVersion ? article : enrichLegacyArticle(article);
+        existing.unshift(enriched);
+      }
+      await fs.writeFile(siteArticlesPath, JSON.stringify(existing, null, 2));
+
+      summary.perSite[site] = newArticles.length;
+      summary.total += newArticles.length;
+      console.log(`[定时发布] ✓ ${site}: +${newArticles.length} 篇（累计 ${existing.length} 篇）`);
+    } catch (err) {
+      summary.perSite[site] = 0;
+      summary.errors[site] = err.message;
+      console.error(`[定时发布] ✗ ${site}: ${err.message}`);
     }
-    await saveArticles(articles);
-    
-    console.log(`========== 自动发布完成，共 ${newArticles.length} 篇 ==========\n`);
-  } catch (error) {
-    console.error('Error in scheduled article generation:', error);
   }
+
+  // ---- 汇总 ----
+  console.log(`\n========== 自动发布完成：共 ${summary.total} 篇 ==========`);
+  for (const site of CONTENT_SITES) {
+    const n = summary.perSite[site] || 0;
+    const err = summary.errors[site];
+    console.log(`  ${site.padEnd(10)}: ${n} 篇${err ? ` [错误: ${err}]` : ''}`);
+  }
+  console.log('');
 }
 
 // ========== 站点健康巡检 ==========
@@ -1449,10 +1465,11 @@ async function runHealthCheck(customUrls) {
   return results;
 }
 
-function buildReportHtml(results, title, { articleCount, contactCount } = {}) {
+function buildReportHtml(results, title, { articleCount, contactCount, autoPublishStall } = {}) {
   const now = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
   const problems = results.filter(r => !r.ok);
-  const allOk = problems.length === 0;
+  const httpOk = problems.length === 0;
+  const allOk = httpOk && !autoPublishStall;
   const color = allOk ? '#22c55e' : '#ef4444';
   const icon = allOk ? '✅' : '⚠️';
   // Daily summary section (articles + contacts)
@@ -1463,15 +1480,29 @@ function buildReportHtml(results, title, { articleCount, contactCount } = {}) {
       <p style="margin:0;font-size:13px;color:#334155">新增文章: <strong>${articleCount ?? 0}</strong> 篇 &nbsp;|&nbsp; 新增留言: <strong>${contactCount ?? 0}</strong> 条</p>
     </div>`;
   }
+  // Auto-publish stall banner (enabled but 0 articles in 24h)
+  let stallHtml = '';
+  if (autoPublishStall) {
+    stallHtml = `<div style="margin-bottom:16px;padding:12px 16px;background:#fef3c7;border-radius:8px;border-left:4px solid #f59e0b">
+      <p style="margin:0 0 4px;font-size:14px;font-weight:600;color:#92400e">⚠️ 自动发布疑似未运行</p>
+      <p style="margin:0;font-size:13px;color:#78350f">过去 24 小时产出 0 篇文章，但自动发布开关是 ON 状态。请检查：cron 是否到达触发时间、LLM/Tavily 额度、后端日志 [定时发布] 标签。</p>
+    </div>`;
+  }
   const rows = results.map(r => {
     const bg = r.ok ? '' : 'background:#fef2f2';
     const statusIcon = r.ok ? '✅' : '❌';
     const detail = r.ok ? `${r.size}B / ${r.latency}ms` : `<span style="color:red">${r.issue}</span>`;
     return `<tr style="${bg}"><td style="padding:8px;border:1px solid #e5e7eb">${statusIcon} ${r.site}</td><td style="padding:8px;border:1px solid #e5e7eb">${r.status||'-'}</td><td style="padding:8px;border:1px solid #e5e7eb">${r.latency}ms</td><td style="padding:8px;border:1px solid #e5e7eb">${detail}</td></tr>`;
   }).join('');
+  const statusLine = allOk
+    ? '所有站点正常'
+    : (problems.length > 0
+        ? `${problems.length} 个站点异常${autoPublishStall ? ' + 自动发布 0 篇' : ''}`
+        : '自动发布疑似未运行');
   return `<div style="font-family:sans-serif;max-width:600px">
     <h2 style="color:${color}">${icon} ${title}</h2>
-    <p style="color:#666">${now} — ${allOk ? '所有站点正常' : problems.length + ' 个站点异常'}</p>
+    <p style="color:#666">${now} — ${statusLine}</p>
+    ${stallHtml}
     ${summaryHtml}
     <table style="border-collapse:collapse;width:100%;font-size:13px">
       <tr style="background:#f9fafb"><th style="padding:8px;border:1px solid #e5e7eb;text-align:left">站点</th><th style="padding:8px;border:1px solid #e5e7eb">HTTP</th><th style="padding:8px;border:1px solid #e5e7eb">延迟</th><th style="padding:8px;border:1px solid #e5e7eb">详情</th></tr>
@@ -1491,14 +1522,27 @@ function isWithinLast24h(isoStr) {
   return (Date.now() - t) <= TWENTY_FOUR_HOURS_MS;
 }
 
-// Count articles across all sites created in the last 24 hours.
+// Count articles created in the last 24 hours.
+// Historically articles are stored in the GLOBAL data/articles.json (single file, site=null).
+// per-site data/sites/<site>/articles.json is read as a future-proofing fallback, but in
+// production today all articles live in the global file. Previously this function only
+// looked at per-site files and always returned 0 → daily health email showed
+// "新增文章 0 篇" even when 4 articles/day were being published.
 async function countLast24hArticles() {
   let count = 0;
+  // Global articles file (the canonical source today)
+  try {
+    const globalArticles = JSON.parse(await fs.readFile(path.join(DATA_DIR, 'articles.json'), 'utf8'));
+    const list = Array.isArray(globalArticles) ? globalArticles : (globalArticles.articles || []);
+    count += list.filter(a => isWithinLast24h(a.createdAt || a.publishedAt)).length;
+  } catch { /* file may not exist */ }
+  // Per-site files (future-proofing, currently empty/absent)
   for (const site of SITE_DIRS) {
     try {
       const filePath = path.join(DATA_DIR, 'sites', site, 'articles.json');
       const articles = JSON.parse(await fs.readFile(filePath, 'utf8'));
-      count += articles.filter(a => isWithinLast24h(a.createdAt)).length;
+      const list = Array.isArray(articles) ? articles : (articles.articles || []);
+      count += list.filter(a => isWithinLast24h(a.createdAt || a.publishedAt)).length;
     } catch { /* file may not exist */ }
   }
   return count;
@@ -1576,11 +1620,18 @@ cron.schedule('* * * * *', async function() {
     const results = await runHealthCheck(mc.urls);
     const recipients = getMonitorRecipients(config);
     if (recipients.length) {
-      const allOk = results.every(r => r.ok);
-      const subject = allOk ? '✅ JOTO.AI 每日健康报告 — 全部正常' : '⚠️ JOTO.AI 每日健康报告 — 发现异常';
       const articleCount = await countLast24hArticles();
       const contactCount = await countLast24hContacts();
-      const html = buildReportHtml(results, 'JOTO.AI 每日健康报告', { articleCount, contactCount });
+      const autoPublishOn = (config.seoConfig?.autoPublish === true) || (config.autoPostEnabled === true);
+      const autoPublishStall = autoPublishOn && articleCount === 0;
+      const httpOk = results.every(r => r.ok);
+      const allOk = httpOk && !autoPublishStall;
+      const subject = allOk
+        ? '✅ JOTO.AI 每日健康报告 — 全部正常'
+        : (autoPublishStall && httpOk
+            ? '⚠️ JOTO.AI 每日健康报告 — 自动发布疑似未运行'
+            : '⚠️ JOTO.AI 每日健康报告 — 发现异常');
+      const html = buildReportHtml(results, 'JOTO.AI 每日健康报告', { articleCount, contactCount, autoPublishStall });
       await sendEmail(recipients, subject, html);
       console.log(`[每日报告] 过去24h 文章:${articleCount} 留言:${contactCount} 已发送 → ${recipients.join(', ')}`);
     }
@@ -1596,7 +1647,9 @@ app.post('/api/admin/monitor-test', verifyToken, async (req, res) => {
     const results = await runHealthCheck(config.monitorConfig?.urls);
     const articleCount = await countLast24hArticles();
     const contactCount = await countLast24hContacts();
-    const html = buildReportHtml(results, 'JOTO.AI 健康巡检 — 测试报告', { articleCount, contactCount });
+    const autoPublishOn = (config.seoConfig?.autoPublish === true) || (config.autoPostEnabled === true);
+    const autoPublishStall = autoPublishOn && articleCount === 0;
+    const html = buildReportHtml(results, 'JOTO.AI 健康巡检 — 测试报告', { articleCount, contactCount, autoPublishStall });
     await sendEmail(recipients, '🧪 JOTO.AI 健康巡检 — 测试报告', html);
     res.json({ success: true });
   } catch (e) { res.json({ success: false, message: e.message }); }
