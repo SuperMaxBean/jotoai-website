@@ -374,15 +374,24 @@ async function generateArticle(llmConfig = null, imageConfig = null, dedupConfig
   let articleData;
 
   // 生成文章内容
-  if (llmConfig && llmConfig.apiKey && llmConfig.apiEndpoint) {
-    try {
-      articleData = await generateArticleWithLLM(llmConfig, keyword, wordCount, siteId, promptOverrides);
-    } catch (error) {
-      console.error('使用配置的LLM失败，使用默认内容:', error.message);
-      articleData = generateDefaultArticle(keyword, siteId);
-    }
+  // 修复 #3：不再 fallback 到 generateDefaultArticle 死模板。历史问题是当 LLM 429/报错时
+  // 静默落到死模板，而死模板里 loop/noteflow 缺失会再 fallback 到 audit 的"合同法务"
+  // 模板 → 全站串车。现在 LLM 失败直接抛错，由 caller 决定：
+  //   - cron 站间循环: 该站报 1 次错，其他站继续
+  //   - 前端单篇触发: 返回 500，管理员看到错误（而不是误以为成功）
+  if (!llmConfig || !llmConfig.apiKey || !llmConfig.apiEndpoint) {
+    throw new Error('LLM 未配置：llmConfig.apiKey / apiEndpoint 缺失');
+  }
+  articleData = await generateArticleWithLLM(llmConfig, keyword, wordCount, siteId, promptOverrides);
+
+  // 修复 #4：字数校验。LLM 偶尔偷懒返回 300-600 字的短文，SEO 价值低
+  const plainText = (articleData?.markdown || articleData?.content || '').replace(/<[^>]+>/g, '').replace(/\s+/g, '');
+  const actualWordCount = plainText.length;
+  if (actualWordCount < Math.floor(wordCount * 0.9)) {
+    console.warn(`[字数检查] 实际 ${actualWordCount} 字 < 目标 ${wordCount} × 90% (${Math.floor(wordCount * 0.9)}) —— 文章偏短`);
+    if (articleData) articleData._wcWarning = { actual: actualWordCount, target: wordCount };
   } else {
-    articleData = generateDefaultArticle(keyword, siteId);
+    console.log(`[字数检查] ${actualWordCount} 字 ✓ (目标 ${wordCount})`);
   }
 
   // AI 拟人化处理（如果开启）
@@ -477,7 +486,13 @@ async function generateRewrittenArticle(llmConfig = null, imageConfig = null, re
     // 2. 选择最佳文章
     console.log(`\n步骤2: 从 ${articles.length} 篇文章中选择最佳文章...`);
     const bestArticle = selectBestArticle(articles, keyword);
-    console.log(`选中文章: ${bestArticle.title}`);
+    // 修复 #5：selectBestArticle 现在会在相关度不达标时返回 null（防止 Tavily
+    // 搜到完全无关的文章，例如游戏攻略、综艺评论之类）。这种情况降级走 AI 原创。
+    if (!bestArticle) {
+      console.log(`未找到与关键词"${keyword}"足够相关的候选文章，降级到 AI 原创生成`);
+      return await generateArticle(llmConfig, imageConfig, null, wordCount, seoKeywords, [], siteId, null, humanizerConfig);
+    }
+    console.log(`选中文章: ${bestArticle.title} (score=${bestArticle.score})`);
     console.log(`文章长度: ${bestArticle.length} 字`);
     console.log(`来源URL: ${bestArticle.url}`);
     

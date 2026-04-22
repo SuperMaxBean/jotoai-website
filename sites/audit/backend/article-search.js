@@ -233,11 +233,11 @@ function selectBestArticle(articles, keyword) {
   if (!articles || articles.length === 0) {
     return null;
   }
-  
+
   // 计算相关度分数
   const scoredArticles = articles.map(article => {
     let score = 0;
-    
+
     // 内容长度分数（500-2000字最佳）
     if (article.length >= 500 && article.length <= 2000) {
       score += 50;
@@ -246,26 +246,67 @@ function selectBestArticle(articles, keyword) {
     } else if (article.length > 3000) {
       score += 10;
     }
-    
+
     // 关键词出现次数分数
     const keywordCount = (article.content.match(new RegExp(keyword, 'gi')) || []).length;
     score += Math.min(keywordCount * 5, 30);
-    
+
     // 标题包含关键词加分
     if (article.title && article.title.includes(keyword)) {
       score += 20;
     }
-    
-    return {
-      ...article,
-      score
-    };
+
+    // 修复 #5：把关键词拆成"核心字"（中文 2+ 字片段或英文词），看标题/正文中命中几个。
+    // 用来兜底整词未匹配但含多个核心字的情况（"AI全科阅卷" vs 标题"AI阅卷"）
+    const tokens = extractTokens(keyword);
+    const titleTokenHits = tokens.filter(t => article.title && article.title.includes(t)).length;
+    const contentTokenHits = tokens.filter(t => article.content && article.content.includes(t)).length;
+    score += titleTokenHits * 3;
+    score += Math.min(contentTokenHits * 2, 10);
+
+    return { ...article, score, tokens, titleTokenHits, contentTokenHits, keywordCount };
   });
-  
-  // 按分数排序，返回最高分的文章
+
   scoredArticles.sort((a, b) => b.score - a.score);
-  
-  return scoredArticles[0];
+
+  // 修复 #5：相关度阈值 —— 最佳候选必须满足以下任一：
+  //   1) 标题含关键词整体
+  //   2) 正文含关键词 ≥ 2 次
+  //   3) 标题或正文命中 ≥ 50% 的关键词核心字
+  // 否则返回 null，由 caller fallback 到 AI 原创（避免过去发生的
+  // "AI全科阅卷" 关键词撞到《清洁工传说》攻略这种 Tavily 噪声）
+  const best = scoredArticles[0];
+  const tokens = best.tokens || [];
+  const tokenHitRatio = tokens.length ? Math.max(best.titleTokenHits, best.contentTokenHits) / tokens.length : 0;
+  const relevant =
+    (best.title && best.title.includes(keyword)) ||
+    (best.keywordCount >= 2) ||
+    tokenHitRatio >= 0.5;
+
+  if (!relevant) {
+    console.log(`[Tavily 相关度拒绝] keyword="${keyword}" 最高分 ${best.score}, 标题="${best.title?.slice(0,60)}", keywordCount=${best.keywordCount}, tokenHitRatio=${tokenHitRatio.toFixed(2)}`);
+    return null;
+  }
+  return best;
+}
+
+// 把 keyword 拆成核心片段，用于模糊相关度判断
+function extractTokens(keyword) {
+  if (!keyword) return [];
+  // 英文单词保留整体；中文按 2 字滑窗切（例如"AI全科阅卷" → ["AI","全科","科阅","阅卷","全科阅卷"...]）
+  const tokens = [];
+  // 英文
+  const enWords = keyword.match(/[A-Za-z][A-Za-z0-9]+/g) || [];
+  tokens.push(...enWords);
+  // 中文 2 字滑窗
+  const zhSegments = keyword.match(/[\u4e00-\u9fa5]+/g) || [];
+  for (const seg of zhSegments) {
+    for (let i = 0; i <= seg.length - 2; i++) {
+      tokens.push(seg.slice(i, i + 2));
+    }
+    if (seg.length >= 3) tokens.push(seg); // 整段也算
+  }
+  return [...new Set(tokens)].filter(t => t.length >= 2);
 }
 
 module.exports = {
