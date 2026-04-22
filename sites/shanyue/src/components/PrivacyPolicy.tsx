@@ -53,7 +53,7 @@ export default function PrivacyPolicy() {
       content: [
         t(
           "私有化部署方案中，所有数据存储在客户自有服务器上，闪阅 AI 无法访问。",
-          "In private deployment, all data is stored on the client's own servers, and 闪阅 AI cannot access it."
+          "In private deployment, all data is stored on the client's own servers, and iMark cannot access it."
         ),
         t(
           "云端方案的数据存储于通过等保三级认证的数据中心，物理位置位于中国大陆境内。",
@@ -147,7 +147,7 @@ export default function PrivacyPolicy() {
           <p className="mt-4 text-lg text-slate-500 max-w-2xl mx-auto">
             {t(
               '闪阅 AI 全科阅卷系统高度重视您的数据安全与隐私保护',
-              '闪阅 AI All-Subject Grading system places the highest priority on your data security and privacy protection'
+              'iMark All-Subject Grading system places the highest priority on your data security and privacy protection'
             )}
           </p>
           <p className="mt-2 text-sm text-slate-400">

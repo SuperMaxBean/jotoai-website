@@ -12,6 +12,7 @@
 | Blog 列表页 `/blog` | GET API + 渲染卡片列表 | 1-2 小时 |
 | Blog 详情页 `/blog/[id]` | GET API + 渲染 HTML + 基础样式 | 2-3 小时 |
 | 联系表单 `/contact` | GET 验证码 + POST 提交 + 成功/错误态 | 2-3 小时 |
+| 微信公众号二维码 | 改 1 行 `<img src>`,无其他工作 | 5 分钟 |
 | 样式打磨 | Tailwind Typography 或自写 CSS | 1-2 小时 |
 
 **总计:6-10 小时的前端工作。** 完全不需要数据库、不需要后端、不需要管理界面。
@@ -383,7 +384,75 @@ export default function ContactForm() {
 
 ---
 
-## 4. SEO 建议(可选但推荐)
+## 4. 微信公众号二维码(必读,5 分钟改完)
+
+你们站点目前展示的微信二维码是自己托管的文件(`/contact-wechat-qr.png`),和 JOTO 其他产品站点的公众号是**两个不同的公众号**。为了统一运营(JOTO 所有产品共用同一个公众号),请改成**直接引用我们托管的中心化 QR**。
+
+### 4.1 唯一要做的事
+
+把所有引用本地 QR 的 `<img src>` 改成我们的 URL:
+
+```diff
+- <img src="/contact-wechat-qr.png" alt="WeChat QR">
++ <img src="https://admin.jotoai.com/brand/wechat-qr.png" alt="WeChat QR">
+```
+
+**就这一行。** 图片 CORS 已开放(`Access-Control-Allow-Origin: *`),直接 `<img src>` 引用即可,不需要任何 JS。
+
+### 4.2 工作原理
+
+- JOTO.AI 内部管理员在后台上传公众号 QR
+- 上传完成后 5 分钟内所有站点(含你们)的浏览器自动同步新 QR —— 因为 HTTP 响应头 `Cache-Control: max-age=300`
+- 如果需要立即失效缓存,使用下面的 info 接口拿版本号做 cache-bust
+
+### 4.3(可选)配套的 metadata 接口
+
+如果你们想显示 "最近更新时间"、控制缓存、或者在 QR 文件不存在时做降级处理,可以调这个公开端点:
+
+```
+GET https://admin.jotoai.com/api/brand/wechat-qr/info
+```
+
+返回:
+```json
+{
+  "exists": true,
+  "url": "https://admin.jotoai.com/brand/wechat-qr.png",
+  "size": 98928,
+  "updatedAt": "2026-04-17T14:56:29.724Z",
+  "version": 1776437789724.1843
+}
+```
+
+或 `{"exists": false, "url": null}` 当尚未上传。
+
+### 4.4 强力 cache-bust(可选)
+
+如果希望用户浏览器缓存在 5 分钟内也能拿到最新 QR,在页面加载时:
+
+```jsx
+const [qr, setQr] = useState('https://admin.jotoai.com/brand/wechat-qr.png');
+
+useEffect(() => {
+  fetch('https://admin.jotoai.com/api/brand/wechat-qr/info')
+    .then(r => r.json())
+    .then(d => {
+      if (d.exists) setQr(`${d.url}?v=${d.version}`);
+    });
+}, []);
+
+// <img src={qr} alt="WeChat QR" />
+```
+
+### 4.5 不要做的事
+
+- ❌ 不要再自建 QR 文件本地托管(会导致和 JOTO 其他站点的 QR 不一致)
+- ❌ 不要用 `api.qrserver.com` 动态生成 QR(那不是真公众号二维码,扫了没用)
+- ❌ 不要把 URL 复制一份到你们的 CDN(会绕过 JOTO 更新机制,失去中心化意义)
+
+---
+
+## 5. SEO 建议(可选但推荐)
 
 ### 4.1 列表页
 ```html
@@ -415,7 +484,7 @@ export default function ContactForm() {
 
 ---
 
-## 5. 性能与缓存建议
+## 6. 性能与缓存建议
 
 - **客户端缓存列表 5 分钟**(React Query / SWR 的 `staleTime: 5 * 60 * 1000`)
 - **图片懒加载**:`<img loading="lazy">`
@@ -426,7 +495,7 @@ export default function ContactForm() {
 
 ---
 
-## 6. 常见错误与调试
+## 7. 常见错误与调试
 
 | 问题 | 原因 | 修复 |
 |---|---|---|
@@ -439,7 +508,7 @@ export default function ContactForm() {
 
 ---
 
-## 7. 不要做的事
+## 8. 不要做的事
 
 - ❌ 不要把 `content` 当 markdown 再解析一遍
 - ❌ 不要本地缓存文章内容超过 10 分钟(会发新文章)
@@ -450,7 +519,7 @@ export default function ContactForm() {
 
 ---
 
-## 8. 对接完成后的验收清单
+## 9. 对接完成后的验收清单
 
 - [ ] `/blog` 页面能看到 3 篇样本文章(或你刷新后我们生成的更多)
 - [ ] 点击卡片能跳到 `/blog/{id}` 详情页
@@ -458,10 +527,11 @@ export default function ContactForm() {
 - [ ] 提交联系表单,你的邮箱(如果你是 partner 的 ops)能收到 `[JOTO Translator] 新的联系表单` 邮件
 - [ ] 验证码点击能刷新、提交失败后自动刷新
 - [ ] 移动端(手机打开)样式正常,不会挤成一团
+- [ ] 微信二维码改成 `https://admin.jotoai.com/brand/wechat-qr.png` 后,页面能正常加载该图片(不再出现 `/contact-wechat-qr.png` 或 `api.qrserver.com` 这样的旧引用)
 
 ---
 
-## 9. 联系我
+## 10. 联系我
 
 对接中遇到问题、需要更多样本文章、想改品牌名(目前暂用 "JOTO Translator")、想加新功能,邮件或微信找我。
 

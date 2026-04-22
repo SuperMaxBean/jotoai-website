@@ -49,7 +49,7 @@ export default function CTA({ onNavigate }: CTAProps) {
             <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-purple-100">
               {t(
                 '立即体验闪阅 AI 全科阅卷系统，感受 50 倍效率提升带来的教学变革',
-                'Experience the 闪阅 AI All-Subject Grading system now, and feel the teaching transformation from a 50x efficiency boost'
+                'Experience the iMark All-Subject Grading system now, and feel the teaching transformation from a 50x efficiency boost'
               )}
             </p>
 
