@@ -40,6 +40,21 @@ function normalizeArticle(raw: any): Article {
 }
 
 /**
+ * Unsplash/admin backend 图片都加查询参数：fm=webp&q=75&w=N 省 30-60% 体积
+ * 非 Unsplash 域名不动（fallback 图片、本地图片都已经是正确尺寸）
+ */
+function optimizeImageUrl(url: string | undefined, maxWidth: number): string {
+  if (!url) return '';
+  // Unsplash 图片：加 webp + quality + width
+  if (url.includes('images.unsplash.com')) {
+    const sep = url.includes('?') ? '&' : '?';
+    if (url.includes('fm=webp') || url.includes('auto=format')) return url;
+    return `${url}${sep}auto=format&fit=crop&w=${maxWidth}&q=75`;
+  }
+  return url;
+}
+
+/**
  * 后端 /api/{site}/articles 已用 marked 把 content 转成 HTML。
  * 前端只剥掉偶尔残留的 <html>/<body>/<head> 壳，然后直接渲染。
  */
@@ -183,8 +198,10 @@ export default function BlogPostPage({ article: articleFromServer }: BlogPostPag
         {/* Article Header Hero */}
         <section className="relative h-[50vh] min-h-[400px] flex items-end">
           <div className="absolute inset-0 z-0">
-            <img src={post.image} alt={post.title}
-              className="w-full h-full object-cover opacity-60" referrerPolicy="no-referrer" />
+            {/* Unsplash 图片加 w=1200&fm=webp&q=75 省 ~150KB + 优先 LCP 加载 */}
+            <img src={optimizeImageUrl(post.image, 1200)} alt={post.title}
+              className="w-full h-full object-cover opacity-60" referrerPolicy="no-referrer"
+              loading="eager" fetchPriority="high" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f0f] via-[#0f0f0f]/50 to-transparent" />
           </div>
           <div className="relative z-10 max-w-4xl mx-auto px-6 pb-12 w-full">
@@ -265,7 +282,7 @@ export default function BlogPostPage({ article: articleFromServer }: BlogPostPag
                     <Link key={related.id} href={`/blog/${related.slug}`}
                       className="bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] p-4 flex gap-4 group hover:border-[#f97316]/30 transition-all">
                       <div className="w-24 h-24 rounded-lg overflow-hidden shrink-0">
-                        <img src={related.image} alt={related.title}
+                        <img src={optimizeImageUrl(related.image, 600)} alt={related.title} loading="lazy"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           referrerPolicy="no-referrer" />
                       </div>

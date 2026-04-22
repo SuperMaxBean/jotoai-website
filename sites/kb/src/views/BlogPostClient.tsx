@@ -128,7 +128,8 @@ export default function BlogPostClient({ article }: { article: Article }) {
         )}
       </div>
 
-      {/* Post Content — 全文在 HTML 中，爬虫完整可读 */}
+      {/* Post Content — 全文在 HTML 中，爬虫完整可读。用 <main> 包文章，给 A11y/screen reader 一个 landmark */}
+      <main>
       <article className="py-20 px-6 mx-auto max-w-3xl">
         <div
           className="prose prose-slate prose-lg max-w-none text-slate-600 leading-relaxed"
@@ -153,6 +154,7 @@ export default function BlogPostClient({ article }: { article: Article }) {
           </button>
         </div>
       </article>
+      </main>
 
       {/* Footer */}
       <footer className="bg-[#0a0f1c] text-slate-300 py-20 px-6 border-t border-white/10">
