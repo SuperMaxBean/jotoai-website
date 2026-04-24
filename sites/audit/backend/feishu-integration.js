@@ -87,6 +87,21 @@ async function syncToFeishuTable(config, data) {
     return false;
   }
 
+  // 每个规范字段允许多个列名（中/英 + 别名），按顺序尝试匹配表格实际列名。
+  // 用户新建的飞书多维表格字段名不一定跟原始版本一致——我们先拉一次列定义，
+  // 把数据字段 key 对齐到表格里真正存在的列名，避免 FieldNameNotFound 直接失败。
+  const FIELD_ALIASES = {
+    name:       ['姓名', '联系人', '客户姓名', 'name', 'Name'],
+    company:    ['公司/学校/机构', '公司', '机构', '学校', '企业', 'company', 'Company', 'organization'],
+    phone:      ['手机号码', '手机号', '电话', 'phone', 'Phone', 'mobile'],
+    email:      ['电子邮箱', '邮箱', 'email', 'Email'],
+    message:    ['咨询需求', '留言', '需求', '备注', 'message', 'Message', 'notes'],
+    source:     ['来源', '来源渠道', 'source', 'Source'],
+    url:        ['网址', '站点', '来源 URL', 'url', 'URL'],
+    date:       ['日期', '提交时间', '时间', 'date', 'Date', 'timestamp'],
+    deviceType: ['客户端类型', '设备', '设备类型', 'device', 'Device'],
+  };
+
   try {
     // 获取tenant_access_token
     const tokenResponse = await axios.post('https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal', {
@@ -100,22 +115,53 @@ async function syncToFeishuTable(config, data) {
 
     const accessToken = tokenResponse.data.tenant_access_token;
 
+    // 先查表格实际字段列表，再用别名匹配——用户可以用任意列名建新表格。
+    let tableFieldNames = null;
+    try {
+      const fieldsResp = await axios.get(
+        `https://open.feishu.cn/open-apis/bitable/v1/apps/${baseId}/tables/${sheetId}/fields?page_size=100`,
+        { headers: { 'Authorization': `Bearer ${accessToken}` } }
+      );
+      if (fieldsResp.data.code === 0) {
+        tableFieldNames = (fieldsResp.data.data?.items || []).map(f => f.field_name);
+      }
+    } catch (e) {
+      console.warn('[feishu] 读取表格字段失败，退回到默认列名:', e.message);
+    }
+
+    // 为每个数据键挑选"表格里存在的"那个列名；实在没匹配就跳过该键，避免整单失败。
+    const pickFieldName = (key) => {
+      const aliases = FIELD_ALIASES[key] || [];
+      if (!tableFieldNames) return aliases[0];
+      return aliases.find(a => tableFieldNames.includes(a)) || null;
+    };
+
+    const record = {};
+    const entries = {
+      name:       data.name || '',
+      company:    data.school || data.company || '',
+      phone:      data.phone || '',
+      email:      data.email || '',
+      message:    data.message || '',
+      source:     data.source || 'website',
+      url:        data.url || '',
+      date:       data.timestamp || data.submittedAt || new Date().toISOString(),
+      deviceType: data.deviceType || '未知',
+    };
+    for (const [key, value] of Object.entries(entries)) {
+      const fieldName = pickFieldName(key);
+      if (fieldName) record[fieldName] = value;
+    }
+
+    if (Object.keys(record).length === 0) {
+      console.error('[feishu] 表格字段与留言字段完全不匹配，跳过写入。表格字段：', tableFieldNames);
+      return false;
+    }
+
     // 添加记录到表格
     const recordResponse = await axios.post(
       `https://open.feishu.cn/open-apis/bitable/v1/apps/${baseId}/tables/${sheetId}/records`,
-      {
-        fields: {
-          '网址': data.url || '',
-          '日期': data.timestamp || data.submittedAt || new Date().toISOString(),
-          '姓名': data.name || '',
-          '公司/学校/机构': data.school || data.company || '',
-          '手机号码': data.phone || '',
-          '电子邮箱': data.email || '',
-          '咨询需求': data.message || '',
-          '来源': data.source || 'website',
-          '客户端类型': data.deviceType || '未知'
-        }
-      },
+      { fields: record },
       {
         headers: {
           'Authorization': `Bearer ${accessToken}`,

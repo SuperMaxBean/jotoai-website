@@ -146,6 +146,20 @@
         </div>
         <div id="cPagerBtns" class="flex items-center gap-1"></div>
       </div>
+
+      <!-- 各站点飞书表格同步配置 -->
+      <div class="mt-10 bg-white border border-gray-100 rounded-xl overflow-hidden">
+        <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+          <div>
+            <div class="text-sm font-semibold text-gray-900">各站点飞书表格同步</div>
+            <div class="text-xs text-gray-500 mt-0.5">新留言会按站点写入对应的飞书多维表格；App ID/Secret 在「集成」页统一配置</div>
+          </div>
+          <div id="fsCredStatus" class="text-xs text-gray-400"></div>
+        </div>
+        <div id="fsSitesList" class="divide-y divide-gray-50">
+          <div class="px-5 py-4 text-gray-400 text-sm"><span class="spinner"></span> 加载中...</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -473,7 +487,7 @@ let LANG=localStorage.getItem('lang')||(navigator.language.startsWith('zh')?'zh'
 function t(k){return I18N[LANG]?.[k]||I18N.zh[k]||k}
 function setLang(l){LANG=l;localStorage.setItem('lang',l);document.querySelectorAll('[data-t]').forEach(el=>{const k=el.dataset.t;if(k)el.textContent=t(k)});document.querySelectorAll('[data-tp]').forEach(el=>{const k=el.dataset.tp;if(k)el.placeholder=t(k)});$('langBtn').textContent=t('lang_switch');$('htmlRoot').lang=l==='zh'?'zh-CN':'en';
   // Re-render dynamic content
-  if(S.length){checkStatus();renderSites();if(document.querySelector('#pg-contacts.active'))loadC();if(document.querySelector('#pg-articles.active'))loadArt();if(document.querySelector('#pg-admins.active'))loadAdmins();if(document.querySelector('#pg-ssl.active'))loadSSL()}}
+  if(S.length){checkStatus();renderSites();if(document.querySelector('#pg-contacts.active')){loadC();loadSitesFeishu()}if(document.querySelector('#pg-articles.active'))loadArt();if(document.querySelector('#pg-admins.active'))loadAdmins();if(document.querySelector('#pg-ssl.active'))loadSSL()}}
 
 let S=[],SM={},AC=[],CFG={},statsMap={};
 const af=(p,o={})=>fetch(p,{...o,headers:{...o.headers,Authorization:`Bearer ${T}`}});
@@ -483,7 +497,7 @@ function toast(t,ok=true){const el=$('toast');el.textContent=t;el.className=`toa
 function go(p){document.querySelectorAll('.page').forEach(e=>e.classList.remove('active'));$('pg-'+p).classList.add('active');
   document.querySelectorAll('[data-p]').forEach(b=>{b.classList.remove('nav-active');b.classList.add('text-gray-400')});
   const b=document.querySelector(`[data-p="${p}"]`);if(b){b.classList.add('nav-active');b.classList.remove('text-gray-400')}
-  if(p==='contacts')loadC();if(p==='articles')loadArt();if(p==='sites')renderSites();
+  if(p==='contacts'){loadC();loadSitesFeishu()}if(p==='articles')loadArt();if(p==='sites')renderSites();
   if(p==='email')loadEmail();if(p==='integrations')loadCfg();
   if(p==='admins')loadAdmins();if(p==='ssl')loadSSL();
   if(p==='monitor')loadMonitor();if(p==='brand')loadQr();
@@ -573,6 +587,49 @@ function toggleAllC(checked){const vis=visibleC();vis.forEach(c=>{const id=Strin
 async function bulkDelC(){if(cSel.size===0)return;if(!confirm(`确认删除选中的 ${cSel.size} 条留言？此操作不可恢复。`))return;
   const ids=[...cSel];try{const r=await(await af('/api/admin/contacts/batch-delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids})})).json();
   if(r.success){toast(`已删除 ${r.deletedCount} 条${r.notFoundCount?`（${r.notFoundCount} 条未找到）`:''}`);cSel.clear();loadC();loadStats()}else{toast(r.error||'删除失败',false)}}catch(e){toast(e.message,false)}}
+
+// ---- 各站点飞书表格同步 ----
+async function loadSitesFeishu(){
+  const box=$('fsSitesList');if(!box)return;
+  box.innerHTML='<div class="px-5 py-4 text-gray-400 text-sm"><span class="spinner"></span> 加载中...</div>';
+  try{
+    const r=await(await af('/api/admin/sites-feishu')).json();
+    if(!r.success){box.innerHTML=`<div class="px-5 py-4 text-red-500 text-sm">${r.error||'加载失败'}</div>`;return}
+    const cred=$('fsCredStatus');
+    if(cred)cred.innerHTML=r.hasAppCreds?'<span class="text-green-600">● App 凭证已配置</span>':'<span class="text-amber-600">● App 凭证未配置（到"集成"页填 App ID / Secret）</span>';
+    const esc=s=>String(s||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]);
+    box.innerHTML=r.sites.map(s=>{
+      const placeholder=r.globalTableUrl?`留空则回退到全局：${r.globalTableUrl.slice(0,60)}${r.globalTableUrl.length>60?'...':''}`:'https://xxx.feishu.cn/base/xxx?table=tblxxx&view=vewxxx';
+      const badge=s.usingGlobalFallback?'<span class="ml-2 px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 text-[10px]">回退全局</span>':(s.feishuTableUrl?'<span class="ml-2 px-1.5 py-0.5 rounded bg-green-50 text-green-600 text-[10px]">独立</span>':'<span class="ml-2 px-1.5 py-0.5 rounded bg-gray-50 text-gray-400 text-[10px]">未配置</span>');
+      return `<div class="px-5 py-3 flex items-center gap-3 hover:bg-gray-50/50">
+        <div class="w-28 shrink-0 text-sm font-medium text-gray-900">${esc(s.name)}${badge}</div>
+        <input id="fsUrl-${s.site}" class="input flex-1 text-xs" placeholder="${esc(placeholder)}" value="${esc(s.feishuTableUrl)}">
+        <button onclick="saveSiteFs('${s.site}')" class="btn-p text-xs !py-1.5 !px-3">保存</button>
+        <button onclick="testSiteFs('${s.site}')" class="btn-s text-xs !py-1.5 !px-3">测试</button>
+      </div>`;
+    }).join('');
+  }catch(e){box.innerHTML=`<div class="px-5 py-4 text-red-500 text-sm">${e.message}</div>`}
+}
+async function saveSiteFs(site){
+  const el=$('fsUrl-'+site);if(!el)return;
+  const url=(el.value||'').trim();
+  try{
+    const r=await(await af(`/api/admin/sites/${site}/feishu`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({feishuTableUrl:url})})).json();
+    if(r.success){toast(`${site} 飞书表格 URL 已保存`);loadSitesFeishu()}
+    else toast(r.error||'保存失败',false);
+  }catch(e){toast(e.message,false)}
+}
+async function testSiteFs(site){
+  // 先保存再测试，避免用户改了没存就点测试
+  const el=$('fsUrl-'+site);
+  if(el){const url=(el.value||'').trim();try{await(await af(`/api/admin/sites/${site}/feishu`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({feishuTableUrl:url})})).json()}catch{}}
+  toast(`正在测试 ${site} 同步...`);
+  try{
+    const r=await(await af(`/api/admin/sites/${site}/feishu/test`,{method:'POST'})).json();
+    if(r.success)toast(`✓ ${site} 测试成功：${r.message}`);
+    else toast(`✗ ${site} 测试失败：${r.message||r.error}`,false);
+  }catch(e){toast(`✗ ${site} 测试失败：${e.message}`,false)}
+}
 
 // Articles
 let artSite='all',allArts=[];
