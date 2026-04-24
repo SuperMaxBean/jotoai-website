@@ -2162,6 +2162,67 @@ app.post('/api/admin/sites/:site/feishu/test', verifyToken, async (req, res) => 
   }
 });
 
+// 把站点的历史留言一次性回填到其飞书多维表格。
+// 数据源合并两处：
+//   (1) /var/www/audit/backend/data/contacts.json （老路径，按 siteHost 过滤）
+//   (2) data/sites/<site>/contacts.json           （新路径）
+// 每条留言走一次 syncToFeishuTable（字段自适应，已含去重失败兜底）
+app.post('/api/admin/sites/:site/feishu/backfill', verifyToken, async (req, res) => {
+  try {
+    const { site } = req.params;
+    if (!SITES.includes(site)) return res.status(404).json({ success: false, error: 'Unknown site' });
+    const merged = await getMergedSiteConfig(site);
+    if (!merged.feishuAppId || !merged.feishuAppSecret) {
+      return res.status(400).json({ success: false, message: '飞书 App ID / Secret 未配置' });
+    }
+    if (!merged.feishuTableUrl) {
+      return res.status(400).json({ success: false, message: `站点 ${site} 未配置飞书表格 URL` });
+    }
+
+    const HOST_MAP = { audit:'audit.jotoai.com', shanyue:'shanyue.jotoai.com', sec:'sec.jotoai.com', kb:'kb.jotoai.com', fasium:'fasium.jotoai.com', loop:'loop.jotoai.com', noteflow:'note.jotoai.com', translator:'translator.jototech.cn' };
+    const host = HOST_MAP[site] || '';
+    const siteName = SITE_NAMES[site] || site;
+
+    const rootContacts = await getContacts();
+    const scoped = rootContacts.filter(c => (host && c.siteHost === host) || c.site === siteName || c.siteId === site);
+    const siteContacts = await readSiteFile(getSitePaths(site).contacts, []);
+    const merged_all = [...scoped, ...siteContacts];
+    // 去重（按 id + submittedAt）
+    const seen = new Set();
+    const list = merged_all.filter(c => {
+      const k = `${c.id || ''}|${c.submittedAt || ''}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+
+    let ok = 0, fail = 0, firstErr = '';
+    for (const c of list) {
+      try {
+        const success = await syncToFeishuTable(merged, {
+          ...c,
+          school: c.school || c.company || '',
+          url: `https://${host || (site + '.jotoai.com')}/`,
+          timestamp: c.submittedAt,
+        });
+        if (success) ok++; else { fail++; if (!firstErr) firstErr = `${c.id}: 同步失败`; }
+      } catch (e) {
+        fail++;
+        if (!firstErr) firstErr = `${c.id}: ${e.message}`;
+      }
+    }
+    res.json({
+      success: true,
+      total: list.length,
+      ok, fail,
+      firstError: firstErr || null,
+      message: `共 ${list.length} 条：成功 ${ok}${fail ? ` / 失败 ${fail}` : ''}`,
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
 // 给某个站的飞书表格补齐标准字段（姓名/公司/手机/邮箱/留言 + 产品经理跟进列）
 // 已有字段跳过，不改类型；返回每次新增/跳过的字段清单。
 app.post('/api/admin/sites/:site/feishu/init-fields', verifyToken, async (req, res) => {
