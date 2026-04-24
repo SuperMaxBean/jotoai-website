@@ -712,6 +712,7 @@ async function loadSitesFeishu(){
       return `<div class="px-2 py-3 flex items-center gap-3">
         <div class="w-32 shrink-0 text-sm font-medium text-gray-900">${esc(s.name)}${badge}</div>
         <input id="fsUrl-${s.site}" oninput="fsCheckDirty()" class="input flex-1 text-xs" placeholder="${esc(placeholder)}" value="${esc(s.feishuTableUrl)}">
+        <button onclick="initSiteFsFields('${s.site}')" class="btn-s text-xs !py-1.5 !px-3" title="给表格补齐留言相关的标准列（包含 PM 反馈列）">初始化字段</button>
         <button onclick="testSiteFs('${s.site}')" class="btn-s text-xs !py-1.5 !px-3" title="保存并写入一条测试数据">测试</button>
       </div>`;
     }).join('');
@@ -774,6 +775,23 @@ async function testSiteFs(site){
     if(r.success)toast(`✓ ${site} 测试成功：${r.message}`);
     else toast(`✗ ${site} 测试失败：${r.message||r.error}`,false);
   }catch(e){toast(`✗ ${site} 测试失败：${e.message}`,false)}
+}
+async function initSiteFsFields(site){
+  // 补齐标准列（姓名/公司/手机/邮箱/留言/来源/时间 + PM 跟进三列），已存在跳过
+  const el=$('fsUrl-'+site);
+  if(el){
+    const url=(el.value||'').trim();
+    if(!url){toast(`请先填写 ${site} 表格 URL`,false);return}
+    try{await(await af(`/api/admin/sites/${site}/feishu`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({feishuTableUrl:url})})).json();fsOriginal[site]=url;fsCheckDirty()}catch{}
+  }
+  toast(`正在为 ${site} 初始化字段...`);
+  try{
+    const r=await(await af(`/api/admin/sites/${site}/feishu/init-fields`,{method:'POST'})).json();
+    if(r.success){
+      const addedStr=r.added.length?`新增：${r.added.join('、')}`:'无新增';
+      toast(`✓ ${site} ${r.message}。${addedStr}`);
+    }else toast(`✗ ${site} 失败：${r.message||r.error}`,false);
+  }catch(e){toast(`✗ ${site} 失败：${e.message}`,false)}
 }
 
 // Articles

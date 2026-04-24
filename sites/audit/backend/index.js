@@ -9,7 +9,7 @@ const cron = require('node-cron');
 const { generateCaptchaText, generateCaptchaSVG } = require('./captcha');
 const { renewCertificate, getCertificateInfo } = require('./cert-manager');
 const { generateArticle: generateArticleNew, generateArticles, testLLMConfig } = require('./article-generator');
-const { sendToFeishuBot, syncToFeishuTable } = require('./feishu-integration');
+const { sendToFeishuBot, syncToFeishuTable, ensureTableFields } = require('./feishu-integration');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -2157,6 +2157,32 @@ app.post('/api/admin/sites/:site/feishu/test', verifyToken, async (req, res) => 
     });
     if (ok) res.json({ success: true, message: '测试数据已写入飞书表格' });
     else res.status(500).json({ success: false, message: '写入失败，请检查表格 URL 与 App 权限' });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+// 给某个站的飞书表格补齐标准字段（姓名/公司/手机/邮箱/留言 + 产品经理跟进列）
+// 已有字段跳过，不改类型；返回每次新增/跳过的字段清单。
+app.post('/api/admin/sites/:site/feishu/init-fields', verifyToken, async (req, res) => {
+  try {
+    const { site } = req.params;
+    if (!SITES.includes(site)) return res.status(404).json({ success: false, error: 'Unknown site' });
+    const merged = await getMergedSiteConfig(site);
+    if (!merged.feishuAppId || !merged.feishuAppSecret) {
+      return res.status(400).json({ success: false, message: '飞书 App ID / Secret 未配置（全局）' });
+    }
+    if (!merged.feishuTableUrl) {
+      return res.status(400).json({ success: false, message: `站点 ${site} 未配置飞书表格 URL` });
+    }
+    const result = await ensureTableFields(merged);
+    if (!result.ok) return res.status(500).json({ success: false, message: result.error });
+    res.json({
+      success: true,
+      added: result.added,
+      skipped: result.skipped,
+      message: `新增 ${result.added.length} 列，已存在 ${result.skipped.length} 列`,
+    });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });
   }
