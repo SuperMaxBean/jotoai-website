@@ -113,7 +113,13 @@
         <h1 class="text-xl font-semibold" data-t="contacts" data-t="contacts_title">留言管理</h1>
         <div class="flex items-center gap-3">
           <select id="cFlt" onchange="cPage=1;renderC()" class="input !w-auto !py-1.5 text-xs"><option value="all">'+(t("all_sites"))+'</option></select>
-          <button onclick="loadC()" class="btn-s text-xs !py-1.5"></button>
+          <button onclick="loadC()" class="btn-s text-xs !py-1.5" title="刷新">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          </button>
+          <button onclick="openContactsSettings()" class="btn-s text-xs !py-1.5 flex items-center gap-1.5" title="同步设置">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <span>同步设置</span>
+          </button>
         </div>
       </div>
     </div>
@@ -163,6 +169,77 @@
     </div>
     <div class="px-8 py-6">
       <div id="artList" class="space-y-3"><div class="text-gray-400 text-sm"><span class="spinner"></span></div></div>
+    </div>
+  </div>
+
+  <!-- ===== CONTACTS SYNC SETTINGS MODAL ===== -->
+  <div id="contactsSettingsModal" class="modal-bg hidden" style="display:none" onclick="if(event.target===this)closeContactsSettings()">
+    <div class="modal-box !max-w-4xl">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h2 class="text-lg font-semibold">留言同步设置</h2>
+          <p class="text-xs text-gray-500 mt-1">留言提交后会按站点自动同步到下列飞书多维表格</p>
+        </div>
+        <button onclick="closeContactsSettings()" class="text-gray-400 hover:text-gray-700 text-2xl leading-none">&times;</button>
+      </div>
+
+      <!-- Tabs -->
+      <div class="border-b border-gray-100 mb-5 flex gap-6 text-sm">
+        <button id="fsTabFeishu" onclick="switchFsTab('feishu')" class="py-2 border-b-2 border-gray-900 text-gray-900 font-medium">飞书多维表格</button>
+        <button id="fsTabBot" onclick="switchFsTab('bot')" class="py-2 border-b-2 border-transparent text-gray-400 hover:text-gray-700">飞书机器人（可选）</button>
+      </div>
+
+      <!-- Feishu 多维表格 -->
+      <div id="fsTabFeishuPanel">
+        <!-- App credentials status -->
+        <div class="card mb-4 border-l-4 border-l-gray-800">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-medium text-sm">飞书应用凭证（共享）</h3>
+              <p class="text-xs text-gray-500 mt-1">所有站点共用一个飞书应用。App ID / Secret 在「集成」页维护。</p>
+            </div>
+            <div id="fsCredStatus" class="text-xs text-gray-400 shrink-0"></div>
+          </div>
+        </div>
+
+        <!-- Per-site table URL list -->
+        <div class="card">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-medium text-sm">各站点表格 URL</h3>
+            <div class="text-[11px] text-gray-400">留空 = 回退到全局默认表格</div>
+          </div>
+          <div id="fsSitesList" class="divide-y divide-gray-100 -mx-2">
+            <div class="px-2 py-4 text-gray-400 text-sm"><span class="spinner"></span> 加载中...</div>
+          </div>
+        </div>
+
+        <div class="mt-4 flex items-center justify-between gap-2">
+          <div id="fsDirty" class="text-xs text-gray-400"></div>
+          <div class="flex items-center gap-2">
+            <button onclick="closeContactsSettings()" class="btn-s text-xs !py-1.5 !px-4">关闭</button>
+            <button id="fsSaveAll" onclick="saveAllSitesFs()" class="btn-p text-xs !py-1.5 !px-4">保存全部</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 飞书机器人 -->
+      <div id="fsTabBotPanel" class="hidden">
+        <div class="card">
+          <h3 class="font-medium text-sm mb-4">飞书群机器人 Webhook</h3>
+          <p class="text-xs text-gray-500 mb-4">配置后，每条新留言会以卡片形式推送到指定群。留空则关闭。</p>
+          <div class="space-y-3">
+            <div>
+              <label class="text-xs text-gray-500 mb-1.5 block">全局 Webhook（兜底）</label>
+              <input id="fsGlobalWh" class="input text-xs" placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/xxx">
+            </div>
+            <div class="text-xs text-gray-400">站点级 Webhook 维护在「站点管理」→「编辑站点」中（可选）。</div>
+          </div>
+          <div class="mt-4 flex items-center gap-2">
+            <button onclick="saveGlobalFeishuWebhook()" class="btn-p text-xs !py-1.5 !px-4">保存</button>
+            <button onclick="testGlobalFeishuWebhook()" class="btn-s text-xs !py-1.5 !px-4">测试推送</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -573,6 +650,165 @@ function toggleAllC(checked){const vis=visibleC();vis.forEach(c=>{const id=Strin
 async function bulkDelC(){if(cSel.size===0)return;if(!confirm(`确认删除选中的 ${cSel.size} 条留言？此操作不可恢复。`))return;
   const ids=[...cSel];try{const r=await(await af('/api/admin/contacts/batch-delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids})})).json();
   if(r.success){toast(`已删除 ${r.deletedCount} 条${r.notFoundCount?`（${r.notFoundCount} 条未找到）`:''}`);cSel.clear();loadC();loadStats()}else{toast(r.error||'删除失败',false)}}catch(e){toast(e.message,false)}}
+
+// ---- 留言同步设置（弹窗） ----
+function openContactsSettings(){
+  const m=$('contactsSettingsModal');if(!m)return;
+  m.classList.remove('hidden');m.style.display='flex';
+  switchFsTab('feishu');
+  loadSitesFeishu();
+}
+function closeContactsSettings(){
+  // 有未保存改动时二次确认，避免用户填了半天点×丢了
+  const dirty=Object.keys(fsOriginal||{}).filter(site=>{
+    const el=$('fsUrl-'+site);if(!el)return false;
+    return (el.value||'').trim()!==(fsOriginal[site]||'');
+  });
+  if(dirty.length>0 && !confirm(`有 ${dirty.length} 处改动未保存，确定关闭？`))return;
+  const m=$('contactsSettingsModal');if(!m)return;
+  m.classList.add('hidden');m.style.display='none';
+}
+function switchFsTab(which){
+  const panels={feishu:$('fsTabFeishuPanel'),bot:$('fsTabBotPanel')};
+  const tabs={feishu:$('fsTabFeishu'),bot:$('fsTabBot')};
+  for(const k of Object.keys(panels)){
+    if(!panels[k]||!tabs[k])continue;
+    if(k===which){
+      panels[k].classList.remove('hidden');
+      tabs[k].className='py-2 border-b-2 border-gray-900 text-gray-900 font-medium';
+    }else{
+      panels[k].classList.add('hidden');
+      tabs[k].className='py-2 border-b-2 border-transparent text-gray-400 hover:text-gray-700';
+    }
+  }
+  if(which==='bot')loadGlobalFeishuWebhook();
+}
+
+// 打开弹窗时缓存原始值，"保存全部"只推送有改动的站
+let fsOriginal={};
+function fsCheckDirty(){
+  const badge=$('fsDirty');if(!badge)return;
+  const dirty=Object.keys(fsOriginal).filter(site=>{
+    const el=$('fsUrl-'+site);if(!el)return false;
+    return (el.value||'').trim()!==(fsOriginal[site]||'');
+  });
+  badge.textContent=dirty.length?`${dirty.length} 处改动未保存`:'';
+  badge.className=dirty.length?'text-xs text-amber-600':'text-xs text-gray-400';
+}
+async function loadSitesFeishu(){
+  const box=$('fsSitesList');if(!box)return;
+  box.innerHTML='<div class="px-2 py-4 text-gray-400 text-sm"><span class="spinner"></span> 加载中...</div>';
+  try{
+    const r=await(await af('/api/admin/sites-feishu')).json();
+    if(!r.success){box.innerHTML=`<div class="px-2 py-4 text-red-500 text-sm">${r.error||'加载失败'}</div>`;return}
+    const cred=$('fsCredStatus');
+    if(cred)cred.innerHTML=r.hasAppCreds?'<span class="text-green-600">● 已配置</span>':'<span class="text-amber-600">● 未配置（到「集成」页填写）</span>';
+    const esc=s=>String(s||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]);
+    fsOriginal={};
+    r.sites.forEach(s=>{fsOriginal[s.site]=s.feishuTableUrl||''});
+    box.innerHTML=r.sites.map(s=>{
+      const placeholder=r.globalTableUrl?`留空则回退到全局：${r.globalTableUrl.slice(0,60)}${r.globalTableUrl.length>60?'…':''}`:'https://xxx.feishu.cn/base/xxx?table=tblxxx&view=vewxxx';
+      const badge=s.usingGlobalFallback?'<span class="ml-2 px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 text-[10px]">回退全局</span>':(s.feishuTableUrl?'<span class="ml-2 px-1.5 py-0.5 rounded bg-green-50 text-green-600 text-[10px]">独立</span>':'<span class="ml-2 px-1.5 py-0.5 rounded bg-gray-50 text-gray-400 text-[10px]">未配置</span>');
+      return `<div class="px-2 py-3 flex items-center gap-3">
+        <div class="w-32 shrink-0 text-sm font-medium text-gray-900">${esc(s.name)}${badge}</div>
+        <input id="fsUrl-${s.site}" oninput="fsCheckDirty()" class="input flex-1 text-xs" placeholder="${esc(placeholder)}" value="${esc(s.feishuTableUrl)}">
+        <button onclick="initSiteFsFields('${s.site}')" class="btn-s text-xs !py-1.5 !px-3" title="给表格补齐留言相关的标准列（包含 PM 反馈列）">初始化字段</button>
+        <button onclick="backfillSiteFs('${s.site}')" class="btn-s text-xs !py-1.5 !px-3" title="把该站历史留言一次性同步到飞书">回填历史</button>
+        <button onclick="testSiteFs('${s.site}')" class="btn-s text-xs !py-1.5 !px-3" title="保存并写入一条测试数据">测试</button>
+      </div>`;
+    }).join('');
+    fsCheckDirty();
+  }catch(e){box.innerHTML=`<div class="px-2 py-4 text-red-500 text-sm">${e.message}</div>`}
+}
+
+async function loadGlobalFeishuWebhook(){
+  const el=$('fsGlobalWh');if(!el)return;
+  try{
+    const r=await(await af('/api/admin/config')).json();
+    el.value=r.feishuWebhook||'';
+  }catch(e){/* ignore */}
+}
+async function saveGlobalFeishuWebhook(){
+  const el=$('fsGlobalWh');if(!el)return;
+  try{
+    const r=await(await af('/api/admin/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({feishuWebhook:el.value.trim()})})).json();
+    if(r.success)toast('✓ 飞书 Webhook 已保存');else toast(r.error||'保存失败',false);
+  }catch(e){toast(e.message,false)}
+}
+async function testGlobalFeishuWebhook(){
+  await saveGlobalFeishuWebhook();
+  try{
+    const r=await(await af('/api/admin/test-feishu-bot',{method:'POST'})).json();
+    if(r.success)toast('✓ 测试推送已发送');else toast(r.message||'测试失败',false);
+  }catch(e){toast(e.message,false)}
+}
+async function saveAllSitesFs(){
+  const btn=$('fsSaveAll');
+  const changed=Object.keys(fsOriginal).filter(site=>{
+    const el=$('fsUrl-'+site);if(!el)return false;
+    return (el.value||'').trim()!==(fsOriginal[site]||'');
+  });
+  if(changed.length===0){toast('没有改动');return}
+  if(btn){btn.disabled=true;btn.textContent='保存中...'}
+  let okCount=0,failCount=0,firstErr='';
+  for(const site of changed){
+    const url=($('fsUrl-'+site)?.value||'').trim();
+    try{
+      const r=await(await af(`/api/admin/sites/${site}/feishu`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({feishuTableUrl:url})})).json();
+      if(r.success)okCount++;else{failCount++;if(!firstErr)firstErr=`${site}: ${r.error}`}
+    }catch(e){failCount++;if(!firstErr)firstErr=`${site}: ${e.message}`}
+  }
+  if(btn){btn.disabled=false;btn.textContent='保存全部'}
+  if(failCount===0)toast(`✓ 已保存 ${okCount} 处改动`);
+  else toast(`保存 ${okCount} 成功 / ${failCount} 失败：${firstErr}`,false);
+  loadSitesFeishu();
+}
+async function testSiteFs(site){
+  // 先保存当前输入再测试
+  const el=$('fsUrl-'+site);
+  if(el){
+    const url=(el.value||'').trim();
+    try{await(await af(`/api/admin/sites/${site}/feishu`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({feishuTableUrl:url})})).json();fsOriginal[site]=url;fsCheckDirty()}catch{}
+  }
+  toast(`正在测试 ${site} 同步...`);
+  try{
+    const r=await(await af(`/api/admin/sites/${site}/feishu/test`,{method:'POST'})).json();
+    if(r.success)toast(`✓ ${site} 测试成功：${r.message}`);
+    else toast(`✗ ${site} 测试失败：${r.message||r.error}`,false);
+  }catch(e){toast(`✗ ${site} 测试失败：${e.message}`,false)}
+}
+async function initSiteFsFields(site){
+  // 补齐标准列（姓名/公司/手机/邮箱/留言/来源/时间 + PM 跟进三列），已存在跳过
+  const el=$('fsUrl-'+site);
+  if(el){
+    const url=(el.value||'').trim();
+    if(!url){toast(`请先填写 ${site} 表格 URL`,false);return}
+    try{await(await af(`/api/admin/sites/${site}/feishu`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({feishuTableUrl:url})})).json();fsOriginal[site]=url;fsCheckDirty()}catch{}
+  }
+  toast(`正在为 ${site} 初始化字段...`);
+  try{
+    const r=await(await af(`/api/admin/sites/${site}/feishu/init-fields`,{method:'POST'})).json();
+    if(r.success){
+      const addedStr=r.added.length?`新增：${r.added.join('、')}`:'无新增';
+      toast(`✓ ${site} ${r.message}。${addedStr}`);
+    }else toast(`✗ ${site} 失败：${r.message||r.error}`,false);
+  }catch(e){toast(`✗ ${site} 失败：${e.message}`,false)}
+}
+async function backfillSiteFs(site){
+  const el=$('fsUrl-'+site);
+  if(el){
+    const url=(el.value||'').trim();
+    if(!url){toast(`请先填写 ${site} 表格 URL`,false);return}
+    try{await(await af(`/api/admin/sites/${site}/feishu`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({feishuTableUrl:url})})).json();fsOriginal[site]=url;fsCheckDirty()}catch{}
+  }
+  if(!confirm(`把 ${site} 所有历史留言同步到对应飞书表格？（会逐条写入，重复运行会出现重复行）`))return;
+  toast(`正在回填 ${site} 历史留言...`);
+  try{
+    const r=await(await af(`/api/admin/sites/${site}/feishu/backfill`,{method:'POST'})).json();
+    if(r.success)toast(`✓ ${site} 回填完成：${r.message}`);
+    else toast(`✗ ${site} 回填失败：${r.message}`,false);
+  }catch(e){toast(`✗ ${site} 回填失败：${e.message}`,false)}
+}
 
 // Articles
 let artSite='all',allArts=[];

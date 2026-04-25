@@ -9,7 +9,7 @@ const cron = require('node-cron');
 const { generateCaptchaText, generateCaptchaSVG } = require('./captcha');
 const { renewCertificate, getCertificateInfo } = require('./cert-manager');
 const { generateArticle: generateArticleNew, generateArticles, testLLMConfig } = require('./article-generator');
-const { sendToFeishuBot, syncToFeishuTable } = require('./feishu-integration');
+const { sendToFeishuBot, syncToFeishuTable, ensureTableFields } = require('./feishu-integration');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -1232,8 +1232,21 @@ app.post('/api/contact', async (req, res) => {
       'note.jotoai.com':         'NoteFlow',
       'translator.jototech.cn':  'JOTO Translator',
     };
+    // Host → siteId 反查（用于找到站级飞书表格 URL；/api/contact 老路径没带 :site）。
+    const HOST_TO_SITE = {
+      'audit.jotoai.com':        'audit',
+      'shanyue.jotoai.com':      'shanyue',
+      'sec.jotoai.com':          'sec',
+      'kb.jotoai.com':           'kb',
+      'fasium.jotoai.com':       'fasium',
+      'fasium-ai.jotoai.com':    'fasium',
+      'loop.jotoai.com':         'loop',
+      'note.jotoai.com':         'noteflow',
+      'translator.jototech.cn':  'translator',
+    };
     const hostHeader = (req.headers['x-forwarded-host'] || req.headers.host || '').replace(/:\d+$/, '');
     const siteName = SITE_MAP[hostHeader] || hostHeader || '未知站点';
+    const siteIdForFeishu = HOST_TO_SITE[hostHeader];
 
     // 保存到文件
     const contacts = await getContacts();
@@ -1251,8 +1264,13 @@ app.post('/api/contact', async (req, res) => {
     await saveContacts(contacts);
 
     // 通知（邮件 + 飞书），与 /api/:site/contact 共用逻辑避免漏发。
+    // 如果能从 host 反查到 site，就用 merged config（读站级 feishuTableUrl）；
+    // 否则退回全局 config。
+    const notifyConfig = siteIdForFeishu && SITES.includes(siteIdForFeishu)
+      ? await getMergedSiteConfig(siteIdForFeishu)
+      : config;
     await notifyNewContact({
-      config,
+      config: notifyConfig,
       contact: contactData,
       siteName,
       siteHost: hostHeader,
@@ -2063,6 +2081,174 @@ app.post('/api/admin/test-feishu-table', verifyToken, async (req, res) => {
   }
 });
 
+// ==================== 各站点飞书表格配置 ====================
+// 一个飞书 App（共享 appId/appSecret，存全局 config），每个站独立的 tableUrl，
+// 让不同站的留言同步到不同的飞书多维表格。
+
+// 列出所有站点的飞书表格配置（给 Dashboard"留言管理"页用）
+app.get('/api/admin/sites-feishu', verifyToken, async (req, res) => {
+  try {
+    const globalCfg = await getConfig();
+    const rows = await Promise.all(SITES.map(async site => {
+      const siteCfg = await readSiteFile(getSitePaths(site).config, {});
+      const merged = await getMergedSiteConfig(site);
+      return {
+        site,
+        name: SITE_NAMES[site] || site,
+        feishuTableUrl: siteCfg.feishuTableUrl || '',
+        mergedTableUrl: merged.feishuTableUrl || '',
+        usingGlobalFallback: !siteCfg.feishuTableUrl && !!globalCfg.feishuTableUrl,
+      };
+    }));
+    res.json({
+      success: true,
+      hasAppCreds: !!(globalCfg.feishuAppId && globalCfg.feishuAppSecret),
+      globalTableUrl: globalCfg.feishuTableUrl || '',
+      sites: rows,
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// 保存某个站点的飞书表格 URL
+app.put('/api/admin/sites/:site/feishu', verifyToken, async (req, res) => {
+  try {
+    const { site } = req.params;
+    if (!SITES.includes(site)) return res.status(404).json({ success: false, error: 'Unknown site' });
+    const { feishuTableUrl } = req.body || {};
+    if (feishuTableUrl !== undefined && typeof feishuTableUrl !== 'string') {
+      return res.status(400).json({ success: false, error: 'feishuTableUrl 必须是字符串' });
+    }
+    // 简单校验：非空时必须是 feishu URL
+    if (feishuTableUrl && !/^https?:\/\/[^\s]+\.feishu\.(cn|com)\//i.test(feishuTableUrl)) {
+      return res.status(400).json({ success: false, error: '请输入完整的飞书多维表格 URL' });
+    }
+    const saved = await saveSiteConfigPartial(site, {
+      feishuTableUrl: feishuTableUrl || '',
+    });
+    res.json({ success: true, feishuTableUrl: saved.feishuTableUrl || '' });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// 测试某个站的飞书表格同步（写入一条测试数据）
+app.post('/api/admin/sites/:site/feishu/test', verifyToken, async (req, res) => {
+  try {
+    const { site } = req.params;
+    if (!SITES.includes(site)) return res.status(404).json({ success: false, error: 'Unknown site' });
+    const merged = await getMergedSiteConfig(site);
+    if (!merged.feishuAppId || !merged.feishuAppSecret) {
+      return res.status(400).json({ success: false, message: '飞书 App ID / Secret 未配置（全局）' });
+    }
+    if (!merged.feishuTableUrl) {
+      return res.status(400).json({ success: false, message: `站点 ${site} 未配置飞书表格 URL` });
+    }
+    const ok = await syncToFeishuTable(merged, {
+      name: '测试用户',
+      school: `${SITE_NAMES[site] || site} · 管理后台测试`,
+      email: 'test@example.com',
+      phone: '13800138000',
+      message: `这是来自 ${site} 的飞书同步测试`,
+      source: '管理后台测试',
+      url: `https://${site}.jotoai.com/`,
+      timestamp: new Date().toISOString(),
+    });
+    if (ok) res.json({ success: true, message: '测试数据已写入飞书表格' });
+    else res.status(500).json({ success: false, message: '写入失败，请检查表格 URL 与 App 权限' });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+// 把站点的历史留言一次性回填到其飞书多维表格。
+// 数据源合并两处：
+//   (1) /var/www/audit/backend/data/contacts.json （老路径，按 siteHost 过滤）
+//   (2) data/sites/<site>/contacts.json           （新路径）
+// 每条留言走一次 syncToFeishuTable（字段自适应，已含去重失败兜底）
+app.post('/api/admin/sites/:site/feishu/backfill', verifyToken, async (req, res) => {
+  try {
+    const { site } = req.params;
+    if (!SITES.includes(site)) return res.status(404).json({ success: false, error: 'Unknown site' });
+    const merged = await getMergedSiteConfig(site);
+    if (!merged.feishuAppId || !merged.feishuAppSecret) {
+      return res.status(400).json({ success: false, message: '飞书 App ID / Secret 未配置' });
+    }
+    if (!merged.feishuTableUrl) {
+      return res.status(400).json({ success: false, message: `站点 ${site} 未配置飞书表格 URL` });
+    }
+
+    const HOST_MAP = { audit:'audit.jotoai.com', shanyue:'shanyue.jotoai.com', sec:'sec.jotoai.com', kb:'kb.jotoai.com', fasium:'fasium.jotoai.com', loop:'loop.jotoai.com', noteflow:'note.jotoai.com', translator:'translator.jototech.cn' };
+    const host = HOST_MAP[site] || '';
+    const siteName = SITE_NAMES[site] || site;
+
+    const rootContacts = await getContacts();
+    const scoped = rootContacts.filter(c => (host && c.siteHost === host) || c.site === siteName || c.siteId === site);
+    const siteContacts = await readSiteFile(getSitePaths(site).contacts, []);
+    const merged_all = [...scoped, ...siteContacts];
+    // 去重（按 id + submittedAt）
+    const seen = new Set();
+    const list = merged_all.filter(c => {
+      const k = `${c.id || ''}|${c.submittedAt || ''}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+
+    let ok = 0, fail = 0, firstErr = '';
+    for (const c of list) {
+      try {
+        const success = await syncToFeishuTable(merged, {
+          ...c,
+          school: c.school || c.company || '',
+          url: `https://${host || (site + '.jotoai.com')}/`,
+          timestamp: c.submittedAt,
+        });
+        if (success) ok++; else { fail++; if (!firstErr) firstErr = `${c.id}: 同步失败`; }
+      } catch (e) {
+        fail++;
+        if (!firstErr) firstErr = `${c.id}: ${e.message}`;
+      }
+    }
+    res.json({
+      success: true,
+      total: list.length,
+      ok, fail,
+      firstError: firstErr || null,
+      message: `共 ${list.length} 条：成功 ${ok}${fail ? ` / 失败 ${fail}` : ''}`,
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+// 给某个站的飞书表格补齐标准字段（姓名/公司/手机/邮箱/留言 + 产品经理跟进列）
+// 已有字段跳过，不改类型；返回每次新增/跳过的字段清单。
+app.post('/api/admin/sites/:site/feishu/init-fields', verifyToken, async (req, res) => {
+  try {
+    const { site } = req.params;
+    if (!SITES.includes(site)) return res.status(404).json({ success: false, error: 'Unknown site' });
+    const merged = await getMergedSiteConfig(site);
+    if (!merged.feishuAppId || !merged.feishuAppSecret) {
+      return res.status(400).json({ success: false, message: '飞书 App ID / Secret 未配置（全局）' });
+    }
+    if (!merged.feishuTableUrl) {
+      return res.status(400).json({ success: false, message: `站点 ${site} 未配置飞书表格 URL` });
+    }
+    const result = await ensureTableFields(merged);
+    if (!result.ok) return res.status(500).json({ success: false, message: result.error });
+    res.json({
+      success: true,
+      added: result.added,
+      skipped: result.skipped,
+      message: `新增 ${result.added.length} 列，已存在 ${result.skipped.length} 列`,
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
 // URL去重管理API
 const usedUrlsManager = require('./used-urls-manager');
 
@@ -2604,6 +2790,39 @@ async function readSiteFile(filePath, defaultVal = []) {
   catch { return defaultVal; }
 }
 
+/**
+ * 读取站点级 config 并与全局 config 合并。飞书 App ID/Secret 全局共享（一个飞书
+ * 应用就够），而 feishuTableUrl / feishuWebhook 由站点自己维护——允许每个站把留言
+ * 同步到不同的飞书多维表格。
+ *
+ * 优先级：站点字段 > 全局字段。站点字段若为空字符串则视为未设置、回退到全局。
+ */
+async function getMergedSiteConfig(site) {
+  const globalCfg = await getConfig();
+  const siteCfg = await readSiteFile(getSitePaths(site).config, {});
+  const pick = (siteVal, globalVal) => {
+    if (siteVal !== undefined && siteVal !== null && siteVal !== '') return siteVal;
+    return globalVal || '';
+  };
+  return {
+    ...globalCfg,
+    ...siteCfg,
+    feishuAppId:      pick(siteCfg.feishuAppId,      globalCfg.feishuAppId),
+    feishuAppSecret:  pick(siteCfg.feishuAppSecret,  globalCfg.feishuAppSecret),
+    feishuTableUrl:   pick(siteCfg.feishuTableUrl,   globalCfg.feishuTableUrl),
+    feishuWebhook:    pick(siteCfg.feishuWebhook,    globalCfg.feishuWebhook),
+  };
+}
+
+async function saveSiteConfigPartial(site, patch) {
+  const p = getSitePaths(site).config;
+  const current = await readSiteFile(p, {});
+  const next = { ...current, ...patch };
+  await fs.mkdir(getSitePaths(site).dir, { recursive: true });
+  await fs.writeFile(p, JSON.stringify(next, null, 2));
+  return next;
+}
+
 // 公开：获取各站点文章
 app.get('/api/:site/articles', async (req, res) => {
   const { enrichLegacyArticle } = require('./article-enrichment');
@@ -2660,7 +2879,9 @@ app.post('/api/:site/contact', async (req, res) => {
     await fs.writeFile(p.contacts, JSON.stringify(contacts, null, 2));
 
     // 通知（邮件 + 飞书）。保存成功后异步通知，失败不影响响应。
-    const config = await getConfig();
+    // 用 merged config：全局飞书 App 凭证 + 站级 feishuTableUrl，允许每个站
+    // 把留言同步到不同的飞书多维表格。
+    const config = await getMergedSiteConfig(site);
     const siteHost = (req.headers['x-forwarded-host'] || req.headers.host || `${site}.jotoai.com`).replace(/:\d+$/, '');
     const deviceType = detectDevice(req.headers['user-agent']);
     notifyNewContact({
