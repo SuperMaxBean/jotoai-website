@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+/* Inter / Outfit / JetBrains Mono are progressive enhancements; we rely on the
+   PingFang SC / Microsoft YaHei / system-ui fallback chain so users in regions
+   that block fonts.googleapis.com still get readable typography. */
+
+@theme {
+  --font-sans: "Inter", "PingFang SC", "Microsoft YaHei", "Noto Sans SC",
+    ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", "PingFang SC", "Microsoft YaHei", "Noto Sans SC",
+    sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-200: #bfdbfe;
+  --color-brand-300: #93c5fd;
+  --color-brand-400: #60a5fa;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+  --color-brand-800: #1e40af;
+  --color-brand-900: #1e3a8a;
+  --color-brand-950: #172554;
+
+  --color-neutral-50: #f8fafc;
+  --color-neutral-100: #f1f5f9;
+  --color-neutral-200: #e2e8f0;
+  --color-neutral-300: #cbd5e1;
+  --color-neutral-400: #94a3b8;
+  --color-neutral-500: #64748b;
+  --color-neutral-600: #475569;
+  --color-neutral-700: #334155;
+  --color-neutral-800: #1e293b;
+  --color-neutral-900: #0f172a;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-white text-neutral-800 antialiased;
+  }
+}
+
+.glass {
+  @apply bg-white/80 backdrop-blur-xl border border-white/50 shadow-sm transition-all;
+}
+
+.dark-glass {
+  @apply bg-neutral-900/40 backdrop-blur-lg border border-white/10;
+}
+
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-700 to-blue-500 font-bold;
+}
+
+.card-hover {
+  @apply hover:shadow-2xl hover:shadow-brand-500/10 hover:-translate-y-1 transition-all duration-300;
+}

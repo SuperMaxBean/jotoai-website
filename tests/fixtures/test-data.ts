@@ -1,10 +1,12 @@
 export const SITES = {
-  audit:   { name: '唯客智审',     url: 'https://audit.jotoai.com',   pages: ['/', '/blog', '/contact', '/features', '/architecture', '/privacy'] },
-  shanyue: { name: '闪阅',         url: 'https://shanyue.jotoai.com', pages: ['/', '/articles', '/capabilities', '/architecture', '/contact', '/privacy'] },
-  sec:     { name: '唯客AI护栏',   url: 'https://sec.jotoai.com',     pages: ['/', '/features', '/articles', '/pricing', '/about', '/contact', '/changelog', '/roadmap'] },
-  kb:      { name: '唯客知识中台', url: 'https://kb.jotoai.com',      pages: ['/', '/blog'] },
-  fasium:  { name: 'FasiumAI',     url: 'https://fasium.jotoai.com',  pages: ['/', '/blog', '/contact', '/privacy'] },
-  loop:    { name: 'Loop',          url: 'https://loop.jotoai.com',    pages: ['/'] },
+  audit:    { name: '唯客智审',     url: 'https://audit.jotoai.com',   pages: ['/', '/blog', '/contact', '/features', '/architecture', '/privacy'] },
+  shanyue:  { name: '闪阅',         url: 'https://shanyue.jotoai.com', pages: ['/', '/articles', '/capabilities', '/architecture', '/contact', '/privacy'] },
+  sec:      { name: '唯客AI护栏',   url: 'https://sec.jotoai.com',     pages: ['/', '/features', '/articles', '/pricing', '/about', '/contact', '/changelog', '/roadmap'] },
+  kb:       { name: '唯客知识中台', url: 'https://kb.jotoai.com',      pages: ['/', '/blog'] },
+  fasium:   { name: 'FasiumAI',     url: 'https://fasium.jotoai.com',  pages: ['/', '/blog', '/contact', '/privacy'] },
+  loop:     { name: 'Loop',          url: 'https://loop.jotoai.com',    pages: ['/'] },
+  bydata:   { name: 'BYDATA',        url: 'https://www.bydata.net',     pages: ['/'] },
+  zengwins: { name: '上海增瀛网络',  url: 'https://www.zengwins.com',   pages: ['/'] },
 } as const;
 
 export const ADMIN = {
