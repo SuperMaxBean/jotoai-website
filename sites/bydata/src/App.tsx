@@ -426,7 +426,7 @@ export default function App() {
 
           {/* Centered desktop nav links (absolute, viewport-centered) */}
           <nav className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <ul className="flex gap-8 text-sm font-medium text-slate-500 uppercase tracking-widest">
+            <ul className="flex gap-6 lg:gap-8 text-sm font-medium text-slate-500 uppercase tracking-widest whitespace-nowrap">
               {navItems.map((item, i) => (
                 <li key={item.id}>
                   <a
@@ -437,8 +437,8 @@ export default function App() {
                     }}
                     className={
                       i === 0
-                        ? 'text-blue-600 border-b-2 border-blue-600 py-1'
-                        : 'hover:text-blue-600 transition-colors'
+                        ? 'text-blue-600 border-b-2 border-blue-600 py-1 whitespace-nowrap'
+                        : 'hover:text-blue-600 transition-colors whitespace-nowrap'
                     }
                   >
                     {item.label}
@@ -560,7 +560,13 @@ export default function App() {
             <div className="inline-block px-5 py-2 mb-8 text-xs font-bold tracking-[0.25em] text-blue-600 bg-blue-50/80 backdrop-blur-sm rounded-full uppercase border border-blue-100/50">
               {t.hero.tag}
             </div>
-            <h1 className="text-6xl md:text-8xl font-black text-slate-900 mb-8 tracking-tighter leading-[1.05]">
+            <h1
+              className={
+                lang === 'en'
+                  ? 'text-5xl md:text-6xl lg:text-7xl font-black text-slate-900 mb-8 tracking-tight leading-[1.1]'
+                  : 'text-6xl md:text-8xl font-black text-slate-900 mb-8 tracking-tighter leading-[1.05]'
+              }
+            >
               <span>{t.hero.titlePre}</span>
               <span className="hidden md:inline">{' '}</span>
               <span className="block md:inline text-blue-600">{t.hero.titleAccent}</span>
@@ -603,7 +609,7 @@ export default function App() {
                 <span className="text-5xl font-black text-blue-600 tracking-tighter group-hover:scale-110 transition-transform duration-500">
                   {stat.value}
                 </span>
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-[0.15em] whitespace-nowrap">
                   {stat.label}
                 </span>
               </div>
