@@ -52,6 +52,8 @@ For batch checks across sites (ICP, company name, email, WeChat QR), use `browse
 | admin backend | 3004 | /etc/nginx/sites-enabled/admin.jotoai.com |
 | fasium | 3005 | /etc/nginx/sites-enabled/fasium.jotoai.com |
 | kb | 3006 | /etc/nginx/sites-enabled/kb.jotoai.com |
+| bydata | 3007 (dev) | /etc/nginx/sites-enabled/bydata.net (static SPA, served from dist/) |
+| zengwins | 3008 (dev) | /etc/nginx/sites-enabled/www.zengwins.com (static SPA, served from dist/) |
 | loop | 8000 | /etc/nginx/sites-enabled/loop.jotoai.com (uvicorn) |
 
 ## Sites Under Test
@@ -64,6 +66,8 @@ For batch checks across sites (ICP, company name, email, WeChat QR), use `browse
 | 知识中台 (kb) | https://kb.jotoai.com | Landing, blog, login |
 | FasiumAI (fasium) | https://fasium.jotoai.com | Landing, blog, blog detail, contact form |
 | Loop | https://loop.jotoai.com | Landing, admin |
+| BYDATA (bydata) | https://www.bydata.net | Landing SPA, CN/EN i18n switcher, ContactForm → admin backend |
+| 上海增瀛网络 (zengwins) | https://www.zengwins.com | Landing SPA, Hero/Services/Coverage/Cases, ContactForm → admin backend |
 | Admin Dashboard | https://admin.jotoai.com | Login, dashboard, site status, email config, contacts |
 
 ---

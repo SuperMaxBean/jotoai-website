@@ -12,6 +12,8 @@ Monorepo for all JOTO.AI product websites.
 | 唯客知识中台 | `sites/kb` | https://kb.jotoai.com | Next.js |
 | FasiumAI | `sites/fasium` | https://fasium.jotoai.com | Next.js |
 | Loop | `sites/loop` | https://loop.jotoai.com | FastAPI + Vite |
+| BYDATA | `sites/bydata` | https://www.bydata.net | Vite + React (static SPA) |
+| 上海增瀛网络 Zengwins | `sites/zengwins` | https://www.zengwins.com | Vite + React (static SPA) |
 
 ## Shared Backend
 

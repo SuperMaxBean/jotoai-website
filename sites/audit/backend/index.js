@@ -2772,8 +2772,8 @@ app.post('/api/admin/accept-invite', async (req, res) => {
 
 
 // ==================== 多站点支持 ====================
-const SITES = ['audit', 'shanyue', 'sec', 'kb', 'fasium', 'loop', 'noteflow', 'translator'];
-const SITE_NAMES = { audit: '唯客智审', shanyue: '闪阅', sec: '唯客AI护栏', kb: '唯客企业知识中台', fasium: 'FasiumAI', loop: 'Loop', noteflow: 'NoteFlow', translator: 'JOTO Translator' };
+const SITES = ['audit', 'shanyue', 'sec', 'kb', 'fasium', 'loop', 'noteflow', 'translator', 'bydata', 'zengwins'];
+const SITE_NAMES = { audit: '唯客智审', shanyue: '闪阅', sec: '唯客AI护栏', kb: '唯客企业知识中台', fasium: 'FasiumAI', loop: 'Loop', noteflow: 'NoteFlow', translator: 'JOTO Translator', bydata: 'BYDATA', zengwins: '上海增瀛网络' };
 
 function getSitePaths(site) {
   const siteDir = path.join(DATA_DIR, 'sites', site);

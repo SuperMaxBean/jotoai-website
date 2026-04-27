@@ -25,14 +25,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture
 
-This is a **monorepo of six product sites** sharing one backend. Each site under `sites/` is a standalone app with its own `package.json` (or `requirements.txt` for Loop). There is no root-level build — you operate per site.
+This is a **monorepo of eight product sites** sharing one backend. Each site under `sites/` is a standalone app with its own `package.json` (or `requirements.txt` for Loop). There is no root-level build — you operate per site.
 
-**Shared Express backend.** All five Next.js sites (audit, shanyue, sec, kb, fasium) talk to a single Express server at `sites/audit/backend/index.js` (port **3004**, served at `https://admin.jotoai.com`). It provides contact-form + captcha, Resend email (domain `mail.jotoai.com`), blog/article generation (`article-generator.js`, `article-rewriter.js`, `article-search.js`, Unsplash fetchers), and admin dashboard APIs. When editing "the backend," this is the one — do not confuse it with the per-site Next.js API routes.
+**Shared Express backend.** All five Next.js sites (audit, shanyue, sec, kb, fasium) and the two Vite SPAs (bydata, zengwins) talk to a single Express server at `sites/audit/backend/index.js` (port **3004**, served at `https://admin.jotoai.com`). It provides contact-form + captcha, Resend email (domain `mail.jotoai.com`), blog/article generation (`article-generator.js`, `article-rewriter.js`, `article-search.js`, Unsplash fetchers), and admin dashboard APIs. When editing "the backend," this is the one — do not confuse it with the per-site Next.js API routes.
 
 **Loop is the exception.** `sites/loop/backend/` is a FastAPI/Python service (uvicorn on port 8000) with its own agent, browser automation, auth, and DB layer. `sites/loop/landing/` is a plain static `index.html` + assets, not a build step. Loop does **not** use the shared Express backend.
 
+**Static SPAs.** `sites/bydata/` and `sites/zengwins/` are pure static Vite + React SPAs. `npm run build` outputs `dist/`, served by Nginx with SPA fallback (`try_files $uri $uri/ /index.html`). Their `ContactForm` posts directly to the shared backend at `https://admin.jotoai.com/api/<site>/contact` (CORS is open). New static sites must be registered in the `SITES` array at `sites/audit/backend/index.js` (line 2775) before contact-form submissions are accepted.
+
 **Site port layout** (authoritative copy in `.claude/skills/tomitest/SKILL.md`):
-`audit` 3001 · `shanyue` 3002 · `sec` 3003 · `admin backend` 3004 · `fasium` 3005 · `kb` 3006 · `loop` 8000.
+`audit` 3001 · `shanyue` 3002 · `sec` 3003 · `admin backend` 3004 · `fasium` 3005 · `kb` 3006 · `bydata` 3007 (dev) · `zengwins` 3008 (dev) · `loop` 8000.
 Many "site shows wrong content" bugs trace to nginx proxying the wrong port — check `/etc/nginx/sites-enabled/<site>.jotoai.com` first.
 
 **Servers.**
