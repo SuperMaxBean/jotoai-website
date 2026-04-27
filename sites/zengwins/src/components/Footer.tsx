@@ -162,6 +162,17 @@ export default function Footer() {
             </a>
           </div>
         </div>
+
+        <div className="pt-6 flex justify-center">
+          <a
+            href="https://beian.miit.gov.cn/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] font-medium text-neutral-400 hover:text-brand-600 transition-colors tracking-wide"
+          >
+            沪ICP备2024096280号-1
+          </a>
+        </div>
       </div>
 
       <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-brand-500/5 blur-[120px] rounded-full pointer-events-none" />

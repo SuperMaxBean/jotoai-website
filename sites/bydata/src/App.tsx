@@ -26,8 +26,30 @@ const translations = {
     },
     about: {
       title: '关于比笛塔 (Bydata)',
-      content:
-        '比笛塔（Bydata）致力于成为领先的生成式AI落地合伙人。我们通过深度行业洞察与前沿人工智能技术，协助企业从数字化转型迈向智能化升级，切实解决业务痛点，释放数据潜能，共创AI驱动的未来。',
+      lead: '比笛塔（Bydata）是聚焦生成式 AI 企业级落地的咨询与交付团队。自成立以来，我们深耕行业洞察与前沿人工智能技术，累计在零售、金融、医药、教育、日化、珠宝等多个领域完成 50+ 项 AIGC 场景实施，覆盖从概念验证（POC）到生产环境长期运维的完整链路。',
+      lead2: '与通用云服务商或纯模型供应商不同，我们以"业务场景 × 模型微调 × 工程交付"三位一体的方式介入：不止于"试用大模型"，而是把 AIGC 能力真正嵌入企业核心业务流程，沉淀为可治理、可复用的智能资产。',
+      pillarsTitle: '我们的差异化',
+      pillars: [
+        {
+          title: '专注 AIGC 落地',
+          desc: '把"生产可用"作为唯一标准 —— 私有化部署、敏感数据隔离、场景化微调，是我们每个技术决策的三条主线。',
+        },
+        {
+          title: '工程化交付方法',
+          desc: '需求拆解 → POC 原型 → 灰度上线，按双周迭代 + 指标对齐推进，单场景从立项到上线平均 6–10 周可量化收益。',
+        },
+        {
+          title: '行业知识沉淀',
+          desc: '在零售商品标签、医药合规规则、教育评估体系等场景持续积累专属语料库与 Prompt 模板库，加速新客户冷启动。',
+        },
+      ],
+      commitmentsTitle: '能力速览',
+      commitments: [
+        { label: '服务行业', value: '零售 · 金融 · 医药 · 教育 · 日化 · 珠宝' },
+        { label: '主流模型', value: 'Qwen · DeepSeek · GLM · Llama · 私有大模型' },
+        { label: '部署方式', value: '私有化 · 混合云 · 算力一体机' },
+        { label: '交付节奏', value: '单场景 6–10 周 POC 至上线' },
+      ],
     },
     services: {
       title: '核心能力',
@@ -172,8 +194,30 @@ const translations = {
     },
     about: {
       title: 'About Bydata',
-      content:
-        'Bydata is committed to being a leading GenAI implementation partner. Through deep industrial insights and cutting-edge AI technologies, we assist enterprises in upgrading from digital transformation to intelligent evolution, solving practical business pain points, and co-creating an AI-driven future.',
+      lead: 'Bydata is an enterprise-grade GenAI consulting and delivery team. Since inception we have implemented 50+ AIGC scenarios across retail, finance, pharma, education, FMCG and jewelry, covering the full lifecycle from POC validation to long-running production operations.',
+      lead2: 'Unlike pure cloud vendors or model providers, we operate along the business-scenario × model-fine-tuning × engineering-delivery axis — moving enterprises beyond "trying the model" to embedding AIGC deeply into core workflows as governable, reusable intelligence assets.',
+      pillarsTitle: 'What Sets Us Apart',
+      pillars: [
+        {
+          title: 'Focused on GenAI Implementation',
+          desc: 'Production usability is our only bar — on-premise deployment, sensitive-data isolation, and scenario fine-tuning anchor every architectural decision.',
+        },
+        {
+          title: 'Engineering-First Delivery',
+          desc: 'Requirements → POC → gated production rollout, on bi-weekly sprints aligned with measurable KPIs — a typical scenario goes from kickoff to live in 6–10 weeks.',
+        },
+        {
+          title: 'Domain Knowledge IP',
+          desc: 'Per-industry corpora and prompt template libraries — retail SKU taxonomies, pharma compliance rules, education assessment rubrics — accelerate every new engagement.',
+        },
+      ],
+      commitmentsTitle: 'Capabilities at a Glance',
+      commitments: [
+        { label: 'Industries', value: 'Retail · Finance · Pharma · Education · FMCG · Jewelry' },
+        { label: 'Models Supported', value: 'Qwen · DeepSeek · GLM · Llama · Private LLMs' },
+        { label: 'Deployment', value: 'On-premise · Hybrid · Compute Appliance' },
+        { label: 'Delivery Cadence', value: '6–10 weeks scenario POC to production' },
+      ],
     },
     services: {
       title: 'Our Services',
@@ -575,10 +619,72 @@ export default function App() {
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="max-w-4xl mx-auto text-center"
+            className="max-w-4xl mx-auto text-center mb-20"
           >
-            <h2 className="text-4xl font-bold text-slate-900 mb-12">{t.about.title}</h2>
-            <p className="text-xl text-slate-600 leading-[2] font-medium">{t.about.content}</p>
+            <h2 className="text-4xl font-bold text-slate-900 mb-10">{t.about.title}</h2>
+            <p className="text-xl text-slate-700 leading-[1.9] font-medium mb-6">{t.about.lead}</p>
+            <p className="text-lg text-slate-500 leading-[1.9]">{t.about.lead2}</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="max-w-6xl mx-auto"
+          >
+            <div className="text-center mb-12">
+              <span className="inline-block text-xs font-bold text-blue-600 uppercase tracking-[0.25em] mb-3">
+                {t.about.pillarsTitle}
+              </span>
+              <div className="w-12 h-1 bg-blue-600 mx-auto rounded-full" />
+            </div>
+            <div className="grid md:grid-cols-3 gap-8 mb-20">
+              {t.about.pillars.map((pillar, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.15 + i * 0.1 }}
+                  className="bg-slate-50 p-8 rounded-2xl border border-slate-100 hover:border-blue-200 hover:shadow-xl transition-all"
+                >
+                  <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black mb-6">
+                    {String(i + 1).padStart(2, '0')}
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-3">{pillar.title}</h3>
+                  <p className="text-sm text-slate-600 leading-[1.8]">{pillar.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="max-w-6xl mx-auto"
+          >
+            <div className="text-center mb-10">
+              <span className="inline-block text-xs font-bold text-blue-600 uppercase tracking-[0.25em] mb-3">
+                {t.about.commitmentsTitle}
+              </span>
+              <div className="w-12 h-1 bg-blue-600 mx-auto rounded-full" />
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {t.about.commitments.map((item, i) => (
+                <div
+                  key={i}
+                  className="bg-white p-6 rounded-2xl border border-slate-200 hover:border-blue-400 transition-colors"
+                >
+                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">
+                    {item.label}
+                  </div>
+                  <div className="text-base font-bold text-slate-900 leading-snug">{item.value}</div>
+                </div>
+              ))}
+            </div>
           </motion.div>
         </div>
       </section>
